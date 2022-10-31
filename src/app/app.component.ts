@@ -11,7 +11,7 @@ import { ParserService } from './services/parser.service';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnDestroy {
-  public textareaFc: FormControl;
+  public textareaFc: FormControl<string | null>;
 
   private _sub: Subscription;
 
@@ -19,19 +19,22 @@ export class AppComponent implements OnDestroy {
     private _parserService: ParserService,
     private _displayService: DisplayService
   ) {
-    this.textareaFc = new FormControl();
+    this.textareaFc = new FormControl<string | null>('');
     this._sub = this.textareaFc.valueChanges
       .pipe(debounceTime(400))
       .subscribe((val) => this.processSourceChange(val));
-    this.textareaFc.setValue(`hello
-world`);
+    this.textareaFc.setValue(`hello world`);
   }
 
   ngOnDestroy(): void {
     this._sub.unsubscribe();
   }
 
-  private processSourceChange(newSource: string) {
+  private processSourceChange(newSource: string | null): void {
+    if (!newSource) {
+      return;
+    }
+
     const result = this._parserService.parse(newSource);
     if (result !== undefined) {
       this._displayService.display(result);
