@@ -1,59 +1,61 @@
-import {Component, ElementRef, OnDestroy, ViewChild} from '@angular/core';
-import {DisplayService} from '../../services/display.service';
-import {Subscription} from 'rxjs';
-import {LayoutService} from '../../services/layout.service';
-import {SvgService} from '../../services/svg.service';
-import {Diagram} from '../../classes/diagram/diagram';
+import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { Subscription } from 'rxjs';
+
+import { Diagram } from '../../classes/diagram/diagram';
+import { DisplayService } from '../../services/display.service';
+import { LayoutService } from '../../services/layout.service';
+import { SvgService } from '../../services/svg.service';
 
 @Component({
-    selector: 'app-display',
-    templateUrl: './display.component.html',
-    styleUrls: ['./display.component.scss']
+  selector: 'app-display',
+  templateUrl: './display.component.html',
+  styleUrls: ['./display.component.scss'],
 })
 export class DisplayComponent implements OnDestroy {
+  @ViewChild('drawingArea') drawingArea: ElementRef<SVGElement> | undefined;
 
-    @ViewChild('drawingArea') drawingArea: ElementRef<SVGElement> | undefined;
+  private _sub: Subscription;
+  private _diagram: Diagram | undefined;
 
-    private _sub: Subscription;
-    private _diagram: Diagram | undefined;
+  constructor(
+    private _layoutService: LayoutService,
+    private _svgService: SvgService,
+    private _displayService: DisplayService
+  ) {
+    this._sub = this._displayService.diagram$.subscribe((diagram) => {
+      this._diagram = diagram;
+      this._layoutService.layout(this._diagram);
+      this.draw();
+    });
+  }
 
-    constructor(private _layoutService: LayoutService,
-                private _svgService: SvgService,
-                private _displayService: DisplayService) {
+  ngOnDestroy(): void {
+    this._sub.unsubscribe();
+  }
 
-        this._sub  = this._displayService.diagram$.subscribe(diagram => {
-            this._diagram = diagram;
-            this._layoutService.layout(this._diagram);
-            this.draw();
-        });
+  private draw() {
+    if (this.drawingArea === undefined) {
+      console.debug('drawing area not ready yet');
+      return;
     }
 
-    ngOnDestroy(): void {
-        this._sub.unsubscribe();
+    this.clearDrawingArea();
+    const elements = this._svgService.createSvgElements(
+      this._displayService.diagram
+    );
+    for (const element of elements) {
+      this.drawingArea.nativeElement.appendChild(element);
+    }
+  }
+
+  private clearDrawingArea() {
+    const drawingArea = this.drawingArea?.nativeElement;
+    if (drawingArea?.childElementCount === undefined) {
+      return;
     }
 
-    private draw() {
-        if (this.drawingArea === undefined) {
-            console.debug('drawing area not ready yet')
-            return;
-        }
-
-        this.clearDrawingArea();
-        const elements = this._svgService.createSvgElements(this._displayService.diagram);
-        for (const element of elements) {
-            this.drawingArea.nativeElement.appendChild(element);
-        }
+    while (drawingArea.childElementCount > 0) {
+      drawingArea.removeChild(drawingArea.lastChild as ChildNode);
     }
-
-    private clearDrawingArea() {
-        const drawingArea = this.drawingArea?.nativeElement;
-        if (drawingArea?.childElementCount === undefined) {
-            return;
-        }
-
-        while (drawingArea.childElementCount > 0) {
-            drawingArea.removeChild(drawingArea.lastChild as ChildNode);
-        }
-    }
-
+  }
 }
