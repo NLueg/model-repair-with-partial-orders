@@ -24,18 +24,13 @@ export class DisplayComponent {
     this.svgElements$ = this._displayService.getPetriNet$().pipe(
       map((currentRun) => this._layoutService.layout(currentRun).run),
       map((modifiedRun) => {
-        if (
-          this.canvas &&
-          this.canvas.drawingArea &&
-          (!modifiedRun.offset ||
-            (!modifiedRun.offset.x && !modifiedRun.offset.y))
-        ) {
+        if (this.canvas && this.canvas.drawingArea) {
           const w = this.canvas.drawingArea.nativeElement.clientWidth;
           const h = this.canvas.drawingArea.nativeElement.clientHeight;
           if (w > 0 && h > 0)
-            this._layoutService.centerRuns([modifiedRun], w / 2, h / 2);
+            this._layoutService.centerPetriNet(modifiedRun, w / 2, h / 2);
         }
-        return this._svgService.createSvgElements(modifiedRun, false);
+        return this._svgService.createSvgElements(modifiedRun);
       })
     );
   }

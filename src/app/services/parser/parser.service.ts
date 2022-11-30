@@ -13,40 +13,36 @@ import {
   hasTransitiveArcs,
   removeTransitives,
 } from '../../classes/diagram/functions/transitives.fn';
-import { PetriNet } from '../../classes/diagram/petriNet';
+import { PetriNet } from '../../classes/diagram/petri-net';
 import {
   arcsAttribute,
-  eventsAttribute,
-  offsetAttribute,
+  placesAttribute,
+  transitionsAttribute,
   typeKey,
 } from './parsing-constants';
 
-type ParsingStates = 'initial' | 'type' | 'events' | 'arcs' | 'offset';
+type ParsingStates = 'initial' | 'type' | 'transitions' | 'places' | 'arcs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ParserService {
   constructor(private toastr: ToastrService) {}
-  readonly transitionRegex = /^(.*)(\[\d*])$/;
-  readonly arcRegex = new RegExp('^([^\\[ ]+)\\s([^\\[ ]+)(\\s?\\[\\d+\\])*$');
-  readonly breakpointRegex = new RegExp('\\[\\d+\\]');
-  readonly offsetRegex = new RegExp('-?\\d+ -?\\d+');
+  private readonly transitionRegex = /^(\S*)\s*(.*)$/;
+  private readonly placeRegex = /^(\S*)\s*(\d*)$/;
+  private readonly arcRegex = /^(\S*)\s*(\S*)\s*(\d*)$/;
+  private readonly breakpointRegex = new RegExp('\\[\\d+\\]');
 
   parse(content: string, errors: Set<string>): PetriNet | null {
     const contentLines = content.split('\n');
     const run: PetriNet = {
       text: content,
+      transitions: [],
       arcs: [],
-      elements: [],
-      offset: { x: 0, y: 0 },
+      places: [],
     };
 
     let currentParsingState: ParsingStates = 'initial';
-    let fileContainsTransitions = false;
-    let fileContainsArcs = false;
-    let fileHasOffset = false;
-
     this.toastr.toasts.forEach((t) => {
       this.toastr.remove(t.toastId);
     });
@@ -72,13 +68,14 @@ export class ParserService {
         case 'type':
           if (trimmedLine === '') {
             break;
-          } else if (trimmedLine === eventsAttribute) {
-            currentParsingState = 'events';
-            fileContainsTransitions = true;
+          } else if (trimmedLine === transitionsAttribute) {
+            currentParsingState = 'transitions';
             break;
           } else if (trimmedLine === arcsAttribute) {
             currentParsingState = 'arcs';
-            fileContainsArcs = true;
+            break;
+          } else if (trimmedLine === placesAttribute) {
+            currentParsingState = 'places';
             break;
           } else {
             errors.add(`The file contains invalid parts`);
@@ -88,13 +85,10 @@ export class ParserService {
             );
             return null;
           }
-        case 'events':
-          if (trimmedLine === '' || trimmedLine === eventsAttribute) {
+        case 'transitions':
+          if (trimmedLine === '' || trimmedLine === transitionsAttribute) {
             break;
-          } else if (
-            trimmedLine !== arcsAttribute &&
-            trimmedLine !== offsetAttribute
-          ) {
+          } else if (trimmedLine !== arcsAttribute) {
             const { id, label, layerPos } = this.parseTransition(trimmedLine);
 
             if (
@@ -112,25 +106,22 @@ export class ParserService {
               );
             }
             break;
-          } else if (trimmedLine === '.arcs') {
+          } else if (trimmedLine === arcsAttribute) {
             currentParsingState = 'arcs';
-            fileContainsArcs = true;
             break;
-          } else if (trimmedLine === offsetAttribute) {
-            currentParsingState = 'offset';
+          } else if (trimmedLine === '.places') {
+            currentParsingState = 'places';
             break;
           } else {
             errors.add(`Unable to parse file`);
             this.toastr.error(`Error`, `Unable to parse file`);
             return null;
           }
+
         case 'arcs':
           if (trimmedLine === '' || trimmedLine === arcsAttribute) {
             break;
-          } else if (trimmedLine === offsetAttribute) {
-            currentParsingState = 'offset';
-            break;
-          } else if (trimmedLine !== eventsAttribute) {
+          } else if (trimmedLine !== transitionsAttribute) {
             let source: string, target: string;
             const breakpoints: Breakpoint[] = [];
 
@@ -190,60 +181,18 @@ export class ParserService {
               );
             }
             break;
-          } else if (trimmedLine === eventsAttribute) {
-            currentParsingState = 'events';
-            fileContainsTransitions = true;
+          } else if (trimmedLine === transitionsAttribute) {
+            currentParsingState = 'transitions';
             break;
           } else {
             errors.add(`Unable to parse file`);
             this.toastr.error(`Error`, `Unable to parse file`);
             return null;
           }
-        case 'offset':
-          if (
-            trimmedLine === '' ||
-            trimmedLine === offsetAttribute ||
-            fileHasOffset
-          ) {
-            break;
-          } else if (this.offsetRegex.test(trimmedLine)) {
-            const matches = this.offsetRegex.exec(trimmedLine);
-            if (matches) {
-              fileHasOffset = true;
-              const coordinates = matches[0].split(' ');
-              run.offset = {
-                x: parseInt(coordinates[0]),
-                y: parseInt(coordinates[1]),
-              };
-            }
-          }
       }
     }
-    if (fileContainsTransitions && fileContainsArcs) {
-      if (!setRefs(run)) {
-        this.toastr.warning(
-          `File contains arcs for non existing events`,
-          `Invalid arcs are ignored`
-        );
-      }
-      if (hasCycles(run)) {
-        removeCycles(run);
-        this.toastr.warning(
-          `Cyclic arcs are ignored`,
-          `File contains cyclic arcs`
-        );
-      }
-      if (hasTransitiveArcs(run)) {
-        removeTransitives(run);
-        this.toastr.warning(
-          `Transitive arcs are ignored`,
-          `File contains transitive arcs`
-        );
-        setRefs(run);
-      }
 
-      return run;
-    } else {
+    if (run.arcs.length === 0 && run.transitions.length === 0) {
       errors.add(`File does not contain events and arcs`);
       this.toastr.error(
         `File does not contain events and arcs`,
@@ -251,6 +200,30 @@ export class ParserService {
       );
       return null;
     }
+
+    if (!setRefs(run)) {
+      this.toastr.warning(
+        `File contains arcs for non existing events`,
+        `Invalid arcs are ignored`
+      );
+    }
+    if (hasCycles(run)) {
+      removeCycles(run);
+      this.toastr.warning(
+        `Cyclic arcs are ignored`,
+        `File contains cyclic arcs`
+      );
+    }
+    if (hasTransitiveArcs(run)) {
+      removeTransitives(run);
+      this.toastr.warning(
+        `Transitive arcs are ignored`,
+        `File contains transitive arcs`
+      );
+      setRefs(run);
+    }
+
+    return run;
   }
 
   private parseTransition(trimmedLine: string): {

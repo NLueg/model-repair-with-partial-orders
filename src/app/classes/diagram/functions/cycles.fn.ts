@@ -1,6 +1,6 @@
 import { Arc } from '../arc';
-import { Element } from '../element';
-import { PetriNet } from '../petriNet';
+import { PetriNet } from '../petri-net';
+import { Transition } from '../transition';
 
 export function hasCycles(run: PetriNet): boolean {
   return getCycles(run).length > 0;
@@ -11,9 +11,9 @@ export function getCycles(run: PetriNet): Arc[] {
   const cyclicArcs = new Array<Arc>();
 
   run.arcs.forEach((arc) => {
-    const visitedTransitions = new Set<Element>();
+    const visitedTransitions = new Set<Transition>();
 
-    const source = run.elements.find((element) => element.id === arc.source);
+    const source = run.transitions.find((element) => element.id === arc.source);
     if (source) {
       visitedTransitions.add(source);
     }
@@ -35,10 +35,10 @@ function checkArcCycle(
   currentRun: PetriNet,
   arc: Arc,
   visitedArcs: Set<Arc>,
-  visitedTransitions: Set<Element>,
+  visitedTransitions: Set<Transition>,
   cyclicArcs: Arc[]
 ): void {
-  const target = currentRun.elements.find(
+  const target = currentRun.transitions.find(
     (element) => element.id === arc.target
   );
   if (visitedArcs.has(arc) || !target) {

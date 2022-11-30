@@ -2,7 +2,7 @@ import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
-import { PetriNet } from '../../classes/diagram/petriNet';
+import { PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../../services/display.service';
 import { ParserService } from '../../services/parser/parser.service';
 import { UploadService } from '../../services/upload/upload.service';
@@ -18,7 +18,7 @@ describe('SourceFileTextareaComponent', () => {
 
   const run: PetriNet = {
     text: '',
-    elements: [],
+    transitions: [],
     warnings: [],
     arcs: [],
   };

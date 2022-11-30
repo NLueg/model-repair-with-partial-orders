@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { first, Subject } from 'rxjs';
 
-import { PetriNet } from '../../classes/diagram/petriNet';
+import { PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../display.service';
 import { RunToPnmlService } from './run-to-pnml/run-to-pnml.service';
 

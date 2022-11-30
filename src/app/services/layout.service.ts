@@ -1,17 +1,17 @@
 import { Injectable } from '@angular/core';
 
 import { Arc, Breakpoint } from '../classes/diagram/arc';
-import { Element } from '../classes/diagram/element';
 import { hasCycles } from '../classes/diagram/functions/cycles.fn';
 import {
   copyRun,
   getEmptyNet,
 } from '../classes/diagram/functions/run-helper.fn';
-import { PetriNet } from '../classes/diagram/petriNet';
+import { PetriNet } from '../classes/diagram/petri-net';
+import { Transition } from '../classes/diagram/transition';
 import { StatehandlerService } from './moving/statehandler/statehandler.service';
 import { eventSize } from './svg/svg-constants';
 
-type Layer = Element | Breakpoint;
+type Layer = Transition | Breakpoint;
 
 @Injectable({
   providedIn: 'root',
@@ -55,13 +55,13 @@ export class LayoutService {
    * @param run run for which the layout is to be determined
    * @returns layers with elements and breakpoints
    */
-  private assignLayers(run: PetriNet): Array<Element[]> {
-    const layers = new Array<Element[]>();
-    const elements = [...run.elements];
+  private assignLayers(run: PetriNet): Array<Transition[]> {
+    const layers = new Array<Transition[]>();
+    const elements = [...run.transitions];
     let arcs = run.arcs;
 
     while (elements.length > 0) {
-      const layer = new Array<Element>();
+      const layer = new Array<Transition>();
       const elementsWithIncomingArcs = arcs
         .filter((a) => elements.find((e) => e.id == a.source))
         .map((a) => elements.find((element) => element.id === a.target));
@@ -112,7 +112,7 @@ export class LayoutService {
         )
         .forEach((a: Arc) => {
           //arc loop
-          const target = currentRun.elements.find(
+          const target = currentRun.transitions.find(
             (element) => element.id === a.target
           );
 
@@ -312,7 +312,7 @@ export class LayoutService {
     const layerIndex = layerInfo.layerIndex;
     const breakpointIndex = breakpoint.arc.breakpoints.indexOf(breakpoint);
 
-    const source = currentRun.elements.find(
+    const source = currentRun.transitions.find(
       (element) => element.id === breakpoint.arc.source
     );
     if (breakpointIndex == 0 && source) {
@@ -321,7 +321,7 @@ export class LayoutService {
       prev = breakpoint.arc.breakpoints[breakpointIndex - 1];
     }
 
-    const target = currentRun.elements.find(
+    const target = currentRun.transitions.find(
       (element) => element.id === breakpoint.arc.target
     );
     if (breakpointIndex == breakpoint.arc.breakpoints.length - 1 && target) {
@@ -466,66 +466,59 @@ export class LayoutService {
     return height;
   }
 
-  public centerRuns(runs: PetriNet[], centerX: number, centerY: number): void {
+  public centerPetriNet(run: PetriNet, centerX: number, centerY: number): void {
     let runBoundsXMin = Math.min(),
       runBoundsXMax = Math.max(),
       runBoundsYMin = Math.min(),
       runBoundsYMax = Math.max();
-    runs.forEach((run) => {
-      run.elements.forEach((e) => {
+    run.transitions.forEach((e) => {
+      if ((e.x ?? 0) < runBoundsXMin) {
+        runBoundsXMin = e.x ?? 0;
+      }
+      if ((e.x ?? 0) > runBoundsXMax - eventSize) {
+        runBoundsXMax = (e.x ?? 0) + eventSize;
+      }
+      if ((e.y ?? 0) < runBoundsYMin) {
+        runBoundsYMin = e.y ?? 0;
+      }
+      if ((e.y ?? 0) > runBoundsYMax - eventSize) {
+        runBoundsYMax = (e.y ?? 0) + eventSize;
+      }
+    });
+    run.arcs.forEach((arc) => {
+      arc.breakpoints.forEach((e) => {
         if ((e.x ?? 0) < runBoundsXMin) {
           runBoundsXMin = e.x ?? 0;
         }
-        if ((e.x ?? 0) > runBoundsXMax - eventSize) {
-          runBoundsXMax = (e.x ?? 0) + eventSize;
+        if ((e.x ?? 0) > runBoundsXMax) {
+          runBoundsXMax = e.x ?? 0;
         }
         if ((e.y ?? 0) < runBoundsYMin) {
           runBoundsYMin = e.y ?? 0;
         }
-        if ((e.y ?? 0) > runBoundsYMax - eventSize) {
-          runBoundsYMax = (e.y ?? 0) + eventSize;
+        if ((e.y ?? 0) > runBoundsYMax) {
+          runBoundsYMax = e.y ?? 0;
         }
       });
-      run.arcs.forEach((arc) => {
-        arc.breakpoints.forEach((e) => {
-          if ((e.x ?? 0) < runBoundsXMin) {
-            runBoundsXMin = e.x ?? 0;
-          }
-          if ((e.x ?? 0) > runBoundsXMax) {
-            runBoundsXMax = e.x ?? 0;
-          }
-          if ((e.y ?? 0) < runBoundsYMin) {
-            runBoundsYMin = e.y ?? 0;
-          }
-          if ((e.y ?? 0) > runBoundsYMax) {
-            runBoundsYMax = e.y ?? 0;
-          }
-        });
-      });
     });
+
+    // TODO: calculate the same for places
 
     const centerRunX = runBoundsXMin + (runBoundsXMax - runBoundsXMin) / 2;
     const centerRunY = runBoundsYMin + (runBoundsYMax - runBoundsYMin) / 2;
     const offsetX = Math.round(centerX - centerRunX);
     const offsetY = Math.round(centerY - centerRunY);
 
-    if (runs.length == 1) {
-      runs[0].offset = { x: offsetX, y: offsetY };
-      this.stateHandler.resetOffset(runs[0].offset);
-    } else {
-      runs.forEach((run) => {
-        run.elements.forEach((e) => {
-          e.x = (e.x ?? 0) + offsetX;
-          e.y = (e.y ?? 0) + offsetY;
-        });
-        run.arcs.forEach((arc) => {
-          arc.breakpoints.forEach((e) => {
-            e.x = (e.x ?? 0) + offsetX;
-            e.y = (e.y ?? 0) + offsetY;
-          });
-        });
+    run.transitions.forEach((e) => {
+      e.x = (e.x ?? 0) + offsetX;
+      e.y = (e.y ?? 0) + offsetY;
+    });
+    run.arcs.forEach((arc) => {
+      arc.breakpoints.forEach((e) => {
+        e.x = (e.x ?? 0) + offsetX;
+        e.y = (e.y ?? 0) + offsetY;
       });
-    }
+    });
   }
 }
 

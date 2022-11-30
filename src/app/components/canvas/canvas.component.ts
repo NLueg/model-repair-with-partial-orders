@@ -51,21 +51,12 @@ export class CanvasComponent implements OnChanges, OnDestroy {
   coordinateChanged = new EventEmitter<CoordinatesInfo[]>();
 
   private _sub: Subscription | undefined;
-  private _offsetSub: Subscription;
-  private _updateOffsetSub: Subscription;
 
   constructor(
     private _svgService: SvgService,
     private _displayService: DisplayService,
     private _stateHandler: StatehandlerService
-  ) {
-    this._offsetSub = this._displayService
-      .offsetInfoAdded()
-      .subscribe((val) => this._stateHandler.resetOffset(val));
-    this._updateOffsetSub = this._displayService
-      .offsetInfoUpdated()
-      .subscribe((val) => this._stateHandler.resetOffset(val));
-  }
+  ) {}
 
   ngOnDestroy(): void {
     this._sub?.unsubscribe();
@@ -133,9 +124,12 @@ export class CanvasComponent implements OnChanges, OnDestroy {
     }
 
     if (this._stateHandler.runIsMoved()) {
-      this._displayService.setOffsetInfo(
-        this._stateHandler.getGlobalChangesForRun()
-      );
+      /*
+        TODO: Currently now offset is supported!
+        this._displayService.setOffsetInfo(
+          this._stateHandler.getGlobalChangesForRun()
+        );
+       */
     }
   }
 

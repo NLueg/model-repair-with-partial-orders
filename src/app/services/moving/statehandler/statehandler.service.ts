@@ -17,7 +17,6 @@ export class StatehandlerService {
   private _globalChanges: Coordinates = { x: 0, y: 0 };
   private _localChanges: Coordinates = { x: 0, y: 0 };
   private _localChangesRun: Coordinates = { x: 0, y: 0 };
-  private _globalChangesRun: Coordinates = { x: 0, y: 0 };
   private _movedChildElement?: Draggable;
   private _activeNeighbourElement?: Draggable;
 
@@ -25,11 +24,6 @@ export class StatehandlerService {
     this._mouseMoveRun = false;
     this._childElementInFocus = false;
     this._runMoved = false;
-  }
-
-  public resetOffset(newCoordinates: Coordinates): void {
-    this._globalChangesRun.x = newCoordinates.x;
-    this._globalChangesRun.y = newCoordinates.y;
   }
 
   public initMouseDownForRun(event: MouseEvent): void {
@@ -61,8 +55,6 @@ export class StatehandlerService {
     if (this._localChangesRun.x !== 0 || this._localChangesRun.y !== 0) {
       this._runMoved = true;
     }
-    this._globalChangesRun.x += this._localChangesRun.x;
-    this._globalChangesRun.y += this._localChangesRun.y;
     this._localChanges = {
       x: event.offsetX - this._globalChanges.x,
       y: event.offsetY - this._globalChanges.y,
@@ -121,10 +113,6 @@ export class StatehandlerService {
 
   public getLocalChangesForRun(): Coordinates {
     return this._localChangesRun;
-  }
-
-  public getGlobalChangesForRun(): Coordinates {
-    return this._globalChangesRun;
   }
 
   public runIsMoving(): boolean {

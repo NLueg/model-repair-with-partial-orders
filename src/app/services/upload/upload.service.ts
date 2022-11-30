@@ -10,18 +10,18 @@ const allowedExtensions = ['txt', 'pn', 'pnml'];
   providedIn: 'root',
 })
 export class UploadService implements OnDestroy {
-  private _upload$: Subject<string>;
+  private upload$: Subject<string>;
 
   constructor(private toastr: ToastrService) {
-    this._upload$ = new Subject<string>();
+    this.upload$ = new Subject<string>();
   }
 
   ngOnDestroy(): void {
-    this._upload$.complete();
+    this.upload$.complete();
   }
 
   getUpload$(): Observable<string> {
-    return this._upload$.asObservable();
+    return this.upload$.asObservable();
   }
 
   checkFiles(files: FileList): boolean {
@@ -72,7 +72,7 @@ export class UploadService implements OnDestroy {
         if (fileExtension?.toLowerCase() === 'pnml') {
           content = getRunTextFromPnml(content);
         }
-        this._upload$.next(content);
+        this.upload$.next(content);
       };
 
       reader.readAsText(file);
