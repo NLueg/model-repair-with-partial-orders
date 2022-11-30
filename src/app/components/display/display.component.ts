@@ -1,61 +1,55 @@
-import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { map, Observable } from 'rxjs';
 
-import { Diagram } from '../../classes/diagram/diagram';
 import { DisplayService } from '../../services/display.service';
 import { LayoutService } from '../../services/layout.service';
-import { SvgService } from '../../services/svg.service';
+import { SvgService } from '../../services/svg/svg.service';
+import { CanvasComponent } from '../canvas/canvas.component';
 
 @Component({
   selector: 'app-display',
   templateUrl: './display.component.html',
   styleUrls: ['./display.component.scss'],
 })
-export class DisplayComponent implements OnDestroy {
-  @ViewChild('drawingArea') drawingArea: ElementRef<SVGElement> | undefined;
+export class DisplayComponent implements AfterViewInit {
+  svgElements$: Observable<SVGElement[]>;
+  @ViewChild('canvas') canvas: CanvasComponent | undefined;
+  @ViewChild('svg_wrapper') svgWrapper: ElementRef<HTMLElement> | undefined;
 
-  private _sub: Subscription;
-  private _diagram: Diagram | undefined;
+  ngAfterViewInit(): void {
+    const observer = new ResizeObserver((entries) => {
+      entries.forEach(() => {
+        this.update();
+      });
+    });
+    if (this.svgWrapper) observer.observe(this.svgWrapper.nativeElement);
+  }
 
   constructor(
     private _layoutService: LayoutService,
     private _svgService: SvgService,
     private _displayService: DisplayService
   ) {
-    this._sub = this._displayService.diagram$.subscribe((diagram) => {
-      this._diagram = diagram;
-      this._layoutService.layout(this._diagram);
-      this.draw();
-    });
-  }
-
-  ngOnDestroy(): void {
-    this._sub.unsubscribe();
-  }
-
-  private draw() {
-    if (this.drawingArea === undefined) {
-      console.debug('drawing area not ready yet');
-      return;
-    }
-
-    this.clearDrawingArea();
-    const elements = this._svgService.createSvgElements(
-      this._displayService.diagram
+    this.svgElements$ = this._displayService.currentRun$.pipe(
+      map((currentRun) => this._layoutService.layout(currentRun).run),
+      map((modifiedRun) => {
+        if (
+          this.canvas &&
+          this.canvas.drawingArea &&
+          (!modifiedRun.offset ||
+            (!modifiedRun.offset.x && !modifiedRun.offset.y))
+        ) {
+          const w = this.canvas.drawingArea.nativeElement.clientWidth;
+          const h = this.canvas.drawingArea.nativeElement.clientHeight;
+          if (w > 0 && h > 0)
+            this._layoutService.centerRuns([modifiedRun], w / 2, h / 2);
+        }
+        return this._svgService.createSvgElements(modifiedRun, false);
+      })
     );
-    for (const element of elements) {
-      this.drawingArea.nativeElement.appendChild(element);
-    }
   }
 
-  private clearDrawingArea() {
-    const drawingArea = this.drawingArea?.nativeElement;
-    if (drawingArea?.childElementCount === undefined) {
-      return;
-    }
-
-    while (drawingArea.childElementCount > 0) {
-      drawingArea.removeChild(drawingArea.lastChild as ChildNode);
-    }
+  private update(): void {
+    this._displayService.updateCurrentRun(this._displayService.currentRun);
   }
 }

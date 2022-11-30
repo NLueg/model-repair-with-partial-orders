@@ -1,1 +1,7 @@
-<svg #drawingArea class="canvas"></svg>
+<div #svg_wrapper>
+  <app-canvas
+    #canvas
+    *ngIf="svgElements$ | async as svgElements"
+    [svgElements]="svgElements"
+  ></app-canvas>
+</div>

@@ -1,0 +1,18 @@
+<h1 mat-dialog-title>Download Model</h1>
+
+<div class="content" mat-dialog-content>
+  <mat-form-field appearance="outline" class="textarea">
+    <mat-label class="input-label">
+      <span>Name</span>
+    </mat-label>
+
+    <input matInput [(ngModel)]="downloadName" />
+  </mat-form-field>
+
+  <div class="buttons"></div>
+</div>
+
+<div mat-dialog-actions>
+  <button mat-button (click)="closePopover()">Cancel</button>
+  <button mat-button (click)="download()">Save</button>
+</div>

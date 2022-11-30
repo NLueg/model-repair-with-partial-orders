@@ -1,50 +1,18 @@
-export class Element {
-  private _x: number;
-  private _y: number;
-  private _svgElement: SVGElement | undefined;
+import { Arc } from './arc';
 
-  constructor() {
-    this._x = 0;
-    this._y = 0;
-  }
+export interface Element {
+  x?: number;
+  y?: number;
+  label: string;
+  id: string;
+  incomingArcs: Arc[];
+  outgoingArcs: Arc[];
+  layerPos?: number;
+  currentRun?: boolean;
+}
 
-  get x(): number {
-    return this._x;
-  }
-
-  set x(value: number) {
-    this._x = value;
-  }
-
-  get y(): number {
-    return this._y;
-  }
-
-  set y(value: number) {
-    this._y = value;
-  }
-
-  public registerSvg(svg: SVGElement): void {
-    this._svgElement = svg;
-    this._svgElement.onmousedown = (event) => {
-      this.processMouseDown(event);
-    };
-    this._svgElement.onmouseup = (event) => {
-      this.processMouseUp(event);
-    };
-  }
-
-  private processMouseDown(event: MouseEvent) {
-    if (this._svgElement === undefined) {
-      return;
-    }
-    this._svgElement.setAttribute('fill', 'red');
-  }
-
-  private processMouseUp(event: MouseEvent) {
-    if (this._svgElement === undefined) {
-      return;
-    }
-    this._svgElement.setAttribute('fill', 'black');
-  }
+export function doesElementBelongToCurrentRun(element: Element): boolean {
+  if (element.currentRun) {
+    return true;
+  } else return false;
 }

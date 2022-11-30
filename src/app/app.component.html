@@ -3,33 +3,34 @@
   <a href="https://www.fernuni-hagen.de/ilovepetrinets/"
     ><h1>I <span class="red">❤</span> Petri Nets</h1></a
   >
-  <h2>Subtitle</h2>
+  <h2>... especially functioning nets 🛠️</h2>
 
-  <!--    Main content    -->
-  <app-display class="padding full-size"></app-display>
+  <main>
+    <app-display class="padding full-size"></app-display>
+    <button
+      mat-raised-button
+      (click)="resetSvgPositioning()"
+      class="reset-button"
+      color="primary"
+    >
+      Reset
+    </button>
+  </main>
 
   <div fxLayout="row" fxLayoutAlign="space-evenly start">
     <app-template-button
-      buttonText="Left button"
-      buttonIcon="lightbulb"
+      buttonText="Upload"
+      buttonIcon="upload"
+      (buttonAction)="openFileSelector()"
+      (dropAction)="dropFiles($event)"
     ></app-template-button>
-    <mat-form-field appearance="outline" class="textarea">
-      <mat-label>Source file</mat-label>
-      <textarea
-        matInput
-        cdkTextareaAutosize
-        cdkAutosizeMinRows="10"
-        cdkAutosizeMaxRows="20"
-        [formControl]="textareaFc"
-      ></textarea>
-    </mat-form-field>
-    <app-template-button
-      buttonText="Right button"
-      buttonIcon="grade"
-    ></app-template-button>
+
+    <app-source-file-textarea
+      [resetEvent]="resetPositioningSubject.asObservable()"
+    ></app-source-file-textarea>
+
+    <app-download></app-download>
   </div>
 
-  <!--  Footer  -->
-  <hr />
   <app-footer></app-footer>
 </div>

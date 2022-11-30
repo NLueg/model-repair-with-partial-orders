@@ -4,9 +4,12 @@
     class="interactive-square"
     fxLayout="row"
     fxLayoutAlign="center center"
-    (click)="processMouseClick($event)"
+    (click)="processMouseClick()"
     (mouseenter)="hoverStart($event)"
     (mouseleave)="hoverEnd($event)"
+    (drop)="processDrop($event)"
+    (dragover)="dragStart($event)"
+    (dragleave)="dragEnd($event)"
   >
     <mat-icon class="larger-icon">
       {{ buttonIcon }}

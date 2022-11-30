@@ -1,23 +1,33 @@
-.interactive-square {
-    width: 100px;
-    height: 100px;
-    border-color: dimgrey;
-    border-width: 5px;
-    border-style: solid;
-    margin-top: 14px;
-}
+:host {
+    .interactive-square {
+        width: 100px;
+        height: 100px;
+        border-color: dimgrey;
+        border-width: 5px;
+        border-style: solid;
+        margin-top: 14px;
+    }
 
-.mouse-hover {
-    border-color: black;
-}
+    .interactive-square * {
+        pointer-events: none;
+    }
 
-.larger-icon {
-    font-size: 40px;
-    width: 40px;
-    height: 40px;
-    color: dimgrey;
-}
+    .mouse-hover:not(.drag-hover) {
+        border-color: black;
+    }
 
-.mouse-hover .larger-icon {
-    color: black;
+    .drag-hover {
+        border-color: green;
+    }
+
+    .larger-icon {
+        font-size: 40px;
+        width: 40px;
+        height: 40px;
+        color: dimgrey;
+    }
+
+    .mouse-hover .larger-icon, .drag-hover .larger-icon {
+        color: black;
+    }
 }

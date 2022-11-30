@@ -1,7 +1,15 @@
-.footer-font {
-    text-align: right;
-    font-weight: 300;
-    font-size: 18px;
-    margin: 0;
-}
+:host {
+    hr {
+        border-color: lightgray;
+        margin-top: 30px;
+        margin-bottom: 30px;
+        width: 100%;
+    }
 
+    .footer-font {
+        text-align: right;
+        font-weight: 300;
+        font-size: 18px;
+        margin: 0;
+    }
+}

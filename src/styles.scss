@@ -1,8 +1,62 @@
 /* You can add global styles to this file, and also import other style files */
+@import '~ngx-toastr/toastr';
 
 html { height: 100%; }
 body {
     margin: 0;
     padding: 50px;
     font-family: "Courier New", sans-serif;
+}
+
+svg foreignObject {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    font-size: 0.8em;
+    text-align: center;
+    word-break: break-word;
+    pointer-events: none;
+
+    span {
+        display: -webkit-box;
+        max-width: 100px;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+
+        text-shadow: -2px 2px#ffffff, -2px 1px#ffffff, -2px 0px#ffffff, -2px -1px#ffffff,-2px -2px#ffffff,
+         -1px 2px#ffffff, -1px 1px#ffffff, -1px 0px#ffffff, -1px -1px#ffffff,-1px -2px#ffffff,
+         0px 2px#ffffff, 0px 1px#ffffff, 0px 0px#ffffff, 0px -1px#ffffff,0px -2px#ffffff,
+         1px 2px#ffffff, 1px 1px#ffffff, 1px 0px#ffffff, 1px -1px#ffffff,1px -2px#ffffff,
+         2px 2px#ffffff, 2px 1px#ffffff, 2px 0px#ffffff, 2px -1px#ffffff,2px -2px#ffffff,
+    }
+}
+
+
+:root {
+    --success-color: #4CAF50;
+    --warn-color: #ff9800;
+    --error-color: #f44336;
+
+    --spaces: 8px;
+    --spaces-x2: calc(var(--spaces) * 2);
+    --spaces-x3: calc(var(--spaces) * 3);
+    --spaces-x4: calc(var(--spaces) * 4);
+}
+
+.mat-tooltip {
+    white-space: pre-line;
+}
+
+.move-helper {
+    fill-opacity: 0;
+    position: relative;
+    z-index: 10;
+    &:hover {
+        fill-opacity: 0.5;
+        transition: fill-opacity .25s ease-out;
+    }
 }

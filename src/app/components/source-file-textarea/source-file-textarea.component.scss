@@ -1,0 +1,41 @@
+:host {
+    width: 100%;
+    max-width: 300px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .mat-form-field {
+        margin: 8px;
+        width: 100%;
+    }
+
+    .input-label {
+        display: inline-flex;
+        align-items: center;
+        column-gap: var(--spaces);
+
+        mat-icon {
+            font-size: 25px;
+
+            &.color_success {
+                color: var(--success-color);
+            }
+
+            &.color_warning {
+                color: var(--warn-color);
+            }
+
+            &.color_error {
+                color: var(--error-color);
+            }
+        }
+    }
+
+    .resolve-button {
+        position: absolute;
+        right: 0;
+        bottom: var(--spaces);
+    }
+}

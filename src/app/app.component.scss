@@ -1,33 +1,40 @@
-.red {
-    color: red;
-}
+:host {
+    .red {
+        color: red;
+    }
 
-h1 {
-    text-align: center;
-    font-weight: 300;
-    font-size: 30px;
-    margin-top: 0;
-    margin-bottom: 50px;
-}
+    h1 {
+        text-align: center;
+        font-weight: 300;
+        font-size: 30px;
+        margin-top: 0;
+        margin-bottom: 50px;
+    }
 
-a {
-    text-decoration: none;
-}
+    a {
+        text-decoration: none;
+    }
 
-a:visited {
-    color: black;
-}
+    a:visited {
+        color: black;
+    }
 
-h2 {
-    text-align: center;
-    font-weight: 300;
-    font-size: 18px;
-    margin-top: 0;
-}
+    h2 {
+        text-align: center;
+        font-weight: 300;
+        font-size: 18px;
+        margin-top: 0;
+    }
 
-hr {
-    border-color: lightgray;
-    margin-top: 30px;
-    margin-bottom: 30px;
-    width: 100%;
+  main {
+    position: relative;
+    border: 2px dotted lightgrey;
+    border-radius: var(--spaces);
+
+    .reset-button {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+    }
+  }
 }

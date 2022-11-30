@@ -3,6 +3,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DisplayComponent } from './display.component';
 
 describe('DisplayComponent', () => {
+  window.ResizeObserver =
+    window.ResizeObserver ||
+    jest.fn().mockImplementation(() => ({
+      disconnect: jest.fn(),
+      observe: jest.fn(),
+      unobserve: jest.fn(),
+    }));
   let component: DisplayComponent;
   let fixture: ComponentFixture<DisplayComponent>;
 

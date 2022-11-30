@@ -1,0 +1,43 @@
+:host {
+    h1 {
+        text-align: center;
+    }
+
+    .content {
+        display: flex;
+        flex-direction: column;
+
+        mat-radio-group {
+            display: flex;
+            flex-direction: column;
+            padding: var(--spaces);
+
+            mat-radio-button {
+                margin: var(--spaces) 0;
+                ::ng-deep .mat-radio-button-inner-container {
+                    width: 20px;
+                    height: 20px;
+                }
+            }
+        }
+        mat-checkbox{
+            padding: var(--spaces);
+            
+            ::ng-deep .mat-checkbox-inner-container {
+                width: 20px;
+                height: 20px;
+            }
+                  
+
+        }
+
+        ::ng-deep mat-form-field .mat-form-field-wrapper{
+            width: 300px;
+            padding-bottom: var(--spaces);
+        }
+    }
+
+    .mat-dialog-actions {
+        justify-content: space-around;
+    }
+}
