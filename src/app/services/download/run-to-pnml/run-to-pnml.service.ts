@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 
 import { Arc } from '../../../classes/diagram/arc';
 import { Element } from '../../../classes/diagram/element';
-import { Run } from '../../../classes/diagram/run';
+import { PetriNet } from '../../../classes/diagram/petriNet';
 import { LayoutService } from '../../layout.service';
 
 const encoding = '<?xml version="1.0" encoding="UTF-8"?>\n';
@@ -16,7 +16,7 @@ const transitionDimension = 40;
 export class RunToPnmlService {
   constructor(private _layoutService: LayoutService) {}
 
-  parseRunToPnml(name: string, run: Run): string {
+  parseRunToPnml(name: string, run: PetriNet): string {
     const { parsedRun, places } = this.layoutRun(run);
     const parsedPlaces = parsedRun.elements.filter((element) =>
       places.find((place) => element.label === place.label)
@@ -44,7 +44,7 @@ export class RunToPnmlService {
 </pnml>`;
   }
 
-  private layoutRun(run: Run): { parsedRun: Run; places: Element[] } {
+  private layoutRun(run: PetriNet): { parsedRun: PetriNet; places: Element[] } {
     const places: Element[] = run.arcs.map((arc) => {
       const name = getPlaceNameByArc(arc);
       return {
@@ -93,7 +93,6 @@ export class RunToPnmlService {
     const parsedRun = this._layoutService.layout({
       arcs: newArcArray,
       elements,
-      warnings: [],
       text: '',
     }).run;
 
@@ -146,7 +145,7 @@ function parsePlaces(places: Element[]): string {
     .join(`\n`);
 }
 
-function parseArcs(run: Run): string {
+function parseArcs(run: PetriNet): string {
   return run.arcs
     .map(
       (arc) => `               <arc id="A"

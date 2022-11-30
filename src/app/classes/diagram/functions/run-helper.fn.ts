@@ -8,21 +8,10 @@ import {
 } from '../../../services/parser/parsing-constants';
 import { Arc } from '../arc';
 import { Element } from '../element';
-import { Run } from '../run';
+import { PetriNet } from '../petriNet';
 import { getCycles } from './cycles.fn';
 
-/**
- * resolve warnings (removes duplicates and invalid arcs)
- */
-export function resolveWarnings(run: Run): Run {
-  removeCycles(run);
-
-  run.text = generateTextForRun(run);
-  run.warnings = [];
-  return run;
-}
-
-export function generateTextForRun(run: Run): string {
+export function generateTextForRun(run: PetriNet): string {
   const lines = [typeKey];
   lines.push(eventsAttribute);
   run.elements.forEach((e) => {
@@ -61,7 +50,7 @@ function getBreakpointInfo(arc: Arc): string {
   return text;
 }
 
-export function removeCycles(run: Run): void {
+export function removeCycles(run: PetriNet): void {
   getCycles(run).forEach((arc) => {
     return run.arcs.splice(
       run.arcs.findIndex((a) => a === arc),
@@ -71,7 +60,7 @@ export function removeCycles(run: Run): void {
   setRefs(run);
 }
 
-export function addElement(run: Run, element: Element): boolean {
+export function addElement(run: PetriNet, element: Element): boolean {
   const contained = run.elements.some((item) => item.id == element.id);
   if (contained) {
     return false;
@@ -81,7 +70,7 @@ export function addElement(run: Run, element: Element): boolean {
   return true;
 }
 
-export function addArc(run: Run, arc: Arc): boolean {
+export function addArc(run: PetriNet, arc: Arc): boolean {
   const contained = run.arcs.some(
     (item) => item.source == arc.source && item.target == arc.target
   );
@@ -97,7 +86,7 @@ export function addArc(run: Run, arc: Arc): boolean {
  * set references from arcs to transitions and vice versa
  * @returns all references found?
  */
-export function setRefs(run: Run): boolean {
+export function setRefs(run: PetriNet): boolean {
   let check = true;
   run.elements.forEach((e) => {
     e.incomingArcs = [];
@@ -135,19 +124,17 @@ export function copyElement(element: Element): Element {
     incomingArcs: [],
     outgoingArcs: [],
     id: element.id,
-    currentRun: element.currentRun,
   };
 }
 
-export function copyRun(run: Run, copyCoordinates: boolean): Run {
+export function copyRun(run: PetriNet, copyCoordinates: boolean): PetriNet {
   if (copyCoordinates) {
     return clonedeep(run);
   } else {
-    const targetRun: Run = {
+    const targetRun: PetriNet = {
       text: '',
       arcs: [],
       elements: [],
-      warnings: [],
     };
 
     run.elements.forEach((e) => {
@@ -165,11 +152,10 @@ export function copyRun(run: Run, copyCoordinates: boolean): Run {
   }
 }
 
-export function getEmptyRun(): Run {
+export function getEmptyNet(): PetriNet {
   return {
     text: emptyContent,
     arcs: [],
     elements: [],
-    warnings: [],
   };
 }

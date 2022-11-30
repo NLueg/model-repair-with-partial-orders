@@ -3,7 +3,6 @@ import { FormControl } from '@angular/forms';
 import {
   debounceTime,
   distinctUntilChanged,
-  first,
   Observable,
   Subscription,
 } from 'rxjs';
@@ -12,15 +11,11 @@ import {
   Coordinates,
   CoordinatesInfo,
 } from '../../classes/diagram/coordinates';
-import { resolveWarnings } from '../../classes/diagram/functions/run-helper.fn';
-import { isRunEmpty, Run } from '../../classes/diagram/run';
+import { isRunEmpty, PetriNet } from '../../classes/diagram/petriNet';
 import { DisplayService } from '../../services/display.service';
 import { ParserService } from '../../services/parser/parser.service';
 import { offsetAttribute } from '../../services/parser/parsing-constants';
-import {
-  exampleContent1,
-  exampleContent2,
-} from '../../services/upload/example-file';
+import { exampleContent1 } from '../../services/upload/example-file';
 import { UploadService } from '../../services/upload/upload.service';
 import {
   removeCoordinates,
@@ -44,12 +39,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
   private _resetEventSubscription?: Subscription;
 
   textareaFc: FormControl;
-
-  hasPreviousRun$: Observable<boolean>;
-  hasNextRun$: Observable<boolean>;
   isCurrentRunEmpty$: Observable<boolean>;
-  getCurrentRunIndex$: Observable<number>;
-  getRunCount$: Observable<number>;
 
   @Input()
   resetEvent?: Observable<void>;
@@ -64,24 +54,8 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
   ) {
     this.textareaFc = new FormControl();
 
-    this.hasPreviousRun$ = this._displayService
-      .hasPreviousRun$()
-      .pipe(distinctUntilChanged());
-
-    this.hasNextRun$ = this._displayService
-      .hasNextRun$()
-      .pipe(distinctUntilChanged());
-
     this.isCurrentRunEmpty$ = this._displayService
       .isCurrentRunEmpty$()
-      .pipe(distinctUntilChanged());
-
-    this.getCurrentRunIndex$ = this._displayService
-      .getCurrentRunIndex$()
-      .pipe(distinctUntilChanged());
-
-    this.getRunCount$ = this._displayService
-      .getRunCount$()
       .pipe(distinctUntilChanged());
 
     this._sub = this.textareaFc.valueChanges
@@ -109,49 +83,12 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
       this.removeOffset()
     );
     this.processNewSource(exampleContent1);
-    this.processNewSource(exampleContent2);
-    this.previousRun();
   }
 
   ngOnDestroy(): void {
     this._resetEventSubscription?.unsubscribe();
     this._sub.unsubscribe();
     this._fileSub.unsubscribe();
-  }
-
-  nextRun(): void {
-    const run = this._displayService.setNextRun();
-    this.updateShownRun(run);
-  }
-
-  previousRun(): void {
-    const run = this._displayService.setPreviousRun();
-    this.updateShownRun(run);
-  }
-
-  removeRun(): void {
-    const run = this._displayService.removeCurrentRun();
-    this.updateShownRun(run);
-  }
-
-  addRun(): void {
-    const run = this._displayService.addEmptyRun();
-    this.updateShownRun(run);
-  }
-
-  reset(): void {
-    this._displayService.clearRuns();
-
-    this._displayService.currentRun$.pipe(first()).subscribe((currentRun) => {
-      this.updateShownRun(currentRun);
-    });
-  }
-
-  resolveWarnings(): void {
-    this._displayService.currentRun$.pipe(first()).subscribe((currentRun) => {
-      currentRun = resolveWarnings(currentRun);
-      this.updateShownRun(currentRun, true);
-    });
   }
 
   private processSourceChange(newSource: string): void {
@@ -163,7 +100,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     if (result.offset) {
       this._displayService.updateOffsetInfo(result.offset);
     }
-    this._displayService.updateCurrentRun(result);
+    this._displayService.setNewNet(result);
   }
 
   private processNewSource(newSource: string): void {
@@ -172,7 +109,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     this.updateValidation(result, errors);
 
     if (!result) return;
-    this._displayService.registerRun(result);
+    this._displayService.setNewNet(result);
     this.textareaFc.setValue(newSource);
   }
 
@@ -234,22 +171,20 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     this._displayService.setOffsetInfo({ x: 0, y: 0 });
   }
 
-  private updateShownRun(run: Run, emitEvent = true): void {
+  private updateShownRun(run: PetriNet, emitEvent = true): void {
     this.textareaFc.setValue(run.text, { emitEvent: emitEvent });
     this.updateValidation(run);
   }
 
   private updateValidation(
-    run: Run | null,
+    run: PetriNet | null,
     errors: Set<string> = new Set<string>()
   ): void {
-    this.runHint = [...errors, ...(run ? run.warnings : [])].join('\n');
+    this.runHint = [...errors].join('\n');
 
     if (!run || errors.size > 0) {
       this.textareaFc.setErrors({ 'invalid run': true });
       this.runValidationStatus = 'error';
-    } else if (run.warnings.length > 0) {
-      this.runValidationStatus = 'warn';
     } else if (!isRunEmpty(run)) {
       this.runValidationStatus = 'success';
     } else {

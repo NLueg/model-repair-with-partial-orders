@@ -13,7 +13,7 @@ import {
   hasTransitiveArcs,
   removeTransitives,
 } from '../../classes/diagram/functions/transitives.fn';
-import { Run } from '../../classes/diagram/run';
+import { PetriNet } from '../../classes/diagram/petriNet';
 import {
   arcsAttribute,
   eventsAttribute,
@@ -33,13 +33,12 @@ export class ParserService {
   readonly breakpointRegex = new RegExp('\\[\\d+\\]');
   readonly offsetRegex = new RegExp('-?\\d+ -?\\d+');
 
-  parse(content: string, errors: Set<string>): Run | null {
+  parse(content: string, errors: Set<string>): PetriNet | null {
     const contentLines = content.split('\n');
-    const run: Run = {
+    const run: PetriNet = {
       text: content,
       arcs: [],
       elements: [],
-      warnings: [],
       offset: { x: 0, y: 0 },
     };
 
@@ -107,9 +106,6 @@ export class ParserService {
                 id: id,
               })
             ) {
-              run.warnings.push(
-                `File contains duplicate events (${trimmedLine.split(' ')[0]})`
-              );
               this.toastr.warning(
                 `File contains duplicate events`,
                 `Duplicate events are ignored`
@@ -157,9 +153,6 @@ export class ParserService {
                   breakpoints: breakpoints,
                 })
               ) {
-                run.warnings.push(
-                  `File contains duplicate arc (${source} ${target})`
-                );
                 this.toastr.warning(
                   `File contains duplicate arcs`,
                   `Duplicate arcs are ignored`
@@ -191,7 +184,6 @@ export class ParserService {
                 }
               }
             } else {
-              run.warnings.push(`File contains invalid arcs`);
               this.toastr.warning(
                 `Invalid arcs are ignored`,
                 `File contains invalid arcs`
@@ -229,7 +221,6 @@ export class ParserService {
     }
     if (fileContainsTransitions && fileContainsArcs) {
       if (!setRefs(run)) {
-        run.warnings.push(`File contains arcs for non existing events`);
         this.toastr.warning(
           `File contains arcs for non existing events`,
           `Invalid arcs are ignored`
@@ -237,7 +228,6 @@ export class ParserService {
       }
       if (hasCycles(run)) {
         removeCycles(run);
-        run.warnings.push(`File contains cyclic arcs`);
         this.toastr.warning(
           `Cyclic arcs are ignored`,
           `File contains cyclic arcs`
@@ -245,7 +235,6 @@ export class ParserService {
       }
       if (hasTransitiveArcs(run)) {
         removeTransitives(run);
-        run.warnings.push(`File contains transitive arcs`);
         this.toastr.warning(
           `Transitive arcs are ignored`,
           `File contains transitive arcs`

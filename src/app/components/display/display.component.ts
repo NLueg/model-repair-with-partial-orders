@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { map, Observable } from 'rxjs';
 
 import { DisplayService } from '../../services/display.service';
@@ -11,26 +11,17 @@ import { CanvasComponent } from '../canvas/canvas.component';
   templateUrl: './display.component.html',
   styleUrls: ['./display.component.scss'],
 })
-export class DisplayComponent implements AfterViewInit {
+export class DisplayComponent {
   svgElements$: Observable<SVGElement[]>;
   @ViewChild('canvas') canvas: CanvasComponent | undefined;
   @ViewChild('svg_wrapper') svgWrapper: ElementRef<HTMLElement> | undefined;
-
-  ngAfterViewInit(): void {
-    const observer = new ResizeObserver((entries) => {
-      entries.forEach(() => {
-        this.update();
-      });
-    });
-    if (this.svgWrapper) observer.observe(this.svgWrapper.nativeElement);
-  }
 
   constructor(
     private _layoutService: LayoutService,
     private _svgService: SvgService,
     private _displayService: DisplayService
   ) {
-    this.svgElements$ = this._displayService.currentRun$.pipe(
+    this.svgElements$ = this._displayService.getPetriNet$().pipe(
       map((currentRun) => this._layoutService.layout(currentRun).run),
       map((modifiedRun) => {
         if (
@@ -47,9 +38,5 @@ export class DisplayComponent implements AfterViewInit {
         return this._svgService.createSvgElements(modifiedRun, false);
       })
     );
-  }
-
-  private update(): void {
-    this._displayService.updateCurrentRun(this._displayService.currentRun);
   }
 }

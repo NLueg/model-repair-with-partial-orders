@@ -1,12 +1,12 @@
 import { Arc } from '../arc';
 import { Element } from '../element';
-import { Run } from '../run';
+import { PetriNet } from '../petriNet';
 
-export function hasCycles(run: Run): boolean {
+export function hasCycles(run: PetriNet): boolean {
   return getCycles(run).length > 0;
 }
 
-export function getCycles(run: Run): Arc[] {
+export function getCycles(run: PetriNet): Arc[] {
   const visitedArcs = new Set<Arc>();
   const cyclicArcs = new Array<Arc>();
 
@@ -32,7 +32,7 @@ export function getCycles(run: Run): Arc[] {
  * @param cyclicArcs last arcs when a cycle occurs
  */
 function checkArcCycle(
-  currentRun: Run,
+  currentRun: PetriNet,
   arc: Arc,
   visitedArcs: Set<Arc>,
   visitedTransitions: Set<Element>,

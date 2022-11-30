@@ -6,12 +6,9 @@ import {
   doesArcBelongToCurrentRun,
 } from '../../classes/diagram/arc';
 import { Coordinates } from '../../classes/diagram/coordinates';
-import {
-  doesElementBelongToCurrentRun,
-  Element,
-} from '../../classes/diagram/element';
+import { Element } from '../../classes/diagram/element';
 import { getIntersection } from '../../classes/diagram/functions/display.fn';
-import { Run } from '../../classes/diagram/run';
+import { PetriNet } from '../../classes/diagram/petriNet';
 import {
   breakpointPositionAttribute,
   breakpointTrail,
@@ -27,7 +24,7 @@ import {
   providedIn: 'root',
 })
 export class SvgService {
-  public createSvgElements(run: Run, merge: boolean): Array<SVGElement> {
+  public createSvgElements(run: PetriNet, merge: boolean): Array<SVGElement> {
     const result: Array<SVGElement> = [];
     const offset = run.offset ?? { x: 0, y: 0 };
 

@@ -1,12 +1,12 @@
 import { Arc } from '../arc';
-import { Run } from '../run';
+import { PetriNet } from '../petriNet';
 import { copyRun } from './run-helper.fn';
 
-export function hasTransitiveArcs(run: Run): boolean {
+export function hasTransitiveArcs(run: PetriNet): boolean {
   return getTransitiveArcs(run).size > 0;
 }
 
-export function getTransitiveArcs(run: Run): Set<Arc> {
+export function getTransitiveArcs(run: PetriNet): Set<Arc> {
   const localRun = copyRun(run, false);
   const checkedArcs = new Set<Arc>();
   const possibleArcs: Arc[] = [];
@@ -69,7 +69,7 @@ export function getTransitiveArcs(run: Run): Set<Arc> {
  * checks an arc sequence for cycles
  * @param currentRun run to parse
  */
-export function removeTransitives(currentRun: Run): void {
+export function removeTransitives(currentRun: PetriNet): void {
   Array.from(getTransitiveArcs(currentRun)).forEach((e) => {
     currentRun.arcs = currentRun.arcs.filter(
       (element) => element.source !== e.source || element.target !== e.target

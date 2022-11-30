@@ -5,9 +5,9 @@ import { Element } from '../classes/diagram/element';
 import { hasCycles } from '../classes/diagram/functions/cycles.fn';
 import {
   copyRun,
-  getEmptyRun,
+  getEmptyNet,
 } from '../classes/diagram/functions/run-helper.fn';
-import { Run } from '../classes/diagram/run';
+import { PetriNet } from '../classes/diagram/petriNet';
 import { StatehandlerService } from './moving/statehandler/statehandler.service';
 import { eventSize } from './svg/svg-constants';
 
@@ -25,8 +25,11 @@ export class LayoutService {
 
   constructor(private stateHandler: StatehandlerService) {}
 
-  layout(run: Run, positionOffset = 0): { run: Run; diagrammHeight: number } {
-    let runClone: Run = copyRun(run, true);
+  layout(
+    run: PetriNet,
+    positionOffset = 0
+  ): { run: PetriNet; diagrammHeight: number } {
+    let runClone: PetriNet = copyRun(run, true);
     let diagrammHeight = 0;
     //let diagrammWidth = 0;
     //if run hast no cycles use sugiyama layout
@@ -39,7 +42,7 @@ export class LayoutService {
       diagrammHeight = this.calculatePosition(layers, positionOffset);
       //diagrammWidht = layers.length * LayoutService.LAYER_WIDTH;
     } else {
-      runClone = getEmptyRun();
+      runClone = getEmptyNet();
     }
 
     return { run: runClone, diagrammHeight };
@@ -52,7 +55,7 @@ export class LayoutService {
    * @param run run for which the layout is to be determined
    * @returns layers with elements and breakpoints
    */
-  private assignLayers(run: Run): Array<Element[]> {
+  private assignLayers(run: PetriNet): Array<Element[]> {
     const layers = new Array<Element[]>();
     const elements = [...run.elements];
     let arcs = run.arcs;
@@ -101,7 +104,7 @@ export class LayoutService {
    * @param currentRun run to parse
    * @param layers layers with elements and breakpoints
    */
-  private addBreakpoints(currentRun: Run, layers: Array<Layer[]>): void {
+  private addBreakpoints(currentRun: PetriNet, layers: Array<Layer[]>): void {
     for (let i = 0; i < layers.length - 1; i++) {
       layers[i]
         .flatMap((element) =>
@@ -147,7 +150,7 @@ export class LayoutService {
    * @param currentRun run to parse
    * @param layers layers with elements and breakpoints
    */
-  private minimizeCrossing(currentRun: Run, layers: Array<Layer[]>): void {
+  private minimizeCrossing(currentRun: PetriNet, layers: Array<Layer[]>): void {
     layers.forEach((layer, index) => {
       const layerTmp = new Array<Layer>();
       this.reorderLayer(currentRun, layers, layer, index, 0, layerTmp);
@@ -198,7 +201,7 @@ export class LayoutService {
    * @returns number of crossings
    */
   private reorderLayer(
-    currentRun: Run,
+    currentRun: PetriNet,
     layers: Array<Layer[]>,
     layer: Layer[],
     layerIndex: number,
@@ -256,7 +259,7 @@ export class LayoutService {
    * @returns number of crossings
    */
   private countCrossings(
-    currentRun: Run,
+    currentRun: PetriNet,
     layers: Array<Layer[]>,
     layerIndex: number
   ): number {
@@ -295,7 +298,7 @@ export class LayoutService {
   }
 
   private getElementArrowsFromBreakpoint(
-    currentRun: Run,
+    currentRun: PetriNet,
     connections: ElementArrows,
     breakpoint: Breakpoint,
     layerInfo: LayerInfoParameter
@@ -463,7 +466,7 @@ export class LayoutService {
     return height;
   }
 
-  public centerRuns(runs: Run[], centerX: number, centerY: number): void {
+  public centerRuns(runs: PetriNet[], centerX: number, centerY: number): void {
     let runBoundsXMin = Math.min(),
       runBoundsXMax = Math.max(),
       runBoundsYMin = Math.min(),

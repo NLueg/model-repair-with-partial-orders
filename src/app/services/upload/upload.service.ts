@@ -4,7 +4,7 @@ import { Observable, Subject } from 'rxjs';
 
 import { getRunTextFromPnml } from './pnml/pnml-to-run.fn';
 
-const allowedExtensions = ['ps', 'pnml'];
+const allowedExtensions = ['txt', 'pn', 'pnml'];
 
 @Injectable({
   providedIn: 'root',
