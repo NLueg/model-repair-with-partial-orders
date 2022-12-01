@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ToastrService } from 'ngx-toastr';
 
-import { exampleContent1 } from '../upload/example-file';
+import { exampleLog, examplePetriNet } from '../upload/example-file';
 import { ParserService } from './parser.service';
 
 describe('ParserService', () => {
@@ -18,180 +18,497 @@ describe('ParserService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should parse example content', () => {
+  it('parseNet should parse example petri net', () => {
     const errors = new Set<string>();
-    const result = service.parse(exampleContent1, errors);
+    const result = service.parsePetriNet(examplePetriNet, errors);
 
     expect(result).toEqual({
       arcs: [
         {
           breakpoints: [],
-          source: '1',
-          target: '2',
+          source: 'p1',
+          target: 'a',
         },
         {
           breakpoints: [],
-          source: '2',
-          target: '3',
+          source: 'a',
+          target: 'p2',
         },
         {
           breakpoints: [],
-          source: '2',
-          target: '5',
+          source: 'p2',
+          target: 'c',
         },
         {
           breakpoints: [],
-          source: '3',
-          target: '4',
+          source: 'c',
+          target: 'p5',
         },
         {
           breakpoints: [],
-          source: '4',
-          target: '7',
+          source: 'p5',
+          target: 'a',
         },
         {
           breakpoints: [],
-          source: '5',
-          target: '6',
+          source: 'p2',
+          target: 'b',
         },
         {
           breakpoints: [],
-          source: '6',
-          target: '7',
+          source: 'b',
+          target: 'p3',
+        },
+        {
+          breakpoints: [],
+          source: 'p3',
+          target: 'd',
+        },
+        {
+          breakpoints: [],
+          source: 'd',
+          target: 'p7',
+        },
+        {
+          breakpoints: [],
+          source: 'p7',
+          target: 'd',
+        },
+        {
+          breakpoints: [],
+          source: 'p7',
+          target: 'c',
+        },
+        {
+          breakpoints: [],
+          source: 'c',
+          target: 'p7',
+        },
+        {
+          breakpoints: [],
+          source: 'd',
+          target: 'p6',
+        },
+        {
+          breakpoints: [],
+          source: 'c',
+          target: 'p4',
+        },
+        {
+          breakpoints: [],
+          source: 'p4',
+          target: 'e',
+        },
+        {
+          breakpoints: [],
+          source: 'e',
+          target: 'p6',
+        },
+        {
+          breakpoints: [],
+          source: 'p6',
+          target: 'f',
         },
       ],
-      elements: [
+      places: [
         {
-          id: '1',
+          id: 'p1',
           incomingArcs: [],
-          label: 'Reise planen',
           outgoingArcs: [
             {
               breakpoints: [],
-              source: '1',
-              target: '2',
+              source: 'p1',
+              target: 'a',
             },
           ],
+          tokens: 2,
+          type: 'place',
         },
         {
-          id: '2',
+          id: 'p2',
           incomingArcs: [
             {
               breakpoints: [],
-              source: '1',
-              target: '2',
+              source: 'a',
+              target: 'p2',
             },
           ],
-          label: 'Prüfen',
           outgoingArcs: [
             {
               breakpoints: [],
-              source: '2',
-              target: '3',
+              source: 'p2',
+              target: 'c',
             },
             {
               breakpoints: [],
-              source: '2',
-              target: '5',
+              source: 'p2',
+              target: 'b',
             },
           ],
+          tokens: 0,
+          type: 'place',
         },
         {
-          id: '3',
+          id: 'p3',
           incomingArcs: [
             {
               breakpoints: [],
-              source: '2',
-              target: '3',
+              source: 'b',
+              target: 'p3',
             },
           ],
-          label: 'Flug suchen',
           outgoingArcs: [
             {
               breakpoints: [],
-              source: '3',
-              target: '4',
+              source: 'p3',
+              target: 'd',
             },
           ],
+          tokens: 1,
+          type: 'place',
         },
         {
-          id: '4',
+          id: 'p4',
           incomingArcs: [
             {
               breakpoints: [],
-              source: '3',
-              target: '4',
+              source: 'c',
+              target: 'p4',
             },
           ],
-          label: 'Flug buchen',
           outgoingArcs: [
             {
               breakpoints: [],
-              source: '4',
-              target: '7',
+              source: 'p4',
+              target: 'e',
             },
           ],
+          tokens: 2,
+          type: 'place',
         },
         {
-          id: '5',
+          id: 'p5',
           incomingArcs: [
             {
               breakpoints: [],
-              source: '2',
-              target: '5',
+              source: 'c',
+              target: 'p5',
             },
           ],
-          label: 'Hotel suchen',
           outgoingArcs: [
             {
               breakpoints: [],
-              source: '5',
-              target: '6',
+              source: 'p5',
+              target: 'a',
             },
           ],
+          tokens: 1,
+          type: 'place',
         },
         {
-          id: '6',
+          id: 'p6',
           incomingArcs: [
             {
               breakpoints: [],
-              source: '5',
-              target: '6',
+              source: 'd',
+              target: 'p6',
+            },
+            {
+              breakpoints: [],
+              source: 'e',
+              target: 'p6',
             },
           ],
-          label: 'Hotel buchen',
           outgoingArcs: [
             {
               breakpoints: [],
-              source: '6',
-              target: '7',
+              source: 'p6',
+              target: 'f',
             },
           ],
+          tokens: 0,
+          type: 'place',
         },
         {
-          id: '7',
+          id: 'p7',
           incomingArcs: [
             {
               breakpoints: [],
-              source: '4',
-              target: '7',
+              source: 'd',
+              target: 'p7',
             },
             {
               breakpoints: [],
-              source: '6',
-              target: '7',
+              source: 'c',
+              target: 'p7',
             },
           ],
-          label: 'Unterlagen speichern',
-          outgoingArcs: [],
+          outgoingArcs: [
+            {
+              breakpoints: [],
+              source: 'p7',
+              target: 'd',
+            },
+            {
+              breakpoints: [],
+              source: 'p7',
+              target: 'c',
+            },
+          ],
+          tokens: 1,
+          type: 'place',
         },
       ],
-      offset: {
-        x: 0,
-        y: 0,
-      },
-      text: '.type run\n.events\n1 | Reise planen\n2 | Prüfen\n3 | Flug suchen\n4 | Flug buchen\n5 | Hotel suchen\n6 | Hotel buchen\n7 | Unterlagen speichern\n.arcs\n1 2\n2 3\n2 5\n3 4\n4 7\n5 6\n6 7\n',
-      warnings: [],
+      text: '.type pn\n.transitions\na a\nb b\nc c\nd d\ne e\nf f\n.places\np1 2\np2 0\np3 1\np4 2\np5 1\np6 0\np7 1\n.arcs\np1 a\na p2\np2 c\nc p5\np5 a\np2 b\nb p3\np3 d\nd p7\np7 d\np7 c\nc p7\nd p6\nc p4\np4 e 3\ne p6\np6 f 3\n',
+      transitions: [
+        {
+          id: 'a',
+          incomingArcs: [
+            {
+              breakpoints: [],
+              source: 'p1',
+              target: 'a',
+            },
+            {
+              breakpoints: [],
+              source: 'p5',
+              target: 'a',
+            },
+          ],
+          label: 'a',
+          outgoingArcs: [
+            {
+              breakpoints: [],
+              source: 'a',
+              target: 'p2',
+            },
+          ],
+          type: 'transition',
+        },
+        {
+          id: 'b',
+          incomingArcs: [
+            {
+              breakpoints: [],
+              source: 'p2',
+              target: 'b',
+            },
+          ],
+          label: 'b',
+          outgoingArcs: [
+            {
+              breakpoints: [],
+              source: 'b',
+              target: 'p3',
+            },
+          ],
+          type: 'transition',
+        },
+        {
+          id: 'c',
+          incomingArcs: [
+            {
+              breakpoints: [],
+              source: 'p2',
+              target: 'c',
+            },
+            {
+              breakpoints: [],
+              source: 'p7',
+              target: 'c',
+            },
+          ],
+          label: 'c',
+          outgoingArcs: [
+            {
+              breakpoints: [],
+              source: 'c',
+              target: 'p5',
+            },
+            {
+              breakpoints: [],
+              source: 'c',
+              target: 'p7',
+            },
+            {
+              breakpoints: [],
+              source: 'c',
+              target: 'p4',
+            },
+          ],
+          type: 'transition',
+        },
+        {
+          id: 'd',
+          incomingArcs: [
+            {
+              breakpoints: [],
+              source: 'p3',
+              target: 'd',
+            },
+            {
+              breakpoints: [],
+              source: 'p7',
+              target: 'd',
+            },
+          ],
+          label: 'd',
+          outgoingArcs: [
+            {
+              breakpoints: [],
+              source: 'd',
+              target: 'p7',
+            },
+            {
+              breakpoints: [],
+              source: 'd',
+              target: 'p6',
+            },
+          ],
+          type: 'transition',
+        },
+        {
+          id: 'e',
+          incomingArcs: [
+            {
+              breakpoints: [],
+              source: 'p4',
+              target: 'e',
+            },
+          ],
+          label: 'e',
+          outgoingArcs: [
+            {
+              breakpoints: [],
+              source: 'e',
+              target: 'p6',
+            },
+          ],
+          type: 'transition',
+        },
+        {
+          id: 'f',
+          incomingArcs: [
+            {
+              breakpoints: [],
+              source: 'p6',
+              target: 'f',
+            },
+          ],
+          label: 'f',
+          outgoingArcs: [],
+          type: 'transition',
+        },
+      ],
+    });
+  });
+
+  it('parseLog should parse example log', () => {
+    const errors = new Set<string>();
+    const result = service.parseLog(exampleLog, errors);
+
+    expect(result).toEqual({
+      arcs: [
+        {
+          breakpoints: [],
+          source: 'e1',
+          target: 'e3',
+        },
+        {
+          breakpoints: [],
+          source: 'e2',
+          target: 'e3',
+        },
+        {
+          breakpoints: [],
+          source: 'e3',
+          target: 'e4',
+        },
+        {
+          breakpoints: [],
+          source: 'e4',
+          target: 'e5',
+        },
+        {
+          breakpoints: [],
+          source: 'e5',
+          target: 'e6',
+        },
+        {
+          breakpoints: [],
+          source: 'e6',
+          target: 'e8',
+        },
+        {
+          breakpoints: [],
+          source: 'e3',
+          target: 'e7',
+        },
+        {
+          breakpoints: [],
+          source: 'e7',
+          target: 'e8',
+        },
+      ],
+      text: '.type log\n.events\ne1 a\ne2 d\ne3 c\ne4 a\ne5 b\ne6 d\ne7 e\ne8 f\n.arcs\ne1 e3\ne2 e3\ne3 e4\ne4 e5\ne5 e6\ne6 e8\ne3 e7\ne7 e8\n',
+      transitions: [
+        {
+          id: 'e1',
+          incomingArcs: [],
+          label: 'a',
+          outgoingArcs: [],
+          type: 'transition',
+        },
+        {
+          id: 'e2',
+          incomingArcs: [],
+          label: 'd',
+          outgoingArcs: [],
+          type: 'transition',
+        },
+        {
+          id: 'e3',
+          incomingArcs: [],
+          label: 'c',
+          outgoingArcs: [],
+          type: 'transition',
+        },
+        {
+          id: 'e4',
+          incomingArcs: [],
+          label: 'a',
+          outgoingArcs: [],
+          type: 'transition',
+        },
+        {
+          id: 'e5',
+          incomingArcs: [],
+          label: 'b',
+          outgoingArcs: [],
+          type: 'transition',
+        },
+        {
+          id: 'e6',
+          incomingArcs: [],
+          label: 'd',
+          outgoingArcs: [],
+          type: 'transition',
+        },
+        {
+          id: 'e7',
+          incomingArcs: [],
+          label: 'e',
+          outgoingArcs: [],
+          type: 'transition',
+        },
+        {
+          id: 'e8',
+          incomingArcs: [],
+          label: 'f',
+          outgoingArcs: [],
+          type: 'transition',
+        },
+      ],
     });
   });
 });

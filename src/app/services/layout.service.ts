@@ -1,17 +1,15 @@
 import { Injectable } from '@angular/core';
 
 import { Arc, Breakpoint } from '../classes/diagram/arc';
-import { hasCycles } from '../classes/diagram/functions/cycles.fn';
+import { ConcreteElementWithArcs } from '../classes/diagram/draggable';
 import {
   copyRun,
-  getEmptyNet,
-} from '../classes/diagram/functions/run-helper.fn';
+  getElementsWithArcs,
+} from '../classes/diagram/functions/net-helper.fn';
 import { PetriNet } from '../classes/diagram/petri-net';
-import { Transition } from '../classes/diagram/transition';
-import { StatehandlerService } from './moving/statehandler/statehandler.service';
 import { eventSize } from './svg/svg-constants';
 
-type Layer = Transition | Breakpoint;
+type Layer = ConcreteElementWithArcs | Breakpoint;
 
 @Injectable({
   providedIn: 'root',
@@ -23,72 +21,81 @@ export class LayoutService {
   private static readonly ELEMENT_HEIGHT = 80;
   private static readonly LAYER_WIDTH = 100;
 
-  constructor(private stateHandler: StatehandlerService) {}
-
   layout(
     run: PetriNet,
     positionOffset = 0
   ): { run: PetriNet; diagrammHeight: number } {
-    let runClone: PetriNet = copyRun(run, true);
-    let diagrammHeight = 0;
-    //let diagrammWidth = 0;
-    //if run hast no cycles use sugiyama layout
-    if (!hasCycles(runClone)) {
+    const runClone: PetriNet = copyRun(run, true);
+    const diagrammHeight = 0;
+    // let diagrammWidth = 0;
+    // if run hast no cycles use sugiyama layout
+    /* if (!hasCycles(runClone)) {
+      console.warn(runClone);
       const layers: Array<Layer[]> = this.assignLayers(runClone);
+      console.warn(layers);
       this.addBreakpoints(runClone, layers);
+      console.warn('addBreakpoints');
       this.setFixedLayerPos(layers);
-      this.minimizeCrossing(runClone, layers);
+      console.warn('setFixedLayerPos');
+      // this.minimizeCrossing(runClone, layers);
+      console.warn('minimizeCrossing');
       this.updateLayerPos(layers);
+      console.warn('updateLayerPos');
       diagrammHeight = this.calculatePosition(layers, positionOffset);
-      //diagrammWidht = layers.length * LayoutService.LAYER_WIDTH;
     } else {
       runClone = getEmptyNet();
-    }
+    } */
 
     return { run: runClone, diagrammHeight };
   }
 
   /**
-   * Sets the layer of all elements of the run
+   * Sets the layer of all elements of the net
    * All elements without incoming arcs are assigned to the next layer
    * The outgoing arcs of all elements in the current layer are deleted to identify the next layer
-   * @param run run for which the layout is to be determined
+   * @param net net for which the layout is to be determined
    * @returns layers with elements and breakpoints
    */
-  private assignLayers(run: PetriNet): Array<Transition[]> {
-    const layers = new Array<Transition[]>();
-    const elements = [...run.transitions];
-    let arcs = run.arcs;
+  private assignLayers(net: PetriNet): Array<ConcreteElementWithArcs[]> {
+    const layers = new Array<ConcreteElementWithArcs[]>();
+    const elements = getElementsWithArcs(net);
+    let arcs = net.arcs;
 
     while (elements.length > 0) {
-      const layer = new Array<Transition>();
-      const elementsWithIncomingArcs = arcs
-        .filter((a) => elements.find((e) => e.id == a.source))
-        .map((a) => elements.find((element) => element.id === a.target));
-      //filter all elements without incoming arcs => add them to the current layer and remove their outgoing arcs
-      elements
-        .filter(
-          (element) =>
-            elementsWithIncomingArcs.findIndex(
-              (elementWithIncomingArcs) =>
-                elementWithIncomingArcs?.id === element.id
-            ) === -1
-        )
-        .forEach((element) => {
-          layer.push(element);
+      const layer = new Array<ConcreteElementWithArcs>();
 
-          const indexOfElement = elements.findIndex(
-            (innerElement) => innerElement.id === element.id
-          );
-          elements.splice(indexOfElement, 1);
+      // Gets all elements which are a source of an arc
+      const arcsWithExistingElements = arcs.filter((a) =>
+        elements.find((e) => e.id === a.source)
+      );
 
-          arcs = arcs.filter((a) => {
-            const indexInOutgoingArcs = element.outgoingArcs.findIndex(
+      const elementsWithIncomingArcs = arcsWithExistingElements.map((a) =>
+        elements.find((element) => element.id === a.target)
+      );
+
+      // filter all elements without incoming arcs => add them to the current layer and remove their outgoing arcs
+
+      const elementsWithoutIncomingArcs = elements.filter(
+        (element) => !elementsWithIncomingArcs.includes(element)
+      );
+      console.warn(elementsWithIncomingArcs);
+      console.warn(elementsWithoutIncomingArcs);
+      elementsWithoutIncomingArcs.forEach((element) => {
+        layer.push(element);
+
+        const indexOfElement = elements.findIndex(
+          (innerElement) => innerElement.id === element.id
+        );
+        elements.splice(indexOfElement, 1);
+
+        const filteredArcs = arcs.filter(
+          (a) =>
+            element.outgoingArcs.findIndex(
               (arc) => arc.source === a.source && arc.target === a.target
-            );
-            return indexInOutgoingArcs === -1;
-          });
-        });
+            ) === -1
+        );
+        arcs = filteredArcs;
+      });
       layers.push(layer);
     }
     return layers;
@@ -101,10 +108,12 @@ export class LayoutService {
    *   3. Loop through all outgoing arcs of the element
    *    4. check distance/layers between arc source and target
    *     5. add breakpoint to arc for each enclosed layer
-   * @param currentRun run to parse
+   * @param petriNet run to parse
    * @param layers layers with elements and breakpoints
    */
-  private addBreakpoints(currentRun: PetriNet, layers: Array<Layer[]>): void {
+  private addBreakpoints(petriNet: PetriNet, layers: Array<Layer[]>): void {
+    const concreteElements = getElementsWithArcs(petriNet);
+
     for (let i = 0; i < layers.length - 1; i++) {
       layers[i]
         .flatMap((element) =>
@@ -112,7 +121,7 @@ export class LayoutService {
         )
         .forEach((a: Arc) => {
           //arc loop
-          const target = currentRun.transitions.find(
+          const target = concreteElements.find(
             (element) => element.id === a.target
           );
 
@@ -466,12 +475,13 @@ export class LayoutService {
     return height;
   }
 
-  public centerPetriNet(run: PetriNet, centerX: number, centerY: number): void {
+  public centerPetriNet(net: PetriNet, centerX: number, centerY: number): void {
     let runBoundsXMin = Math.min(),
       runBoundsXMax = Math.max(),
       runBoundsYMin = Math.min(),
       runBoundsYMax = Math.max();
-    run.transitions.forEach((e) => {
+
+    getElementsWithArcs(net).forEach((e) => {
       if ((e.x ?? 0) < runBoundsXMin) {
         runBoundsXMin = e.x ?? 0;
       }
@@ -485,7 +495,7 @@ export class LayoutService {
         runBoundsYMax = (e.y ?? 0) + eventSize;
       }
     });
-    run.arcs.forEach((arc) => {
+    net.arcs.forEach((arc) => {
       arc.breakpoints.forEach((e) => {
         if ((e.x ?? 0) < runBoundsXMin) {
           runBoundsXMin = e.x ?? 0;
@@ -502,18 +512,16 @@ export class LayoutService {
       });
     });
 
-    // TODO: calculate the same for places
-
     const centerRunX = runBoundsXMin + (runBoundsXMax - runBoundsXMin) / 2;
     const centerRunY = runBoundsYMin + (runBoundsYMax - runBoundsYMin) / 2;
     const offsetX = Math.round(centerX - centerRunX);
     const offsetY = Math.round(centerY - centerRunY);
 
-    run.transitions.forEach((e) => {
+    getElementsWithArcs(net).forEach((e) => {
       e.x = (e.x ?? 0) + offsetX;
       e.y = (e.y ?? 0) + offsetY;
     });
-    run.arcs.forEach((arc) => {
+    net.arcs.forEach((arc) => {
       arc.breakpoints.forEach((e) => {
         e.x = (e.x ?? 0) + offsetX;
         e.y = (e.y ?? 0) + offsetY;

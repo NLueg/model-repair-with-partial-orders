@@ -11,7 +11,7 @@ import { CoordinatesInfo } from '../../classes/diagram/coordinates';
 import { isRunEmpty, PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../../services/display.service';
 import { ParserService } from '../../services/parser/parser.service';
-import { exampleContent1 } from '../../services/upload/example-file';
+import { examplePetriNet } from '../../services/upload/example-file';
 import { UploadService } from '../../services/upload/upload.service';
 import {
   removeCoordinates,
@@ -73,7 +73,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     this._resetEventSubscription = this.resetEvent?.subscribe(() =>
       this.removeOffset()
     );
-    this.processNewSource(exampleContent1);
+    this.processNewSource(examplePetriNet);
   }
 
   ngOnDestroy(): void {
@@ -84,7 +84,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
 
   private processSourceChange(newSource: string): void {
     const errors = new Set<string>();
-    const result = this.parserService.parse(newSource, errors);
+    const result = this.parserService.parsePetriNet(newSource, errors);
     this.updateValidation(result, errors);
 
     if (!result) return;
@@ -93,7 +93,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
 
   private processNewSource(newSource: string): void {
     const errors = new Set<string>();
-    const result = this.parserService.parse(newSource, errors);
+    const result = this.parserService.parsePetriNet(newSource, errors);
     this.updateValidation(result, errors);
 
     if (!result) return;

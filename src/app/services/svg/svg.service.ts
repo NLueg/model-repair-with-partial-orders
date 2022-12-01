@@ -2,8 +2,11 @@ import { Injectable } from '@angular/core';
 
 import { Arc, Breakpoint } from '../../classes/diagram/arc';
 import { Coordinates } from '../../classes/diagram/coordinates';
+import { ConcreteElementWithArcs } from '../../classes/diagram/draggable';
 import { getIntersection } from '../../classes/diagram/functions/display.fn';
+import { getElementsWithArcs } from '../../classes/diagram/functions/net-helper.fn';
 import { PetriNet } from '../../classes/diagram/petri-net';
+import { Place } from '../../classes/diagram/place';
 import { Transition } from '../../classes/diagram/transition';
 import {
   breakpointPositionAttribute,
@@ -23,9 +26,11 @@ export class SvgService {
   public createSvgElements(run: PetriNet): Array<SVGElement> {
     const result: Array<SVGElement> = [];
 
+    const elements: (Transition | Place)[] = getElementsWithArcs(run);
+
     run.arcs.forEach((arc) => {
-      const source = run.transitions.find((el) => el.id === arc.source);
-      const target = run.transitions.find((el) => el.id === arc.target);
+      const source = elements.find((el) => el.id === arc.source);
+      const target = elements.find((el) => el.id === arc.target);
       const arrow = createSvgForArc(arc, source, target);
       if (arrow) {
         arrow.forEach((a) => {
@@ -33,26 +38,16 @@ export class SvgService {
         });
       }
     });
-    run.transitions.forEach((el) => {
+    elements.forEach((el) => {
       result.push(...createSvgForElement(el));
     });
     return result;
   }
 }
 
-function createSvgForElement(element: Transition): SVGElement[] {
-  const svg = createSvgElement('rect');
+function createSvgForElement(element: Transition | Place): SVGElement[] {
   const x = element.x ?? 0;
   const y = element.y ?? 0;
-  svg.setAttribute('x', `${x}`);
-  svg.setAttribute('y', `${y}`);
-  svg.setAttribute('width', `${eventSize}`);
-  svg.setAttribute('height', `${eventSize}`);
-  svg.setAttribute('stroke', 'black');
-  svg.setAttribute('stroke-width', '2');
-  svg.setAttribute('fill-opacity', '0');
-  svg.setAttribute(layerPosYAttibute, `${element.layerPos ?? 0}`);
-  svg.setAttribute(eventIdAttribute, `${element.id}`);
 
   const text = createSvgElement('foreignObject');
   text.setAttribute('x', `${x - (100 - eventSize) / 2}`);
@@ -63,9 +58,43 @@ function createSvgForElement(element: Transition): SVGElement[] {
   text.setAttribute('width', `${width}`);
   text.setAttribute('describes-event', element.id);
   const span = document.createElement('span');
-  span.setAttribute('title', element.label);
-  span.textContent = element.label;
+
+  let svg: SVGElement;
+
+  if (element.type === 'transition') {
+    svg = createSvgElement('rect');
+    svg.setAttribute('x', `${x}`);
+    svg.setAttribute('y', `${y}`);
+    svg.setAttribute('width', `${eventSize}`);
+    svg.setAttribute('height', `${eventSize}`);
+    svg.setAttribute('stroke', 'black');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('fill-opacity', '0');
+    svg.setAttribute(layerPosYAttibute, `${element.layerPos ?? 0}`);
+    svg.setAttribute(eventIdAttribute, `${element.id}`);
+
+    span.setAttribute('title', element.label);
+    span.textContent = element.label;
+  } else {
+    const radius = eventSize / 2;
+
+    svg = createSvgElement('circle');
+    svg.setAttribute('cx', `${x + radius}`);
+    svg.setAttribute('cy', `${y + radius}`);
+    svg.setAttribute('r', `${radius}`);
+    svg.setAttribute('stroke', 'black');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('fill-opacity', '0');
+    svg.setAttribute(layerPosYAttibute, `${element.layerPos ?? 0}`);
+    svg.setAttribute(eventIdAttribute, `${element.id}`);
+
+    span.setAttribute('title', element.id);
+    span.textContent = element.id;
+  }
+
   text.append(span);
+
+  // TODO: Specific layout for places
 
   // TODO: This is how colors are changed!
   /* if (doesElementBelongToCurrentRun(element) && highlight) {
@@ -82,8 +111,8 @@ function createSvgElement(name: string): SVGElement {
 
 function createSvgForArc(
   arc: Arc,
-  source: Transition | undefined,
-  target: Transition | undefined
+  source: ConcreteElementWithArcs | undefined,
+  target: ConcreteElementWithArcs | undefined
 ): SVGElement[] {
   const elements: SVGElement[] = [];
 
@@ -125,7 +154,7 @@ function createSvgForArc(
       )
     );
   } else {
-    //source -> first breakpoint
+    // source -> first breakpoint
     const start = getIntersection(
       (source.x ?? 0) + eventSize / 2,
       (source.y ?? 0) + eventSize / 2,
@@ -150,7 +179,7 @@ function createSvgForArc(
         }
       )
     );
-    //breakpoint -> next breakpoint
+    // breakpoint -> next breakpoint
     for (let i = 0; i < arc.breakpoints.length - 1; i++) {
       elements.push(
         createLine(
@@ -169,7 +198,7 @@ function createSvgForArc(
         )
       );
     }
-    //last breakpoint -> target
+    // last breakpoint -> target
     const end = getIntersection(
       (target.x ?? 0) + eventSize / 2,
       (target.y ?? 0) + eventSize / 2,

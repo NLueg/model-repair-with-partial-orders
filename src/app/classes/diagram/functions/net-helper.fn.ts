@@ -3,16 +3,19 @@ import clonedeep from 'lodash.clonedeep';
 import { emptyContent } from '../../../services/empty-file';
 import {
   arcsAttribute,
+  netTypeKey,
   transitionsAttribute,
-  typeKey,
 } from '../../../services/parser/parsing-constants';
 import { Arc } from '../arc';
+import { ConcreteElementWithArcs } from '../draggable';
+import { EventLog } from '../event-log';
 import { PetriNet } from '../petri-net';
+import { Place } from '../place';
 import { Transition } from '../transition';
 import { getCycles } from './cycles.fn';
 
 export function generateTextForRun(run: PetriNet): string {
-  const lines = [typeKey];
+  const lines = [netTypeKey];
   lines.push(transitionsAttribute);
   run.transitions.forEach((e) => {
     const identifier = e.label === e.id ? e.id : `${e.id + ' | ' + e.label}`;
@@ -60,17 +63,30 @@ export function removeCycles(run: PetriNet): void {
   setRefs(run);
 }
 
-export function addElement(run: PetriNet, element: Transition): boolean {
-  const contained = run.transitions.some((item) => item.id == element.id);
+export function addTransition(
+  petriNet: PetriNet | EventLog,
+  element: Transition
+): boolean {
+  const contained = petriNet.transitions.some((item) => item.id == element.id);
   if (contained) {
     return false;
   }
 
-  run.transitions.push(element);
+  petriNet.transitions.push(element);
   return true;
 }
 
-export function addArc(run: PetriNet, arc: Arc): boolean {
+export function addPlace(petriNet: PetriNet, place: Place): boolean {
+  const contained = petriNet.places.some((item) => item.id == place.id);
+  if (contained) {
+    return false;
+  }
+
+  petriNet.places.push(place);
+  return true;
+}
+
+export function addArc(run: PetriNet | EventLog, arc: Arc): boolean {
   const contained = run.arcs.some(
     (item) => item.source == arc.source && item.target == arc.target
   );
@@ -86,20 +102,21 @@ export function addArc(run: PetriNet, arc: Arc): boolean {
  * set references from arcs to transitions and vice versa
  * @returns all references found?
  */
-export function setRefs(run: PetriNet): boolean {
+export function setRefs(net: PetriNet): boolean {
   let check = true;
-  run.transitions.forEach((e) => {
+  const concreteElements: ConcreteElementWithArcs[] = getElementsWithArcs(net);
+  concreteElements.forEach((e) => {
     e.incomingArcs = [];
     e.outgoingArcs = [];
   });
 
-  run.arcs.forEach((a) => {
-    const source = run.transitions.find((e) => e.id == a.source);
-    const target = run.transitions.find((e) => e.id == a.target);
+  net.arcs.forEach((a) => {
+    const source = concreteElements.find((e) => e.id == a.source);
+    const target = concreteElements.find((e) => e.id == a.target);
 
     if (!source || !target) {
       check = false;
-      run.arcs.slice(run.arcs.indexOf(a), 1);
+      net.arcs.slice(net.arcs.indexOf(a), 1);
     } else {
       source.outgoingArcs.push(a);
       target.incomingArcs.push(a);
@@ -124,6 +141,7 @@ export function copyElement(element: Transition): Transition {
     incomingArcs: [],
     outgoingArcs: [],
     id: element.id,
+    type: 'transition',
   };
 }
 
@@ -160,4 +178,8 @@ export function getEmptyNet(): PetriNet {
     places: [],
     arcs: [],
   };
+}
+
+export function getElementsWithArcs(net: PetriNet): (Transition | Place)[] {
+  return [...net.transitions, ...net.places];
 }

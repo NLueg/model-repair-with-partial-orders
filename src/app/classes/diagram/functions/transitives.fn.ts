@@ -1,6 +1,6 @@
 import { Arc } from '../arc';
 import { PetriNet } from '../petri-net';
-import { copyRun } from './run-helper.fn';
+import { copyRun } from './net-helper.fn';
 
 export function hasTransitiveArcs(run: PetriNet): boolean {
   return getTransitiveArcs(run).size > 0;

@@ -53,6 +53,7 @@ export class RunToPnmlService {
       return {
         label: name,
         id: name,
+        type: 'transition',
         incomingArcs: [],
         outgoingArcs: [],
       };
@@ -60,6 +61,7 @@ export class RunToPnmlService {
     places.unshift({
       id: firstPlaceId,
       label: firstPlaceId,
+      type: 'transition',
       incomingArcs: [],
       outgoingArcs: [],
     });

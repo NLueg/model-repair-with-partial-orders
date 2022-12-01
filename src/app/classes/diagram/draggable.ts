@@ -14,6 +14,7 @@ export interface ConcreteElement {
 }
 
 export interface ConcreteElementWithArcs extends ConcreteElement {
+  id: string;
   incomingArcs: Arc[];
   outgoingArcs: Arc[];
 }

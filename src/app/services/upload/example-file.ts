@@ -1,4 +1,4 @@
-export const exampleContent1 = `.type pn
+export const examplePetriNet = `.type pn
 .transitions
 a a
 b b
@@ -32,4 +32,25 @@ c p4
 p4 e 3
 e p6
 p6 f 3
+`;
+
+export const exampleLog = `.type log
+.events
+e1 a
+e2 d
+e3 c
+e4 a
+e5 b
+e6 d
+e7 e
+e8 f
+.arcs
+e1 e3
+e2 e3
+e3 e4
+e4 e5
+e5 e6
+e6 e8
+e3 e7
+e7 e8
 `;

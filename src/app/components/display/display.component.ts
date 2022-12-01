@@ -17,20 +17,20 @@ export class DisplayComponent {
   @ViewChild('svg_wrapper') svgWrapper: ElementRef<HTMLElement> | undefined;
 
   constructor(
-    private _layoutService: LayoutService,
-    private _svgService: SvgService,
-    private _displayService: DisplayService
+    private layoutService: LayoutService,
+    private svgService: SvgService,
+    private displayService: DisplayService
   ) {
-    this.svgElements$ = this._displayService.getPetriNet$().pipe(
-      map((currentRun) => this._layoutService.layout(currentRun).run),
+    this.svgElements$ = this.displayService.getPetriNet$().pipe(
+      map((currentRun) => this.layoutService.layout(currentRun).run),
       map((modifiedRun) => {
         if (this.canvas && this.canvas.drawingArea) {
           const w = this.canvas.drawingArea.nativeElement.clientWidth;
           const h = this.canvas.drawingArea.nativeElement.clientHeight;
           if (w > 0 && h > 0)
-            this._layoutService.centerPetriNet(modifiedRun, w / 2, h / 2);
+            this.layoutService.centerPetriNet(modifiedRun, w / 2, h / 2);
         }
-        return this._svgService.createSvgElements(modifiedRun);
+        return this.svgService.createSvgElements(modifiedRun);
       })
     );
   }

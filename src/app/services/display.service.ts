@@ -2,7 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, map, Observable } from 'rxjs';
 
 import { Coordinates, CoordinatesInfo } from '../classes/diagram/coordinates';
-import { getEmptyNet } from '../classes/diagram/functions/run-helper.fn';
+import { getEmptyNet } from '../classes/diagram/functions/net-helper.fn';
 import { isRunEmpty, PetriNet } from '../classes/diagram/petri-net';
 
 @Injectable({
