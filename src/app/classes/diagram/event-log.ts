@@ -1,8 +1,8 @@
 import { Arc } from './arc';
-import { Transition } from './transition';
+import { EventItem } from './transition';
 
 export interface EventLog {
   text: string;
-  transitions: Transition[];
+  events: EventItem[];
   arcs: Arc[];
 }

@@ -67,12 +67,12 @@ export function addTransition(
   petriNet: PetriNet | EventLog,
   element: Transition
 ): boolean {
-  const contained = petriNet.transitions.some((item) => item.id == element.id);
+  const contained = petriNet.events.some((item) => item.id == element.id);
   if (contained) {
     return false;
   }
 
-  petriNet.transitions.push(element);
+  petriNet.events.push(element);
   return true;
 }
 

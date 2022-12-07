@@ -54,3 +54,23 @@ e6 e8
 e3 e7
 e7 e8
 `;
+
+export const exampleLogInvalid = `.type log
+.events
+e1 a
+e2 d
+e3 c
+e4 a
+e5 b
+e6 d
+e7 e
+e8 f
+.arcs
+e1 e3
+e2 e3
+e4 e5
+e5 e6
+e6 e8
+e3 e7
+e7 e8
+`;

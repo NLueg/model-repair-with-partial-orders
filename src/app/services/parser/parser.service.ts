@@ -40,7 +40,7 @@ export class ParserService {
     const contentLines = content.split('\n');
     const log: EventLog = {
       text: content,
-      transitions: [],
+      events: [],
       arcs: [],
     };
 
@@ -418,7 +418,7 @@ export class ParserService {
     return {
       id,
       type: 'place',
-      tokens: isNaN(tokens) ? 0 : tokens,
+      marking: isNaN(tokens) ? 0 : tokens,
       incomingArcs: [],
       outgoingArcs: [],
     };

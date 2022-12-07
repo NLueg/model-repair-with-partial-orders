@@ -3,6 +3,7 @@ import { ConcreteElement } from './draggable';
 export type Arc = {
   source: string;
   target: string;
+  weight: number;
   breakpoints: Breakpoint[];
   currentRun?: boolean;
 };
