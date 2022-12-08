@@ -1,9 +1,17 @@
 import { TestBed } from '@angular/core/testing';
 import { ToastrService } from 'ngx-toastr';
 
-import { exampleLog, examplePetriNet } from '../upload/example-file';
+import {
+  exampleLog,
+  exampleLogInvalid,
+  examplePetriNet,
+} from '../upload/example-file';
+import {
+  parsedInvalidPartialorder,
+  parsedPartialOrder,
+  parsedPetriNet,
+} from '../upload/example-file-parsed';
 import { ParserService } from './parser.service';
-import {parsedPartialOrder, parsedPetriNet} from "../upload/example-file-parsed";
 
 describe('ParserService', () => {
   let service: ParserService;
@@ -28,8 +36,15 @@ describe('ParserService', () => {
 
   it('parseLog should parse example log', () => {
     const errors = new Set<string>();
-    const result = service.parseLog(exampleLog, errors);
+    const result = service.parsePartialOrder(exampleLog, errors);
 
     expect(result).toEqual(parsedPartialOrder);
-});
+  });
 
+  it('parseLog should parse invalid example log', () => {
+    const errors = new Set<string>();
+    const result = service.parsePartialOrder(exampleLogInvalid, errors);
+
+    expect(result).toEqual(parsedInvalidPartialorder);
+  });
+});

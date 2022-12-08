@@ -45,6 +45,7 @@ export class LpoFireValidator {
     for (const e of this._lpo.finalEvents) {
       e.addNextEvent(final);
     }
+
     this._lpo.addEvent(initial);
     this._lpo.addEvent(final);
     this._lpo.determineInitialAndFinalEvents();
@@ -101,7 +102,7 @@ export class LpoFireValidator {
         !notValidPlaces[i] &&
         !backwardsValidPlaces[i]
       ) {
-        flow[i] = checkFlowForPlace(this._places[i], this._lpo.events);
+        flow[i] = this.checkFlowForPlace(this._places[i], this._lpo.events);
       }
     }
 
@@ -118,6 +119,63 @@ export class LpoFireValidator {
         return new ValidationResult(false, ValidationPhase.FLOW);
       }
     });
+  }
+
+  private checkFlowForPlace(place: Place, events: Array<Event>): boolean {
+    const n = events.length * 2 + 2;
+    const SOURCE = 0;
+    const SINK = n - 1;
+
+    const network = new MaxFlowPreflowN3(n);
+
+    for (let eIndex = 0; eIndex < events.length; eIndex++) {
+      network.setUnbounded(this.eventStart(eIndex), this.eventEnd(eIndex));
+
+      const event = events[eIndex];
+      if (event.transition === undefined) {
+        if (place.marking > 0) {
+          network.setCap(SOURCE, this.eventEnd(eIndex), place.marking);
+        }
+      } else {
+        for (const outArc of (event.transition as unknown as Transition)
+          .outgoingArcs) {
+          const postPlace = outArc.destination as Place;
+          if (postPlace === place) {
+            network.setCap(SOURCE, this.eventEnd(eIndex), outArc.weight);
+          }
+        }
+        for (const inArc of (event.transition as unknown as Transition)
+          .ingoingArcs) {
+          const prePlace = inArc.source as Place;
+          if (prePlace === place) {
+            network.setCap(this.eventStart(eIndex), SINK, inArc.weight);
+          }
+        }
+      }
+      for (const postEvent of event.nextEvents) {
+        network.setUnbounded(
+          this.eventEnd(eIndex),
+          this.eventStart(events.findIndex((e) => e === postEvent))
+        );
+      }
+    }
+
+    let need = 0;
+    for (let ii = 0; ii < n; ii++) {
+      need += network.getCap(ii, SINK);
+    }
+    const f = network.maxFlow(SOURCE, SINK);
+    console.debug(`flow ${place.id} ${f}`);
+    console.debug(`need ${place.id} ${need}`);
+    return need === f;
+  }
+
+  private eventStart(eventIndex: number): number {
+    return eventIndex * 2 + 1;
+  }
+
+  private eventEnd(eventIndex: number): number {
+    return eventIndex * 2 + 2;
   }
 
   private buildTotalOrdering(): Array<Event> {
@@ -234,61 +292,4 @@ export class LpoFireValidator {
   private newBoolArray(fill: boolean): Array<boolean> {
     return new Array<boolean>(this._places.length).fill(fill);
   }
-}
-
-function checkFlowForPlace(place: Place, events: Array<Event>): boolean {
-  const n = events.length * 2 + 2;
-  const SOURCE = 0;
-  const SINK = n - 1;
-
-  const network = new MaxFlowPreflowN3(n);
-
-  for (let eIndex = 0; eIndex < events.length; eIndex++) {
-    network.setUnbounded(eventStart(eIndex), eventEnd(eIndex));
-
-    const event = events[eIndex];
-    if (event.transition === undefined) {
-      if (place.marking > 0) {
-        network.setCap(SOURCE, eventEnd(eIndex), place.marking);
-      }
-    } else {
-      for (const outArc of (event.transition as unknown as Transition)
-        .outgoingArcs) {
-        const postPlace = outArc.destination as Place;
-        if (postPlace === place) {
-          network.setCap(SOURCE, eventEnd(eIndex), outArc.weight);
-        }
-      }
-      for (const inArc of (event.transition as unknown as Transition)
-        .ingoingArcs) {
-        const prePlace = inArc.source as Place;
-        if (prePlace === place) {
-          network.setCap(eventStart(eIndex), SINK, inArc.weight);
-        }
-      }
-    }
-    for (const postEvent of event.nextEvents) {
-      network.setUnbounded(
-        eventEnd(eIndex),
-        eventStart(events.findIndex((e) => e === postEvent))
-      );
-    }
-  }
-
-  let need = 0;
-  for (let ii = 0; ii < n; ii++) {
-    need += network.getCap(ii, SINK);
-  }
-  const f = network.maxFlow(SOURCE, SINK);
-  console.debug(`flow ${place.id} ${f}`);
-  console.debug(`need ${place.id} ${need}`);
-  return need === f;
-}
-
-function eventStart(eventIndex: number): number {
-  return eventIndex * 2 + 1;
-}
-
-function eventEnd(eventIndex: number): number {
-  return eventIndex * 2 + 2;
 }

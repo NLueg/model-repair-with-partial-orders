@@ -8,10 +8,10 @@ import {
 } from '../../../services/parser/parsing-constants';
 import { Arc } from '../arc';
 import { ConcreteElementWithArcs } from '../draggable';
-import { EventLog } from '../event-log';
+import { PartialOrder } from '../partial-order';
 import { PetriNet } from '../petri-net';
 import { Place } from '../place';
-import { Transition } from '../transition';
+import { EventItem, Transition } from '../transition';
 import { getCycles } from './cycles.fn';
 
 export function generateTextForRun(run: PetriNet): string {
@@ -64,15 +64,28 @@ export function removeCycles(run: PetriNet): void {
 }
 
 export function addTransition(
-  petriNet: PetriNet | EventLog,
+  petriNet: PetriNet,
   element: Transition
 ): boolean {
-  const contained = petriNet.events.some((item) => item.id == element.id);
+  const contained = petriNet.transitions.some((item) => item.id == element.id);
   if (contained) {
     return false;
   }
 
-  petriNet.events.push(element);
+  petriNet.transitions.push(element);
+  return true;
+}
+
+export function addEventItem(
+  partialOrder: PartialOrder,
+  element: EventItem
+): boolean {
+  const contained = partialOrder.events.some((item) => item.id == element.id);
+  if (contained) {
+    return false;
+  }
+
+  partialOrder.events.push(element);
   return true;
 }
 
@@ -86,7 +99,7 @@ export function addPlace(petriNet: PetriNet, place: Place): boolean {
   return true;
 }
 
-export function addArc(run: PetriNet | EventLog, arc: Arc): boolean {
+export function addArc(run: PetriNet | PartialOrder, arc: Arc): boolean {
   const contained = run.arcs.some(
     (item) => item.source == arc.source && item.target == arc.target
   );
@@ -128,6 +141,7 @@ export function setRefs(net: PetriNet): boolean {
 
 export function copyArc(arc: Arc): Arc {
   return {
+    weight: arc.weight,
     source: arc.source,
     target: arc.target,
     breakpoints: [],

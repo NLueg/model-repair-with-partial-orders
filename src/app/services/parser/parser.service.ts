@@ -2,18 +2,26 @@ import { Injectable } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
 import { Breakpoint } from 'src/app/classes/diagram/arc';
 
-import { EventLog } from '../../classes/diagram/event-log';
 import { hasCycles } from '../../classes/diagram/functions/cycles.fn';
 import {
   addArc,
+  addEventItem,
   addPlace,
   addTransition,
   removeCycles,
   setRefs,
 } from '../../classes/diagram/functions/net-helper.fn';
+import {
+  determineInitialAndFinalEvents,
+  PartialOrder,
+} from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
 import { Place } from '../../classes/diagram/place';
-import { Transition } from '../../classes/diagram/transition';
+import {
+  concatEvents,
+  EventItem,
+  Transition,
+} from '../../classes/diagram/transition';
 import {
   arcsAttribute,
   eventsAttribute,
@@ -36,9 +44,9 @@ export class ParserService {
   private readonly arcRegex = /^(\S*)\s*(\S*)\s*(\d*)$/;
   private readonly breakpointRegex = new RegExp('\\[\\d+\\]');
 
-  parseLog(content: string, errors: Set<string>): EventLog | null {
+  parsePartialOrder(content: string, errors: Set<string>): PartialOrder | null {
     const contentLines = content.split('\n');
-    const log: EventLog = {
+    const partialOrder: PartialOrder = {
       text: content,
       events: [],
       arcs: [],
@@ -83,9 +91,9 @@ export class ParserService {
           }
         case 'transitions':
           if (trimmedLine !== arcsAttribute) {
-            const transition = this.parseTransition(trimmedLine);
+            const transition = this.parseEventItem(trimmedLine);
 
-            if (!addTransition(log, transition)) {
+            if (!addEventItem(partialOrder, transition)) {
               this.toastr.warning(
                 `File contains duplicate transitions`,
                 `Duplicate transitions are ignored`
@@ -123,41 +131,47 @@ export class ParserService {
                 target = splitLine[1];
               }
 
-              if (
-                !addArc(log, {
-                  source: source,
-                  target: target,
-                  breakpoints: breakpoints,
-                })
-              ) {
+              // TODO: Support weighted arcs
+              const arc = {
+                weight: 1,
+                source: source,
+                target: target,
+                breakpoints: breakpoints,
+              };
+              if (!addArc(partialOrder, arc)) {
                 this.toastr.warning(
                   `File contains duplicate arcs`,
                   `Duplicate arcs are ignored`
                 );
               } else {
-                const arc = log.arcs.find(
-                  (a) => a.source === source && a.target === target
+                const source = partialOrder.events.find(
+                  (event) => event.id === arc.source
                 );
-                if (arc) {
-                  let trimmedLineTmp = trimmedLine;
-                  while (this.breakpointRegex.test(trimmedLineTmp)) {
-                    const layerPos = parseInt(
-                      trimmedLineTmp.substring(
-                        trimmedLineTmp.indexOf('[') + 1,
-                        trimmedLineTmp.indexOf(']')
-                      )
-                    );
-                    breakpoints.push({
-                      x: 0,
-                      y: 0,
-                      layerPos: layerPos,
-                      arc: arc,
-                    });
-                    arc.breakpoints = breakpoints;
-                    trimmedLineTmp = trimmedLineTmp.substring(
-                      trimmedLineTmp.indexOf(']') + 1
-                    );
-                  }
+                const target = partialOrder.events.find(
+                  (event) => event.id === arc.target
+                );
+                if (source && target) {
+                  concatEvents(source, target);
+                }
+
+                let trimmedLineTmp = trimmedLine;
+                while (this.breakpointRegex.test(trimmedLineTmp)) {
+                  const layerPos = parseInt(
+                    trimmedLineTmp.substring(
+                      trimmedLineTmp.indexOf('[') + 1,
+                      trimmedLineTmp.indexOf(']')
+                    )
+                  );
+                  breakpoints.push({
+                    x: 0,
+                    y: 0,
+                    layerPos: layerPos,
+                    arc: arc,
+                  });
+                  arc.breakpoints = breakpoints;
+                  trimmedLineTmp = trimmedLineTmp.substring(
+                    trimmedLineTmp.indexOf(']') + 1
+                  );
                 }
               }
             } else {
@@ -177,8 +191,8 @@ export class ParserService {
           }
       }
     }
-
-    return log;
+    determineInitialAndFinalEvents(partialOrder);
+    return partialOrder;
   }
 
   parsePetriNet(content: string, errors: Set<string>): PetriNet | null {
@@ -304,41 +318,37 @@ export class ParserService {
                 target = splitLine[1];
               }
 
-              if (
-                !addArc(run, {
-                  source: source,
-                  target: target,
-                  breakpoints: breakpoints,
-                })
-              ) {
+              // TODO: Support weighted arcs
+              const arc = {
+                weight: 1,
+                source: source,
+                target: target,
+                breakpoints: breakpoints,
+              };
+              if (!addArc(run, arc)) {
                 this.toastr.warning(
                   `File contains duplicate arcs`,
                   `Duplicate arcs are ignored`
                 );
               } else {
-                const arc = run.arcs.find(
-                  (a) => a.source === source && a.target === target
-                );
-                if (arc) {
-                  let trimmedLineTmp = trimmedLine;
-                  while (this.breakpointRegex.test(trimmedLineTmp)) {
-                    const layerPos = parseInt(
-                      trimmedLineTmp.substring(
-                        trimmedLineTmp.indexOf('[') + 1,
-                        trimmedLineTmp.indexOf(']')
-                      )
-                    );
-                    breakpoints.push({
-                      x: 0,
-                      y: 0,
-                      layerPos: layerPos,
-                      arc: arc,
-                    });
-                    arc.breakpoints = breakpoints;
-                    trimmedLineTmp = trimmedLineTmp.substring(
-                      trimmedLineTmp.indexOf(']') + 1
-                    );
-                  }
+                let trimmedLineTmp = trimmedLine;
+                while (this.breakpointRegex.test(trimmedLineTmp)) {
+                  const layerPos = parseInt(
+                    trimmedLineTmp.substring(
+                      trimmedLineTmp.indexOf('[') + 1,
+                      trimmedLineTmp.indexOf(']')
+                    )
+                  );
+                  breakpoints.push({
+                    x: 0,
+                    y: 0,
+                    layerPos: layerPos,
+                    arc: arc,
+                  });
+                  arc.breakpoints = breakpoints;
+                  trimmedLineTmp = trimmedLineTmp.substring(
+                    trimmedLineTmp.indexOf(']') + 1
+                  );
                 }
               }
             } else {
@@ -407,6 +417,22 @@ export class ParserService {
       type: 'transition',
       incomingArcs: [],
       outgoingArcs: [],
+    };
+  }
+
+  private parseEventItem(trimmedLine: string): EventItem {
+    const match = this.transitionRegex.exec(trimmedLine);
+    const id = match ? match[1] : trimmedLine;
+    const label = match ? match[2] : trimmedLine;
+
+    return {
+      id,
+      label,
+      type: 'event',
+      incomingArcs: [],
+      outgoingArcs: [],
+      nextEvents: [],
+      previousEvents: [],
     };
   }
 

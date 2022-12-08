@@ -7,9 +7,14 @@ import {
 } from '../../../utility/incrementing-counter';
 import { Arc } from './arc';
 import { Marking } from './marking';
-import { NetUnionResult } from './net-union-result';
 import { Place } from './place';
 import { Transition } from './transition';
+
+export interface NetUnionResult {
+  net: PetriNet;
+  inputPlacesB: Set<string>;
+  outputPlacesB: Set<string>;
+}
 
 export class PetriNet {
   private _places: Map<string, Place>;

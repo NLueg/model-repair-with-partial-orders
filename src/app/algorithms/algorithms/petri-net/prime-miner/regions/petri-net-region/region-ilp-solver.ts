@@ -68,6 +68,7 @@ export class RegionIlpSolver {
 
     const combined = this.combineInputNets(nets);
 
+    // TODO: Calculates regions
     const ilp$ = new BehaviorSubject(this.setUpInitialILP(combined, config));
     ilp$
       .pipe(switchMap((ilp) => this.solveILP(ilp)))
@@ -115,6 +116,7 @@ export class RegionIlpSolver {
     return { net: result, inputs, outputs };
   }
 
+  // TODO: Here the variables are created
   private setUpInitialILP(
     combined: CombinationResult,
     config: RegionsConfiguration
@@ -161,6 +163,7 @@ export class RegionIlpSolver {
     ilp.generals.push(...constraints.integerVariables);
   }
 
+  // TODO: Constraints for the places
   private createInitialConstraints(
     combined: CombinationResult,
     config: RegionsConfiguration
