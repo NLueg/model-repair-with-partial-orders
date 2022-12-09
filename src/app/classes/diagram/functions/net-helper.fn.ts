@@ -12,7 +12,6 @@ import { PartialOrder } from '../partial-order';
 import { PetriNet } from '../petri-net';
 import { Place } from '../place';
 import { EventItem, Transition } from '../transition';
-import { getCycles } from './cycles.fn';
 
 export function generateTextForRun(run: PetriNet): string {
   const lines = [netTypeKey];
@@ -53,9 +52,9 @@ function getBreakpointInfo(arc: Arc): string {
   return text;
 }
 
-export function removeCycles(run: PetriNet): void {
-  getCycles(run).forEach((arc) => {
-    return run.arcs.splice(
+export function removeCycles(run: PetriNet, cycleArcs: Arc[]): void {
+  cycleArcs.forEach((arc) => {
+    run.arcs.splice(
       run.arcs.findIndex((a) => a === arc),
       1
     );

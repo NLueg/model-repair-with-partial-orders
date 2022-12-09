@@ -69,8 +69,8 @@ export class RunToPnmlService {
     const newArcArray: Arc[] = run.arcs.flatMap((arc) => {
       const placeName = getPlaceNameByArc(arc);
       return [
-        { source: arc.source, target: placeName, breakpoints: [] },
-        { source: placeName, target: arc.target, breakpoints: [] },
+        { source: arc.source, target: placeName, breakpoints: [], weight: 1 },
+        { source: placeName, target: arc.target, breakpoints: [], weight: 1 },
       ];
     });
 
@@ -82,6 +82,7 @@ export class RunToPnmlService {
           source: firstPlaceId,
           target: e.id,
           breakpoints: [],
+          weight: 1,
         });
       });
 

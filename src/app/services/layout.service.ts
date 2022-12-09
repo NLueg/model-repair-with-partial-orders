@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 
 import { Arc, Breakpoint } from '../classes/diagram/arc';
 import { ConcreteElementWithArcs } from '../classes/diagram/draggable';
+import { getCycles } from '../classes/diagram/functions/cycles.fn';
 import {
   copyRun,
   getElementsWithArcs,
@@ -26,26 +27,24 @@ export class LayoutService {
     positionOffset = 0
   ): { run: PetriNet; diagrammHeight: number } {
     const runClone: PetriNet = copyRun(run, true);
-    const diagrammHeight = 0;
-    // let diagrammWidth = 0;
-    // if run hast no cycles use sugiyama layout
-    /* if (!hasCycles(runClone)) {
-      console.warn(runClone);
-      const layers: Array<Layer[]> = this.assignLayers(runClone);
-      console.warn(layers);
-      this.addBreakpoints(runClone, layers);
-      console.warn('addBreakpoints');
-      this.setFixedLayerPos(layers);
-      console.warn('setFixedLayerPos');
-      // this.minimizeCrossing(runClone, layers);
-      console.warn('minimizeCrossing');
-      this.updateLayerPos(layers);
-      console.warn('updateLayerPos');
-      diagrammHeight = this.calculatePosition(layers, positionOffset);
-    } else {
-      runClone = getEmptyNet();
-    } */
+    let diagrammHeight = 0;
 
+    const arcsWithPotentialCycles = [...runClone.arcs];
+
+    const cycles = getCycles(runClone);
+    const arcsWithoutCycles = arcsWithPotentialCycles.filter(
+      (arc) => !cycles.find((cycle) => cycle === arc)
+    );
+    runClone.arcs = arcsWithoutCycles;
+
+    const layers: Array<Layer[]> = this.assignLayers(runClone);
+    this.addBreakpoints(runClone, layers);
+    this.setFixedLayerPos(layers);
+    this.minimizeCrossing(runClone, layers);
+    this.updateLayerPos(layers);
+    diagrammHeight = this.calculatePosition(layers, positionOffset);
+
+    runClone.arcs = arcsWithPotentialCycles;
     return { run: runClone, diagrammHeight };
   }
 
@@ -78,8 +77,6 @@ export class LayoutService {
       const elementsWithoutIncomingArcs = elements.filter(
         (element) => !elementsWithIncomingArcs.includes(element)
       );
-      console.warn(elementsWithIncomingArcs);
-      console.warn(elementsWithoutIncomingArcs);
       elementsWithoutIncomingArcs.forEach((element) => {
         layer.push(element);
 
@@ -87,14 +84,12 @@ export class LayoutService {
           (innerElement) => innerElement.id === element.id
         );
         elements.splice(indexOfElement, 1);
-
-        const filteredArcs = arcs.filter(
+        arcs = arcs.filter(
           (a) =>
             element.outgoingArcs.findIndex(
               (arc) => arc.source === a.source && arc.target === a.target
             ) === -1
         );
-        arcs = filteredArcs;
       });
       layers.push(layer);
     }

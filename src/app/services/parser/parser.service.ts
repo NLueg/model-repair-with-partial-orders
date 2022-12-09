@@ -2,13 +2,11 @@ import { Injectable } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
 import { Breakpoint } from 'src/app/classes/diagram/arc';
 
-import { hasCycles } from '../../classes/diagram/functions/cycles.fn';
 import {
   addArc,
   addEventItem,
   addPlace,
   addTransition,
-  removeCycles,
   setRefs,
 } from '../../classes/diagram/functions/net-helper.fn';
 import {
@@ -197,7 +195,7 @@ export class ParserService {
 
   parsePetriNet(content: string, errors: Set<string>): PetriNet | null {
     const contentLines = content.split('\n');
-    const run: PetriNet = {
+    const petriNet: PetriNet = {
       text: content,
       transitions: [],
       arcs: [],
@@ -255,7 +253,7 @@ export class ParserService {
           ) {
             const transition = this.parseTransition(trimmedLine);
 
-            if (!addTransition(run, transition)) {
+            if (!addTransition(petriNet, transition)) {
               this.toastr.warning(
                 `File contains duplicate transitions`,
                 `Duplicate transitions are ignored`
@@ -280,7 +278,7 @@ export class ParserService {
           ) {
             const place = this.parsePlace(trimmedLine);
 
-            if (!addPlace(run, place)) {
+            if (!addPlace(petriNet, place)) {
               this.toastr.warning(
                 `File contains duplicate places`,
                 `Duplicate places are ignored`
@@ -325,7 +323,7 @@ export class ParserService {
                 target: target,
                 breakpoints: breakpoints,
               };
-              if (!addArc(run, arc)) {
+              if (!addArc(petriNet, arc)) {
                 this.toastr.warning(
                   `File contains duplicate arcs`,
                   `Duplicate arcs are ignored`
@@ -369,7 +367,7 @@ export class ParserService {
       }
     }
 
-    if (run.arcs.length === 0 && run.transitions.length === 0) {
+    if (petriNet.arcs.length === 0 && petriNet.transitions.length === 0) {
       errors.add(`File does not contain events and arcs`);
       this.toastr.error(
         `File does not contain events and arcs`,
@@ -378,32 +376,26 @@ export class ParserService {
       return null;
     }
 
-    if (!setRefs(run)) {
+    if (!setRefs(petriNet)) {
       this.toastr.warning(
         `File contains arcs for non existing events`,
         `Invalid arcs are ignored`
       );
     }
-    if (hasCycles(run)) {
-      removeCycles(run);
-      this.toastr.warning(
-        `Cyclic arcs are ignored`,
-        `File contains cyclic arcs`
-      );
-    }
+
     /**
      * TODO: Reactivate this check!!!
      * -> Does not work for arcs which target not exists
-    if (hasTransitiveArcs(run)) {
-      removeTransitives(run);
+    if (hasTransitiveArcs(petriNet)) {
+      removeTransitives(petriNet);
       this.toastr.warning(
         `Transitive arcs are ignored`,
         `File contains transitive arcs`
       );
-      setRefs(run);
+      setRefs(petriNet);
     } */
 
-    return run;
+    return petriNet;
   }
 
   private parseTransition(trimmedLine: string): Transition {

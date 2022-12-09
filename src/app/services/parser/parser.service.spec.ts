@@ -18,7 +18,12 @@ describe('ParserService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [{ provide: ToastrService, useValue: { toasts: [] } }],
+      providers: [
+        {
+          provide: ToastrService,
+          useValue: { toasts: [], warning: jest.fn() },
+        },
+      ],
     });
     service = TestBed.inject(ParserService);
   });

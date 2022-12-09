@@ -21,7 +21,7 @@ export type FireResult = {
   phase: 'flow' | 'forwards' | 'backwards';
 };
 
-// TODO: Solve run time issues
+// TODO: Refactor this!
 // TODO: Try to understand this ...
 export class FirePartialOrder {
   private readonly idToEventMap = new Map<string, EventItem>();
