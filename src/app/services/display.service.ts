@@ -3,13 +3,16 @@ import { BehaviorSubject, map, Observable } from 'rxjs';
 
 import { Coordinates, CoordinatesInfo } from '../classes/diagram/coordinates';
 import { getEmptyNet } from '../classes/diagram/functions/net-helper.fn';
+import { PartialOrder } from '../classes/diagram/partial-order';
 import { isRunEmpty, PetriNet } from '../classes/diagram/petri-net';
+import { parsedInvalidPartialorder } from './upload/example-file-parsed';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DisplayService implements OnDestroy {
   private petriNet$: BehaviorSubject<PetriNet>;
+  private partialOrders$: BehaviorSubject<PartialOrder[]>;
 
   private coordinatesInfo$: BehaviorSubject<Array<CoordinatesInfo>>;
 
@@ -18,6 +21,9 @@ export class DisplayService implements OnDestroy {
   constructor() {
     const emptyRun = getEmptyNet();
     this.petriNet$ = new BehaviorSubject<PetriNet>(emptyRun);
+    this.partialOrders$ = new BehaviorSubject<PartialOrder[]>([
+      parsedInvalidPartialorder,
+    ]);
 
     this.reset$ = new BehaviorSubject<Coordinates>({ x: 0, y: 0 });
     this.coordinatesInfo$ = new BehaviorSubject<Array<CoordinatesInfo>>([
@@ -52,16 +58,21 @@ export class DisplayService implements OnDestroy {
     return this.petriNet$.asObservable();
   }
 
-  public addEmptyRun(): PetriNet {
-    this.petriNet$.next(getEmptyNet());
-    return this.petriNet$.getValue();
-  }
-
   isCurrentRunEmpty$(): Observable<boolean> {
     return this.petriNet$.pipe(map((run) => isRunEmpty(run)));
   }
 
   setNewNet(newSource: PetriNet): void {
     this.petriNet$.next(newSource);
+  }
+
+  appendNewPartialOrder(partialOrder: PartialOrder): void {
+    const currentList = this.partialOrders$.value;
+    currentList.push(partialOrder);
+    this.partialOrders$.next(currentList);
+  }
+
+  getPartialOrders$(): Observable<PartialOrder[]> {
+    return this.partialOrders$.asObservable();
   }
 }

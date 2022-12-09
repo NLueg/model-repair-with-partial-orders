@@ -17,6 +17,18 @@ export interface EventItem extends ConcreteElementWithArcs {
   transition?: Transition;
 }
 
+export function createEventItem(id: string): EventItem {
+  return {
+    id,
+    type: 'event',
+    label: '',
+    nextEvents: [],
+    previousEvents: [],
+    incomingArcs: [],
+    outgoingArcs: [],
+  };
+}
+
 export function concatEvents(first: EventItem, second: EventItem): void {
   first.nextEvents.push(second.id);
   second.previousEvents.push(first.id);

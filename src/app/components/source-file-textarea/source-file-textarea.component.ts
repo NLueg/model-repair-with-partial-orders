@@ -11,6 +11,7 @@ import { CoordinatesInfo } from '../../classes/diagram/coordinates';
 import { isRunEmpty, PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../../services/display.service';
 import { ParserService } from '../../services/parser/parser.service';
+import { netTypeKey } from '../../services/parser/parsing-constants';
 import { examplePetriNet } from '../../services/upload/example-file';
 import { UploadService } from '../../services/upload/upload.service';
 import {
@@ -93,12 +94,23 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
 
   private processNewSource(newSource: string): void {
     const errors = new Set<string>();
-    const result = this.parserService.parsePetriNet(newSource, errors);
-    this.updateValidation(result, errors);
 
-    if (!result) return;
-    this._displayService.setNewNet(result);
-    this.textareaFc.setValue(newSource);
+    if (newSource.trim().startsWith(netTypeKey)) {
+      const petriNet = this.parserService.parsePetriNet(newSource, errors);
+      this.updateValidation(petriNet, errors);
+      if (!petriNet) return;
+
+      this._displayService.setNewNet(petriNet);
+      this.textareaFc.setValue(newSource);
+    } else {
+      const partialOrder = this.parserService.parsePartialOrder(
+        newSource,
+        errors
+      );
+      if (!partialOrder) return;
+
+      this._displayService.appendNewPartialOrder(partialOrder);
+    }
   }
 
   private addLayerPosInfo(coordinatesInfo: Array<CoordinatesInfo>): void {

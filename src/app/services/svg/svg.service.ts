@@ -82,7 +82,7 @@ function createSvgForElement(element: Transition | Place): SVGElement[] {
     svg.setAttribute('cx', `${x + radius}`);
     svg.setAttribute('cy', `${y + radius}`);
     svg.setAttribute('r', `${radius}`);
-    svg.setAttribute('stroke', 'black');
+    svg.setAttribute('stroke', element.invalid ? 'red' : 'black');
     svg.setAttribute('stroke-width', '2');
     svg.setAttribute('fill-opacity', '0');
     svg.setAttribute(layerPosYAttibute, `${element.layerPos ?? 0}`);

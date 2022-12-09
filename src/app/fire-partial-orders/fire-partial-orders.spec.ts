@@ -10,75 +10,17 @@ describe('fire partial orders', () => {
     const result = new FirePartialOrder(
       parsedPetriNet,
       parsedPartialOrder
-    ).firePartialOrder();
+    ).getInvalidPlaces();
 
-    expect(result).toEqual([
-      {
-        phase: 'forwards',
-        valid: true,
-      },
-      {
-        phase: 'forwards',
-        valid: true,
-      },
-      {
-        phase: 'backwards',
-        valid: true,
-      },
-      {
-        phase: 'backwards',
-        valid: true,
-      },
-      {
-        phase: 'forwards',
-        valid: true,
-      },
-      {
-        phase: 'forwards',
-        valid: true,
-      },
-      {
-        phase: 'flow',
-        valid: true,
-      },
-    ]);
+    expect(result).toEqual([]);
   });
 
   it('should fire partial orders for invalid', () => {
     const result = new FirePartialOrder(
       parsedPetriNet,
       parsedInvalidPartialorder
-    ).firePartialOrder();
+    ).getInvalidPlaces();
 
-    expect(result).toEqual([
-      {
-        phase: 'backwards',
-        valid: true,
-      },
-      {
-        phase: 'forwards',
-        valid: true,
-      },
-      {
-        phase: 'backwards',
-        valid: true,
-      },
-      {
-        phase: 'forwards',
-        valid: true,
-      },
-      {
-        phase: 'flow',
-        valid: false,
-      },
-      {
-        phase: 'forwards',
-        valid: true,
-      },
-      {
-        phase: 'flow',
-        valid: false,
-      },
-    ]);
+    expect(result).toEqual(['p5', 'p7']);
   });
 });

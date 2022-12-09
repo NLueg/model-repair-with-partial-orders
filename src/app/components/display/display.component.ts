@@ -1,6 +1,9 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { map, Observable, switchMap } from 'rxjs';
 
+import { PartialOrder } from '../../classes/diagram/partial-order';
+import { PetriNet } from '../../classes/diagram/petri-net';
+import { FirePartialOrder } from '../../fire-partial-orders/fire-partial-order';
 import { DisplayService } from '../../services/display.service';
 import { LayoutService } from '../../services/layout.service';
 import { SvgService } from '../../services/svg/svg.service';
@@ -23,6 +26,29 @@ export class DisplayComponent {
   ) {
     this.svgElements$ = this.displayService.getPetriNet$().pipe(
       map((currentRun) => this.layoutService.layout(currentRun).run),
+      switchMap((run) =>
+        this.displayService.getPartialOrders$().pipe(
+          map((orders) => {
+            run.places.forEach((place) => {
+              place.invalid = undefined;
+            });
+            if (orders.length > 0) {
+              // TODO: Fire more partial orders
+              const invalidPlaces = this.firePartialOrder(
+                run,
+                orders[orders.length - 1]
+              );
+              for (const place of invalidPlaces) {
+                const foundPlace = run.places.find((p) => p.id === place);
+                if (foundPlace) {
+                  foundPlace.invalid = true;
+                }
+              }
+            }
+            return run;
+          })
+        )
+      ),
       map((modifiedRun) => {
         if (this.canvas && this.canvas.drawingArea) {
           const w = this.canvas.drawingArea.nativeElement.clientWidth;
@@ -30,8 +56,15 @@ export class DisplayComponent {
           if (w > 0 && h > 0)
             this.layoutService.centerPetriNet(modifiedRun, w / 2, h / 2);
         }
-        return this.svgService.createSvgElements(modifiedRun);
+        return [...this.svgService.createSvgElements(modifiedRun)];
       })
     );
+  }
+
+  private firePartialOrder(
+    petriNet: PetriNet,
+    partialOrder: PartialOrder
+  ): string[] {
+    return new FirePartialOrder(petriNet, partialOrder).getInvalidPlaces();
   }
 }

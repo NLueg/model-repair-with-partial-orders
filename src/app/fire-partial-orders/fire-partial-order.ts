@@ -1,8 +1,4 @@
 import { MaxFlowPreflowN3 } from '../algorithms/algorithms/flow-network/max-flow-preflow-n3';
-import {
-  ValidationPhase,
-  ValidationResult,
-} from '../algorithms/algorithms/petri-net/fire-petri-net/classes/validation-result';
 import { Arc } from '../classes/diagram/arc';
 import {
   determineInitialAndFinalEvents,
@@ -12,14 +8,10 @@ import { PetriNet } from '../classes/diagram/petri-net';
 import { Place } from '../classes/diagram/place';
 import {
   concatEvents,
+  createEventItem,
   EventItem,
   Transition,
 } from '../classes/diagram/transition';
-
-export type FireResult = {
-  valid: boolean;
-  phase: 'flow' | 'forwards' | 'backwards';
-};
 
 // TODO: Refactor this!
 // TODO: Try to understand this ...
@@ -27,15 +19,16 @@ export class FirePartialOrder {
   private readonly idToEventMap = new Map<string, EventItem>();
   private readonly idToPlaceMap = new Map<string, Place>();
 
-  constructor(private petriNet: PetriNet, private partialOrder: PartialOrder) {
+  private readonly petriNet: PetriNet;
+  private readonly partialOrder: PartialOrder;
+
+  constructor(petriNet: PetriNet, partialOrder: PartialOrder) {
+    this.petriNet = { ...petriNet };
+    this.partialOrder = { ...partialOrder };
+
     for (const e of this.partialOrder.events) {
       for (const t of this.petriNet.transitions) {
         if (e.label === t.label) {
-          if (e.transition !== undefined) {
-            throw new Error(
-              `The algorithm does not support label-splitted nets`
-            );
-          }
           e.transition = t;
         }
       }
@@ -45,26 +38,15 @@ export class FirePartialOrder {
         );
       }
     }
-    const initial: EventItem = {
-      type: 'event',
-      id: 'initial marking',
-      label: '',
-      nextEvents: [],
-      previousEvents: [],
-      incomingArcs: [],
-      outgoingArcs: [],
-    };
-    const finalEvent: EventItem = {
-      type: 'event',
-      id: 'final marking',
-      label: '',
-      nextEvents: [],
-      previousEvents: [],
-      incomingArcs: [],
-      outgoingArcs: [],
-    };
-    this.partialOrder.events.push(initial);
-    this.partialOrder.events.push(finalEvent);
+
+    const initial: EventItem = createEventItem('initial marking');
+    const finalEvent: EventItem = createEventItem('final marking');
+
+    this.partialOrder.events = [
+      initial,
+      ...this.partialOrder.events,
+      finalEvent,
+    ];
     this.partialOrder.events.forEach((e) => this.idToEventMap.set(e.id, e));
 
     this.partialOrder.initialEvents?.forEach((eventId) => {
@@ -89,7 +71,11 @@ export class FirePartialOrder {
     this.petriNet.places.forEach((p) => this.idToPlaceMap.set(p.id, p));
   }
 
-  public firePartialOrder(): FireResult[] {
+  /**
+   * Fires the partial order in the net and returns the ids of invalid places.
+   * @returns The ids of invalid places.
+   */
+  getInvalidPlaces(): string[] {
     const totalOrder = this.buildTotalOrdering(this.partialOrder);
     totalOrder.forEach(
       (event) =>
@@ -164,19 +150,15 @@ export class FirePartialOrder {
       }
     }
 
-    return this.petriNet.places.map((p, i) => {
-      if (validPlaces[i]) {
-        return new ValidationResult(true, ValidationPhase.FORWARDS);
-      } else if (backwardsValidPlaces[i]) {
-        return new ValidationResult(true, ValidationPhase.BACKWARDS);
-      } else if (flow[i]) {
-        return new ValidationResult(true, ValidationPhase.FLOW);
-      } else if (notValidPlaces[i]) {
-        return new ValidationResult(false, ValidationPhase.FORWARDS);
-      } else {
-        return new ValidationResult(false, ValidationPhase.FLOW);
-      }
-    });
+    return this.petriNet.places
+      .filter((p, i) => {
+        if (validPlaces[i]) {
+          return false;
+        } else if (backwardsValidPlaces[i]) {
+          return false;
+        } else return !flow[i];
+      })
+      .map((p) => p.id);
   }
 
   private fireForwards(
