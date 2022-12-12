@@ -14,7 +14,6 @@ export interface EventItem extends ConcreteElementWithArcs {
 
   // Required for firing the partial order
   localMarking?: number[];
-  transition?: Transition;
 }
 
 export function createEventItem(id: string): EventItem {

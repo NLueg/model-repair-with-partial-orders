@@ -14,10 +14,10 @@ import {
 import { MaxFlowPreflowN3 } from '../../stuff/algorithms/flow-network/max-flow-preflow-n3';
 
 // TODO: Refactor this!
-// TODO: Try to understand this ...
 export class FirePartialOrder {
   private readonly idToEventMap = new Map<string, EventItem>();
   private readonly idToPlaceMap = new Map<string, Place>();
+  private readonly labelToTransitionMap = new Map<string, Transition>();
 
   private readonly petriNet: PetriNet;
   private readonly partialOrder: PartialOrder;
@@ -26,48 +26,9 @@ export class FirePartialOrder {
     this.petriNet = { ...petriNet };
     this.partialOrder = { ...partialOrder };
 
-    for (const e of this.partialOrder.events) {
-      for (const t of this.petriNet.transitions) {
-        if (e.label === t.label) {
-          e.transition = t;
-        }
-      }
-      if (e.transition === undefined) {
-        throw new Error(
-          `The net does not contain a transition with the label '${e.label}' of the event '${e.id}'`
-        );
-      }
-    }
-
-    const initial: EventItem = createEventItem('initial marking');
-    const finalEvent: EventItem = createEventItem('final marking');
-
-    this.partialOrder.events = [
-      initial,
-      ...this.partialOrder.events,
-      finalEvent,
-    ];
-    this.partialOrder.events.forEach((e) => this.idToEventMap.set(e.id, e));
-
-    this.partialOrder.initialEvents?.forEach((eventId) => {
-      const foundEventItem = this.idToEventMap.get(eventId);
-      if (foundEventItem) {
-        concatEvents(initial, foundEventItem);
-      } else {
-        console.error(`Event with id ${eventId} not found`);
-      }
-    });
-
-    this.partialOrder.finalEvents?.forEach((eventId) => {
-      const foundEventItem = this.idToEventMap.get(eventId);
-      if (foundEventItem) {
-        concatEvents(foundEventItem, finalEvent);
-      } else {
-        console.error(`Event with id ${eventId} not found`);
-      }
-    });
-    determineInitialAndFinalEvents(this.partialOrder);
-
+    this.petriNet.transitions.forEach((t) =>
+      this.labelToTransitionMap.set(t.label, t)
+    );
     this.petriNet.places.forEach((p) => this.idToPlaceMap.set(p.id, p));
   }
 
@@ -76,15 +37,11 @@ export class FirePartialOrder {
    * @returns The ids of invalid places.
    */
   getInvalidPlaces(): string[] {
-    const totalOrder = this.buildTotalOrdering(this.partialOrder);
-    totalOrder.forEach(
-      (event) =>
-        (event.localMarking = new Array<number>(
-          this.petriNet.places.length
-        ).fill(0))
-    );
+    this.buildExtensionForPartialOrder();
 
-    // build start event
+    const totalOrder = this.buildTotalOrdering(this.partialOrder);
+
+    // Adds the initial marking to the first event.
     const initialEvent = totalOrder[0];
     for (let i = 0; i < this.petriNet.places.length; i++) {
       initialEvent.localMarking![i] = this.petriNet.places[i].marking;
@@ -94,8 +51,7 @@ export class FirePartialOrder {
     const complexPlaces = new Array(this.petriNet.places.length).fill(false);
     const notValidPlaces = new Array(this.petriNet.places.length).fill(false);
 
-    let queue = [...totalOrder];
-    this.fireForwards(queue, validPlaces, complexPlaces);
+    this.fireForwards([...totalOrder], validPlaces, complexPlaces);
 
     // not valid places
     const finalEvent = this.idToEventMap.get(
@@ -110,7 +66,7 @@ export class FirePartialOrder {
     }
 
     // Don't fire all backwards!
-    queue = [finalEvent];
+    const queue = [finalEvent];
     for (let i = totalOrder.length - 2; i >= 0; i--) {
       totalOrder[i].localMarking = new Array<number>(
         this.petriNet.places.length
@@ -159,6 +115,37 @@ export class FirePartialOrder {
         } else return !flow[i];
       })
       .map((p) => p.id);
+  }
+
+  private buildExtensionForPartialOrder(): void {
+    const initial: EventItem = createEventItem('initial marking');
+    const finalEvent: EventItem = createEventItem('final marking');
+
+    this.partialOrder.events = [
+      initial,
+      ...this.partialOrder.events,
+      finalEvent,
+    ];
+    this.partialOrder.events.forEach((e) => this.idToEventMap.set(e.id, e));
+
+    this.partialOrder.initialEvents?.forEach((eventId) => {
+      const foundEventItem = this.idToEventMap.get(eventId);
+      if (foundEventItem) {
+        concatEvents(initial, foundEventItem);
+      } else {
+        console.error(`Event with id ${eventId} not found`);
+      }
+    });
+
+    this.partialOrder.finalEvents?.forEach((eventId) => {
+      const foundEventItem = this.idToEventMap.get(eventId);
+      if (foundEventItem) {
+        concatEvents(foundEventItem, finalEvent);
+      } else {
+        console.error(`Event with id ${eventId} not found`);
+      }
+    });
+    determineInitialAndFinalEvents(this.partialOrder);
   }
 
   private fireForwards(
@@ -212,9 +199,10 @@ export class FirePartialOrder {
       }
 
       // can fire?
-      if (event.transition !== undefined) {
+      const transition = this.labelToTransitionMap.get(event.label);
+      if (transition !== undefined) {
         // fire
-        for (const arc of preArcs(event.transition)) {
+        for (const arc of preArcs(transition)) {
           const pIndex = this.getPIndex(prePlace(arc));
           event.localMarking![pIndex] =
             event.localMarking![pIndex] - arc.weight;
@@ -223,7 +211,7 @@ export class FirePartialOrder {
           }
         }
 
-        for (const arc of postArcs(event.transition)) {
+        for (const arc of postArcs(transition)) {
           const pIndex = this.getPIndex(postPlace(arc));
           event.localMarking![pIndex] =
             event.localMarking![pIndex] + arc.weight;
@@ -252,6 +240,7 @@ export class FirePartialOrder {
     return this.petriNet.places.findIndex((pp) => pp === p);
   }
 
+  // TODO: Refactor me!
   private buildTotalOrdering(partialOrder: PartialOrder): Array<EventItem> {
     const ordering: Array<string> = [
       ...(this.partialOrder.initialEvents ?? []),
@@ -261,13 +250,10 @@ export class FirePartialOrder {
     const examineLater: Array<EventItem> = [...partialOrder.events];
     while (examineLater.length > 0) {
       const event = examineLater.shift();
-      if (!event) {
-        throw Error('Event is undefined');
-      }
-
-      if (contained.includes(event.id)) {
+      if (!event || contained.includes(event.id)) {
         continue;
       }
+
       let add = true;
       for (const pre of event.previousEvents) {
         if (!contained.some((containedEvent) => containedEvent === pre)) {
@@ -283,7 +269,13 @@ export class FirePartialOrder {
       }
     }
 
-    return ordering.map((id) => this.idToEventMap.get(id) as EventItem);
+    return ordering.map((id) => {
+      const eventItem = this.idToEventMap.get(id) as EventItem;
+      eventItem.localMarking = new Array<number>(
+        this.petriNet.places.length
+      ).fill(0);
+      return eventItem;
+    });
   }
 
   private checkFlowForPlace(place: Place, events: Array<EventItem>): boolean {
@@ -297,7 +289,7 @@ export class FirePartialOrder {
       network.setUnbounded(this.eventStart(eIndex), this.eventEnd(eIndex));
 
       const event = events[eIndex];
-      const transition = event.transition;
+      const transition = this.labelToTransitionMap.get(event.label);
       if (transition === undefined) {
         if (place.marking > 0) {
           network.setCap(SOURCE, this.eventEnd(eIndex), place.marking);
