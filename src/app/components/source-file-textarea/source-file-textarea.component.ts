@@ -12,7 +12,7 @@ import { isRunEmpty, PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../../services/display.service';
 import { ParserService } from '../../services/parser/parser.service';
 import { netTypeKey } from '../../services/parser/parsing-constants';
-import { examplePetriNet } from '../../services/upload/example-file';
+import { simpleExamplePetriNet } from '../../services/upload/simple-example/simple-example-texts';
 import { UploadService } from '../../services/upload/upload.service';
 import {
   removeCoordinates,
@@ -74,7 +74,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     this._resetEventSubscription = this.resetEvent?.subscribe(() =>
       this.removeOffset()
     );
-    this.processNewSource(examplePetriNet);
+    this.processNewSource(simpleExamplePetriNet);
   }
 
   ngOnDestroy(): void {

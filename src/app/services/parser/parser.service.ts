@@ -114,7 +114,7 @@ export class ParserService {
             trimmedLine !== eventsAttribute &&
             trimmedLine !== placesAttribute
           ) {
-            let source: string, target: string;
+            let source: string, target: string, weight: number;
             const breakpoints: Breakpoint[] = [];
 
             if (this.arcRegex.test(trimmedLine)) {
@@ -123,15 +123,16 @@ export class ParserService {
               if (match) {
                 source = match[1];
                 target = match[2];
+                weight = Number(match[3]);
               } else {
                 const splitLine = trimmedLine.split(' ');
                 source = splitLine[0];
                 target = splitLine[1];
+                weight = Number(splitLine[2]);
               }
 
-              // TODO: Support weighted arcs
               const arc = {
-                weight: 1,
+                weight: isNaN(weight) ? 1 : weight,
                 source: source,
                 target: target,
                 breakpoints: breakpoints,

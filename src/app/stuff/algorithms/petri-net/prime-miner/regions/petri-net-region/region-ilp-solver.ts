@@ -1,10 +1,11 @@
 import { GLPK, LP, Result } from 'glpk.js';
 import {
   BehaviorSubject,
+  from,
+  map,
   Observable,
   ReplaySubject,
   switchMap,
-  take,
 } from 'rxjs';
 
 import { Bound } from '../../../../../models/glpk/bound';
@@ -51,7 +52,7 @@ export class RegionIlpSolver {
 
   constructor(
     private _regionTransformer: PetriNetRegionTransformerService,
-    private _solver$: Observable<GLPK>
+    private solver: GLPK
   ) {
     this._constraintCounter = new IncrementingCounter();
     this._variableCounter = new IncrementingCounter();
@@ -73,7 +74,9 @@ export class RegionIlpSolver {
     ilp$
       .pipe(switchMap((ilp) => this.solveILP(ilp)))
       .subscribe((ps: ProblemSolution) => {
+        console.warn(ps);
         if (ps.solution.result.status === Solution.OPTIMAL) {
+          // Adds the marking value to the places
           const region = this._regionTransformer.displayRegionInNet(
             ps.solution,
             combined.net
@@ -151,16 +154,6 @@ export class RegionIlpSolver {
       ilp.subjectTo = [];
     }
     ilp.subjectTo.push(...constraints.constraints);
-
-    if (ilp.binaries === undefined) {
-      ilp.binaries = [];
-    }
-    ilp.binaries.push(...constraints.binaryVariables);
-
-    if (ilp.generals === undefined) {
-      ilp.generals = [];
-    }
-    ilp.generals.push(...constraints.integerVariables);
   }
 
   // TODO: Constraints for the places
@@ -369,7 +362,6 @@ export class RegionIlpSolver {
 
     const yVariables = additionalConstraints
       .reduce((arr, constraint) => {
-        arr.push(...constraint.binaryVariables);
         return arr;
       }, [] as Array<string>)
       .map((y) => this.variable(y));
@@ -866,19 +858,10 @@ export class RegionIlpSolver {
   }
 
   private solveILP(ilp: LP): Observable<ProblemSolution> {
-    const result$ = new ReplaySubject<ProblemSolution>();
-
-    this._solver$.pipe(take(1)).subscribe((glpk) => {
-      const res = glpk.solve(ilp, {
-        msglev: MessageLevel.ERROR,
-      }) as unknown as Promise<Result>;
-      res.then((solution: Result) => {
-        result$.next({ ilp, solution });
-        result$.complete();
-      });
-    });
-
-    return result$.asObservable();
+    const solutionPromise = this.solver.solve(ilp, {
+      msglev: MessageLevel.ERROR,
+    }) as unknown as Promise<Result>;
+    return from(solutionPromise).pipe(map((solution) => ({ solution, ilp })));
   }
 
   private formatVariableList(variables: Variable | Array<Variable>): string {

@@ -1,17 +1,17 @@
-import { MaxFlowPreflowN3 } from '../algorithms/algorithms/flow-network/max-flow-preflow-n3';
-import { Arc } from '../classes/diagram/arc';
+import { Arc } from '../../classes/diagram/arc';
 import {
   determineInitialAndFinalEvents,
   PartialOrder,
-} from '../classes/diagram/partial-order';
-import { PetriNet } from '../classes/diagram/petri-net';
-import { Place } from '../classes/diagram/place';
+} from '../../classes/diagram/partial-order';
+import { PetriNet } from '../../classes/diagram/petri-net';
+import { Place } from '../../classes/diagram/place';
 import {
   concatEvents,
   createEventItem,
   EventItem,
   Transition,
-} from '../classes/diagram/transition';
+} from '../../classes/diagram/transition';
+import { MaxFlowPreflowN3 } from '../../stuff/algorithms/flow-network/max-flow-preflow-n3';
 
 // TODO: Refactor this!
 // TODO: Try to understand this ...
@@ -329,8 +329,6 @@ export class FirePartialOrder {
       need += network.getCap(ii, SINK);
     }
     const f = network.maxFlow(SOURCE, SINK);
-    console.debug(`flow ${place.id} ${f}`);
-    console.debug(`need ${place.id} ${need}`);
     return need === f;
   }
 

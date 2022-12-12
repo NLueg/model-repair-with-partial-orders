@@ -2,7 +2,7 @@ import {
   parsedInvalidPartialorder,
   parsedPartialOrder,
   parsedPetriNet,
-} from '../services/upload/example-file-parsed';
+} from '../../services/upload/example-file-parsed';
 import { FirePartialOrder } from './fire-partial-order';
 
 describe('fire partial orders', () => {

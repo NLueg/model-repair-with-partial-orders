@@ -27,7 +27,11 @@ export class PrimeMinerService {
     protected _implicitPlaceRemover: ImplicitPlaceRemoverService
   ) {}
 
-  // Prime miner algorithm
+  /**
+   * Generates a petri net from a partial order
+   * @param minerInputs partial order net with the contained traces
+   * @param config
+   */
   public mine(
     minerInputs: Array<PartialOrderNetWithContainedTraces>,
     config: RegionsConfiguration = {}
@@ -37,6 +41,7 @@ export class PrimeMinerService {
       return EMPTY;
     }
 
+    // Sortiert nach höchster Frequenz (häufigste Logs zuerst)
     minerInputs.sort(
       (a, b) => (b.net?.frequency ?? 0) - (a.net?.frequency ?? 0)
     );
@@ -47,6 +52,8 @@ export class PrimeMinerService {
     const minerInput$ = new BehaviorSubject(minerInputs[0]);
     return minerInput$.pipe(
       concatMap((nextInput) => {
+        // Synthesise the given inputs to a single net
+        // The first net is just empty, and we try to add the next input to it
         return this._synthesisService
           .synthesise([bestResult.net, nextInput.net], config)
           .pipe(

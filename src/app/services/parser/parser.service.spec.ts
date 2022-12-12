@@ -11,6 +11,14 @@ import {
   parsedPartialOrder,
   parsedPetriNet,
 } from '../upload/example-file-parsed';
+import {
+  parsedSimpleExampleLogInvalid,
+  parsedSimpleExamplePetriNet,
+} from '../upload/simple-example/simple-example-parsed';
+import {
+  simpleExampleLogInvalid,
+  simpleExamplePetriNet,
+} from '../upload/simple-example/simple-example-texts';
 import { ParserService } from './parser.service';
 
 describe('ParserService', () => {
@@ -51,5 +59,19 @@ describe('ParserService', () => {
     const result = service.parsePartialOrder(exampleLogInvalid, errors);
 
     expect(result).toEqual(parsedInvalidPartialorder);
+  });
+
+  it('parseNet should parse simple example petri net', () => {
+    const errors = new Set<string>();
+    const result = service.parsePetriNet(simpleExamplePetriNet, errors);
+
+    expect(result).toEqual(parsedSimpleExamplePetriNet);
+  });
+
+  it('parseLog should parse simple invalid example log', () => {
+    const errors = new Set<string>();
+    const result = service.parsePartialOrder(simpleExampleLogInvalid, errors);
+
+    expect(result).toEqual(parsedSimpleExampleLogInvalid);
   });
 });

@@ -5,7 +5,7 @@ import { Coordinates, CoordinatesInfo } from '../classes/diagram/coordinates';
 import { getEmptyNet } from '../classes/diagram/functions/net-helper.fn';
 import { PartialOrder } from '../classes/diagram/partial-order';
 import { isRunEmpty, PetriNet } from '../classes/diagram/petri-net';
-import { parsedInvalidPartialorder } from './upload/example-file-parsed';
+import { parsedSimpleExampleLogInvalid } from './upload/simple-example/simple-example-parsed';
 
 @Injectable({
   providedIn: 'root',
@@ -22,7 +22,7 @@ export class DisplayService implements OnDestroy {
     const emptyRun = getEmptyNet();
     this.petriNet$ = new BehaviorSubject<PetriNet>(emptyRun);
     this.partialOrders$ = new BehaviorSubject<PartialOrder[]>([
-      parsedInvalidPartialorder,
+      parsedSimpleExampleLogInvalid,
     ]);
 
     this.reset$ = new BehaviorSubject<Coordinates>({ x: 0, y: 0 });

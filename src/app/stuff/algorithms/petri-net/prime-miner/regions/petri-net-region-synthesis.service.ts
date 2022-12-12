@@ -34,6 +34,7 @@ export class PetriNetRegionSynthesisService {
 
     const arrayInput = Array.isArray(input) ? input : [input];
 
+    // Generates regions for the nets
     this._regionService.computeRegions(arrayInput, config).subscribe({
       next: (region) => {
         synthesiser.addRegion(region);
