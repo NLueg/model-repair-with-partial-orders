@@ -13,6 +13,8 @@ import {
 } from '../../classes/diagram/transition';
 import { MaxFlowPreflowN3 } from '../../stuff/algorithms/flow-network/max-flow-preflow-n3';
 
+type InnerFireResult = { branchPlaces: string[] };
+
 // TODO: Refactor this!
 export class FirePartialOrder {
   private readonly idToEventMap = new Map<string, EventItem>();
@@ -49,10 +51,9 @@ export class FirePartialOrder {
     }
 
     const validPlaces = new Array(this.petriNet.places.length).fill(true);
-    const complexPlaces = new Array(this.petriNet.places.length).fill(false);
     const notValidPlaces = new Array(this.petriNet.places.length).fill(false);
 
-    this.fireForwards([...totalOrder], validPlaces, complexPlaces);
+    const forwardResult = this.fireForwards([...totalOrder], validPlaces);
 
     // not valid places
     const finalEvent = this.idToEventMap.get(
@@ -86,18 +87,14 @@ export class FirePartialOrder {
       }
     }
 
-    this.fireBackwards(
-      backwardsFireQueue,
-      backwardsValidPlaces,
-      new Array(this.petriNet.places.length).fill(false)
-    );
+    this.fireBackwards(backwardsFireQueue, backwardsValidPlaces);
 
     // Rest with flow
     const flow = new Array(this.petriNet.places.length).fill(false);
     for (let i = 0; i < this.petriNet.places.length; i++) {
       if (
         !validPlaces[i] &&
-        complexPlaces[i] &&
+        forwardResult.branchPlaces.includes(this.petriNet.places[i].id) &&
         !notValidPlaces[i] &&
         !backwardsValidPlaces[i]
       ) {
@@ -156,13 +153,11 @@ export class FirePartialOrder {
 
   private fireForwards(
     queue: Array<EventItem>,
-    validPlaces: Array<boolean>,
-    complexPlaces: Array<boolean>
-  ) {
-    this.fire(
+    validPlaces: Array<boolean>
+  ): InnerFireResult {
+    return this.fire(
       queue,
       validPlaces,
-      complexPlaces,
       (t) => t.incomingArcs,
       (a) => this.idToPlaceMap.get(a.source),
       (t) => t.outgoingArcs,
@@ -171,15 +166,10 @@ export class FirePartialOrder {
     );
   }
 
-  private fireBackwards(
-    queue: Array<EventItem>,
-    validPlaces: Array<boolean>,
-    complexPlaces: Array<boolean>
-  ) {
+  private fireBackwards(queue: Array<EventItem>, validPlaces: Array<boolean>) {
     this.fire(
       queue,
       validPlaces,
-      complexPlaces,
       (t) => t.outgoingArcs,
       (a) => this.idToPlaceMap.get(a.target),
       (t) => t.incomingArcs,
@@ -192,13 +182,14 @@ export class FirePartialOrder {
   private fire(
     eventQueue: Array<EventItem>,
     validPlaces: Array<boolean>,
-    complexPlaces: Array<boolean>,
     preArcs: (t: Transition) => Array<Arc>,
     prePlace: (a: Arc) => Place | undefined,
     postArcs: (t: Transition) => Array<Arc>,
     postPlace: (a: Arc) => Place | undefined,
     nextEvents: (e: EventItem) => string[]
-  ) {
+  ): InnerFireResult {
+    const branchPlaces: string[] = [];
+
     while (eventQueue.length > 0) {
       const event = eventQueue.shift();
       if (!event) {
@@ -230,7 +221,7 @@ export class FirePartialOrder {
       if (nextEventsToFire.length > 0) {
         for (let i = 0; i < this.petriNet.places.length; i++) {
           if (nextEventsToFire.length > 1 && event.localMarking![i] > 0) {
-            complexPlaces[i] = true;
+            branchPlaces.push(this.petriNet.places[i].id);
           }
           const firstLater = [...nextEventsToFire][0];
           const firstLaterEvent = this.idToEventMap.get(
@@ -242,7 +233,7 @@ export class FirePartialOrder {
       }
     }
 
-    return { validPlaces, complexPlaces };
+    return { branchPlaces };
   }
 
   private buildTotalOrder(partialOrder: PartialOrder): Array<EventItem> {
