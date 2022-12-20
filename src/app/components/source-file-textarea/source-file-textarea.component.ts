@@ -97,6 +97,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
 
     if (newSource.trim().startsWith(netTypeKey)) {
       const petriNet = this.parserService.parsePetriNet(newSource, errors);
+      console.warn(petriNet);
       this.updateValidation(petriNet, errors);
       if (!petriNet) return;
 

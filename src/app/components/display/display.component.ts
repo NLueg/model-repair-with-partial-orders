@@ -1,5 +1,5 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { map, Observable, switchMap } from 'rxjs';
+import { map, Observable, of, switchMap } from 'rxjs';
 
 import { FirePartialOrder } from '../../algorithms/fire-partial-orders/fire-partial-order';
 import { PetriNetRegionsService } from '../../algorithms/regions/petri-net-regions.service';
@@ -30,23 +30,30 @@ export class DisplayComponent {
       map((currentRun) => this.layoutService.layout(currentRun).run),
       switchMap((petriNet) =>
         this.displayService.getPartialOrders$().pipe(
-          map((orders) => {
-            // TODO: Fire more partial orders
-            this.petriNetRegionsService.computeRegions(petriNet).subscribe();
+          // TODO: Fire more partial orders
+          switchMap((partialOrders) => {
+            if (partialOrders.length === 0) {
+              return of([]);
+            }
 
+            const invalidPlaces = this.firePartialOrder(
+              petriNet,
+              partialOrders[partialOrders.length - 1]
+            );
+
+            // TODO: Generate repair suggestions for each place
+            return this.petriNetRegionsService
+              .computeRegions(petriNet, invalidPlaces)
+              .pipe(map(() => invalidPlaces));
+          }),
+          map((invalidPlaces) => {
             petriNet.places.forEach((place) => {
               place.invalid = undefined;
             });
-            if (orders.length > 0) {
-              const invalidPlaces = this.firePartialOrder(
-                petriNet,
-                orders[orders.length - 1]
-              );
-              for (const place of invalidPlaces) {
-                const foundPlace = petriNet.places.find((p) => p.id === place);
-                if (foundPlace) {
-                  foundPlace.invalid = true;
-                }
+            for (const place of invalidPlaces) {
+              const foundPlace = petriNet.places.find((p) => p.id === place);
+              if (foundPlace) {
+                foundPlace.invalid = true;
               }
             }
             return petriNet;

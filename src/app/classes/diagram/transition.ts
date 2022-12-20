@@ -29,6 +29,10 @@ export function createEventItem(id: string): EventItem {
 }
 
 export function concatEvents(first: EventItem, second: EventItem): void {
-  first.nextEvents.push(second.id);
-  second.previousEvents.push(first.id);
+  if (!first.nextEvents.includes(second.id)) {
+    first.nextEvents.push(second.id);
+  }
+  if (!second.previousEvents.includes(first.id)) {
+    second.previousEvents.push(first.id);
+  }
 }

@@ -13,6 +13,22 @@ import {
 } from '../../classes/diagram/transition';
 import { MaxFlowPreflowN3 } from '../../stuff/algorithms/flow-network/max-flow-preflow-n3';
 
+export class ValidationResult {
+  public valid: boolean;
+  public phase: ValidationPhase;
+
+  constructor(valid: boolean, phase: ValidationPhase) {
+    this.valid = valid;
+    this.phase = phase;
+  }
+}
+
+export enum ValidationPhase {
+  FLOW = 'flow',
+  FORWARDS = 'forwards',
+  BACKWARDS = 'backwards',
+}
+
 type InnerFireResult = { branchPlaces: string[] };
 
 // TODO: Refactor this!
@@ -104,6 +120,22 @@ export class FirePartialOrder {
         );
       }
     }
+
+    /**
+     * return this.petriNet.places.map((p, i) => {
+     *       if (validPlaces[i]) {
+     *         return new ValidationResult(true, ValidationPhase.FORWARDS);
+     *       } else if (backwardsValidPlaces[i]) {
+     *         return new ValidationResult(true, ValidationPhase.BACKWARDS);
+     *       } else if (flow[i]) {
+     *         return new ValidationResult(true, ValidationPhase.FLOW);
+     *       } else if (notValidPlaces[i]) {
+     *         return new ValidationResult(false, ValidationPhase.FORWARDS);
+     *       } else {
+     *         return new ValidationResult(false, ValidationPhase.FLOW);
+     *       }
+     *     });
+     */
 
     return this.petriNet.places
       .filter((p, i) => {

@@ -1,0 +1,22 @@
+.type pn
+.transitions
+a a
+b b
+c c
+d d
+.places
+p1 1
+p2 0
+p3 0
+p4 0
+p5 0
+.arcs
+p1 a 2
+a p2
+p2 b
+p2 c
+b p3
+c p4
+p3 d
+p4 d
+d p5
