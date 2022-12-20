@@ -1,5 +1,5 @@
 import { GLPK, LP, Result } from 'glpk.js';
-import { concatMap, from, Observable, of, ReplaySubject, toArray } from 'rxjs';
+import { concatMap, from, Observable, ReplaySubject, tap, toArray } from 'rxjs';
 
 import { PartialOrder } from '../../../classes/diagram/partial-order';
 import { PetriNet } from '../../../classes/diagram/petri-net';
@@ -13,15 +13,15 @@ import { Variable } from '../../../stuff/models/glpk/variable';
 import { DirectlyFollowsExtractor } from './directly-follows-extractor';
 import { Constraint, Goal, MessageLevel } from './glpk-constants';
 
-export interface CombinationResult {
-  net: PetriNet;
-  inputs: Array<Set<string>>;
-  outputs: Array<Set<string>>;
+export enum VariableType {
+  INITIAL_MARKING,
+  INGOING_WEIGHT,
+  OUTGOING_WEIGHT,
 }
 
-interface Region {
-  net: PetriNet;
-  inputs: Array<string>;
+export interface SolutionVariable {
+  label: string;
+  type: VariableType;
 }
 
 export class IlpSolver {
@@ -64,8 +64,12 @@ export class IlpSolver {
     partialOrders: Array<PartialOrder>,
     petriNet: PetriNet,
     placeIdToCheck: string
-  ): Observable<void> {
-    const baseConstraints = this.buildBasicIlpForPartialOrders(partialOrders);
+  ): Observable<ProblemSolution[]> {
+    const baseConstraints = this.buildBasicIlpForPartialOrders(
+      partialOrders,
+      petriNet,
+      placeIdToCheck
+    );
 
     const baseIlp = this.setUpBaseIlp();
 
@@ -77,29 +81,28 @@ export class IlpSolver {
         pair,
       }));
 
-    console.log(problems);
-    from(problems)
-      .pipe(
-        concatMap((problem) => {
-          return this.solveILP(
-            this.populateIlp(
-              problem.baseIlp,
-              problem.baseConstraints,
-              problem.pair
-            )
-          );
-        }),
-        toArray()
-      )
-      .subscribe((solutions) => console.warn(solutions));
-
-    return of(undefined);
+    return from(problems).pipe(
+      concatMap((problem) => {
+        return this.solveILP(
+          this.populateIlp(
+            problem.baseIlp,
+            problem.baseConstraints,
+            problem.pair
+          )
+        );
+      }),
+      toArray(),
+      tap(() => {
+        console.log('Ingoing', this._labelVariableMapIngoing);
+        console.log('Outgoing', this._labelVariableMapOutgoing);
+      })
+    );
   }
 
   private populateIlp(
     baseIlp: LP,
     baseConstraints: Array<SubjectTo>,
-    causalPair: Array<string>
+    causalPair: [string, string]
   ): LP {
     const result = Object.assign({}, baseIlp);
     result.subjectTo = [...baseConstraints];
@@ -131,13 +134,11 @@ export class IlpSolver {
   protected solveILP(ilp: LP): Observable<ProblemSolution> {
     const result$ = new ReplaySubject<ProblemSolution>(1);
 
-    console.log('Solve: ', ilp);
     const res = this.glpk.solve(ilp, {
-      msglev: MessageLevel.ALL,
+      msglev: MessageLevel.ERROR,
     }) as unknown as Promise<Result>;
     res
       .then((solution: Result) => {
-        console.log('Solution: ', solution);
         result$.next({ ilp, solution });
         result$.complete();
       })
@@ -147,18 +148,43 @@ export class IlpSolver {
   }
 
   private buildBasicIlpForPartialOrders(
-    partialOrders: Array<PartialOrder>
+    partialOrders: Array<PartialOrder>,
+    petriNet: PetriNet,
+    placeIdToCheck: string
   ): Array<SubjectTo> {
     const baseIlpConstraints: Array<SubjectTo> = [];
 
     for (let i = 0; i < partialOrders.length; i++) {
       const events = partialOrders[i].events;
       for (const e of events) {
-        baseIlpConstraints.push(...this.firingRule(e, i));
+        baseIlpConstraints.push(...this.firingRule(e, i, partialOrders[i]));
         baseIlpConstraints.push(...this.tokenFlow(e, i));
       }
       baseIlpConstraints.push(...this.initialMarking(events, i));
     }
+
+    // TODO: Only generate constraints for the place that is being checked
+    // TODO: I want to generate a place, that can replace the invalid one
+    // TODO: I remove this place and try to find a new one
+    // TODO: I have to tell the solver, that there is an existing net!!!
+    const validPlaces = petriNet.places.filter((p) => p.id !== placeIdToCheck);
+    for (const place of validPlaces) {
+      for (const incoming of place.incomingArcs) {
+        // TODO: add constraint for each incoming arc
+      }
+      for (const outgoing of place.outgoingArcs) {
+        // TODO: add constraint for each incoming arc
+      }
+    }
+
+    const invalidPlace = petriNet.places.find((p) => p.id === placeIdToCheck)!;
+    for (const incoming of invalidPlace.incomingArcs) {
+      // TODO: add constraint for each incoming arc
+    }
+    for (const outgoing of invalidPlace.outgoingArcs) {
+      // TODO: add constraint for each incoming arc
+    }
+
     return baseIlpConstraints;
   }
 
@@ -182,11 +208,20 @@ export class IlpSolver {
     };
   }
 
-  private firingRule(event: EventItem, i: number): Array<SubjectTo> {
+  private firingRule(
+    event: EventItem,
+    i: number,
+    partialOrder: PartialOrder
+  ): Array<SubjectTo> {
     const variables = [this.variable(this.getPoEventId(event.id, i))];
     for (const pre of event.previousEvents) {
       variables.push(this.variable(this.getPoArcId(pre, event.id, i)));
-      this._directlyFollowsExtractor.add(event.label, pre);
+
+      const preLabel = partialOrder.events.find((e) => e.id === pre)?.label;
+      if (!preLabel) {
+        throw Error('Predecessor label not found!');
+      }
+      this._directlyFollowsExtractor.add(event.label, preLabel);
     }
     variables.push(
       this.variable(
@@ -202,34 +237,34 @@ export class IlpSolver {
 
   private tokenFlow(event: EventItem, i: number): Array<SubjectTo> {
     const variables = [this.variable(this.getPoEventId(event.id, i))];
-    // for (const pre of event.previousEvents) {
-    //   variables.push(this.variable(this.getPoArcId(pre, event.id, i)));
-    // }
-    // for (const post of event.nextEvents) {
-    //   variables.push(this.variable(this.getPoArcId(event.id, post, i), -1));
-    // }
-    //     if (event.nextEvents.length === 0) {
-    //       variables.push(
-    //         this.variable(this.getPoArcId(event.id, this.FINAL_MARKING, i), -1)
-    //       );
-    //     }
-    //     variables.push(
-    //       this.variable(
-    //         this.transitionVariableName(
-    //           event.label!,
-    //           VariableName.INGOING_ARC_WEIGHT_PREFIX
-    //         ),
-    //         -1
-    //       )
-    //     );
-    //     variables.push(
-    //       this.variable(
-    //         this.transitionVariableName(
-    //           event.label!,
-    //           VariableName.OUTGOING_ARC_WEIGHT_PREFIX
-    //         )
-    //       )
-    //     );
+    for (const pre of event.previousEvents) {
+      variables.push(this.variable(this.getPoArcId(pre, event.id, i)));
+    }
+    for (const post of event.nextEvents) {
+      variables.push(this.variable(this.getPoArcId(event.id, post, i), -1));
+    }
+    if (event.nextEvents.length === 0) {
+      variables.push(
+        this.variable(this.getPoArcId(event.id, this.FINAL_MARKING, i), -1)
+      );
+    }
+    variables.push(
+      this.variable(
+        this.transitionVariableName(
+          event.label!,
+          VariableName.INGOING_ARC_WEIGHT_PREFIX
+        ),
+        -1
+      )
+    );
+    variables.push(
+      this.variable(
+        this.transitionVariableName(
+          event.label!,
+          VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+        )
+      )
+    );
     return this.equal(variables, 0).constraints;
   }
 
@@ -242,6 +277,38 @@ export class IlpSolver {
     );
     variables.push(this.variable(VariableName.INITIAL_MARKING));
     return this.equal(variables, 0).constraints;
+  }
+
+  public getInverseVariableMapping(variable: string): SolutionVariable | null {
+    if (variable === VariableName.INITIAL_MARKING) {
+      return {
+        label: VariableName.INITIAL_MARKING,
+        type: VariableType.INITIAL_MARKING,
+      };
+    } else if (variable.startsWith(VariableName.INGOING_ARC_WEIGHT_PREFIX)) {
+      const label = this._inverseLabelVariableMapIngoing.get(variable);
+      if (label === undefined) {
+        throw new Error(
+          `ILP variable '${variable}' could not be resolved to an ingoing transition label!`
+        );
+      }
+      return {
+        label,
+        type: VariableType.INGOING_WEIGHT,
+      };
+    } else if (variable.startsWith(VariableName.OUTGOING_ARC_WEIGHT_PREFIX)) {
+      const label = this._inverseLabelVariableMapOutgoing.get(variable);
+      if (label === undefined) {
+        throw new Error(
+          `ILP variable '${variable}' could not be resolved to an outgoing transition label!`
+        );
+      }
+      return {
+        label,
+        type: VariableType.OUTGOING_WEIGHT,
+      };
+    }
+    return null;
   }
 
   private getPoEventId(id: string, i: number): string {
@@ -260,7 +327,18 @@ export class IlpSolver {
     return id;
   }
 
-  protected transitionVariableName(label: string, prefix: 'x' | 'y'): string {
+  /**
+   * Gets variable name for transition
+   * @param label transition label
+   * @param prefix prefix for variable name
+   * @protected
+   */
+  protected transitionVariableName(
+    label: string,
+    prefix:
+      | VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+      | VariableName.INGOING_ARC_WEIGHT_PREFIX
+  ): string {
     let map, inverseMap;
     if (prefix === VariableName.INGOING_ARC_WEIGHT_PREFIX) {
       map = this._labelVariableMapIngoing;
@@ -269,10 +347,12 @@ export class IlpSolver {
       map = this._labelVariableMapOutgoing;
       inverseMap = this._inverseLabelVariableMapOutgoing;
     }
+
     const saved = map.get(label);
     if (saved !== undefined) {
       return saved;
     }
+
     const name = this.helperVariableName(prefix);
     map.set(label, name);
     inverseMap.set(name, label);

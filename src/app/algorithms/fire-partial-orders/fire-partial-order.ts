@@ -1,3 +1,5 @@
+import clonedeep from 'lodash.clonedeep';
+
 import { Arc } from '../../classes/diagram/arc';
 import {
   determineInitialAndFinalEvents,
@@ -42,7 +44,7 @@ export class FirePartialOrder {
 
   constructor(petriNet: PetriNet, partialOrder: PartialOrder) {
     this.petriNet = { ...petriNet };
-    this.partialOrder = { ...partialOrder };
+    this.partialOrder = clonedeep(partialOrder);
 
     this.petriNet.transitions.forEach((t) =>
       this.labelToTransitionMap.set(t.label, t)
@@ -153,8 +155,8 @@ export class FirePartialOrder {
    * @private
    */
   private buildExtensionForPartialOrder(): void {
-    const initial: EventItem = createEventItem('initial marking');
-    const finalEvent: EventItem = createEventItem('final marking');
+    const initial: EventItem = createEventItem('initial_marking');
+    const finalEvent: EventItem = createEventItem('final_marking');
 
     this.partialOrder.events = [
       initial,

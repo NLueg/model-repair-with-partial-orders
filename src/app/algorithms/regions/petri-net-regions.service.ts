@@ -1,10 +1,14 @@
 import { Injectable } from '@angular/core';
 import { GLPK } from 'glpk.js';
-import { from, Observable, switchMap } from 'rxjs';
+import { from, map, Observable, switchMap } from 'rxjs';
 
 import { PetriNet } from '../../classes/diagram/petri-net';
-import { parsedSimpleExampleLogInvalid } from '../../services/upload/simple-example/simple-example-parsed';
-import { IlpSolver } from './ilp-solver/ilp-solver';
+import {
+  parsedSimpleExampleLogInvalid,
+  parsedSimpleExampleLogInvalidSecond,
+} from '../../services/upload/simple-example/simple-example-parsed';
+import { ProblemSolution } from '../../stuff/algorithms/petri-net/prime-miner/regions/petri-net-region/region-ilp-solver';
+import { IlpSolver, VariableType } from './ilp-solver/ilp-solver';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const createGlpk: () => Promise<GLPK> = require('glpk.js').default;
@@ -19,13 +23,51 @@ export class PetriNetRegionsService {
     invalidPlaces: string[]
   ): Observable<void> {
     return from(createGlpk()).pipe(
-      switchMap((glpk: GLPK) =>
-        new IlpSolver(glpk).computeRegions(
-          [parsedSimpleExampleLogInvalid],
-          petriNet,
-          invalidPlaces[0]
-        )
-      )
+      switchMap((glpk) => {
+        const solver = new IlpSolver(glpk);
+        return solver
+          .computeRegions(
+            [
+              parsedSimpleExampleLogInvalid,
+              parsedSimpleExampleLogInvalidSecond,
+            ],
+            petriNet,
+            invalidPlaces[0]
+          )
+          .pipe(map((solutions) => this.handleSolutions(solutions, solver)));
+      })
     );
+  }
+
+  private handleSolutions(solutions: ProblemSolution[], solver: IlpSolver) {
+    console.warn(solutions);
+
+    for (const placeSolution of solutions) {
+      console.warn('====== PLACE START ======');
+      Object.entries(placeSolution.solution.result.vars).forEach(
+        ([variable, value]) => {
+          if (value === 0) {
+            return;
+          }
+          const decoded = solver.getInverseVariableMapping(variable);
+          if (decoded === null) {
+            return;
+          }
+
+          switch (decoded.type) {
+            case VariableType.INITIAL_MARKING:
+              console.log('Marking for place ', value);
+              return;
+            case VariableType.INGOING_WEIGHT:
+              console.log(`Add transition from place to ${decoded.label}`);
+              return;
+            case VariableType.OUTGOING_WEIGHT:
+              console.log(`Add transition from ${decoded.label} to place`);
+              return;
+          }
+        }
+      );
+      console.warn('====== PLACE END ======');
+    }
   }
 }

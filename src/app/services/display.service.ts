@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { BehaviorSubject, map, Observable } from 'rxjs';
 
 import { Coordinates, CoordinatesInfo } from '../classes/diagram/coordinates';
@@ -10,7 +10,7 @@ import { parsedSimpleExampleLogInvalid } from './upload/simple-example/simple-ex
 @Injectable({
   providedIn: 'root',
 })
-export class DisplayService implements OnDestroy {
+export class DisplayService {
   private petriNet$: BehaviorSubject<PetriNet>;
   private partialOrders$: BehaviorSubject<PartialOrder[]>;
 
@@ -40,10 +40,6 @@ export class DisplayService implements OnDestroy {
         },
       },
     ]);
-  }
-
-  ngOnDestroy(): void {
-    this.petriNet$.complete();
   }
 
   public setCoordsInfo(coordsInfos: Array<CoordinatesInfo>): void {

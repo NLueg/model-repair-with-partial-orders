@@ -88,6 +88,6 @@ export enum Solution {
 
 export enum VariableName {
   INITIAL_MARKING = 'm0',
-  OUTGOING_ARC_WEIGHT_PREFIX = 'x',
-  INGOING_ARC_WEIGHT_PREFIX = 'y',
+  OUTGOING_ARC_WEIGHT_PREFIX = 'in',
+  INGOING_ARC_WEIGHT_PREFIX = 'out',
 }

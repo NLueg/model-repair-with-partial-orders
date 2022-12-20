@@ -172,3 +172,52 @@ export const parsedSimpleExampleLogInvalid: PartialOrder = {
   initialEvents: ['e1'],
   text: '.type log\n.events\ne1 a\ne2 b\ne3 c\n.arcs\ne1 e2\ne2 e3\n',
 };
+
+export const parsedSimpleExampleLogInvalidSecond: PartialOrder = {
+  arcs: [
+    {
+      breakpoints: [],
+      source: 'E1',
+      target: 'E3',
+      weight: 1,
+    },
+    {
+      breakpoints: [],
+      source: 'E3',
+      target: 'E2',
+      weight: 1,
+    },
+  ],
+  events: [
+    {
+      id: 'E1',
+      incomingArcs: [],
+      label: 'a',
+      nextEvents: ['E3'],
+      outgoingArcs: [],
+      previousEvents: [],
+      type: 'event',
+    },
+    {
+      id: 'E2',
+      incomingArcs: [],
+      label: 'b',
+      nextEvents: [],
+      outgoingArcs: [],
+      previousEvents: ['E3'],
+      type: 'event',
+    },
+    {
+      id: 'E3',
+      incomingArcs: [],
+      label: 'c',
+      nextEvents: ['E2'],
+      outgoingArcs: [],
+      previousEvents: ['E1'],
+      type: 'event',
+    },
+  ],
+  finalEvents: ['e3'],
+  initialEvents: ['e1'],
+  text: '.type log\n.events\ne1 a\ne2 b\ne3 c\n.arcs\ne1 e2\ne2 e3\n',
+};
