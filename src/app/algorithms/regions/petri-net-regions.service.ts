@@ -2,11 +2,8 @@ import { Injectable } from '@angular/core';
 import { GLPK } from 'glpk.js';
 import { from, map, Observable, switchMap } from 'rxjs';
 
+import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
-import {
-  parsedSimpleExampleLogInvalid,
-  parsedSimpleExampleLogInvalidSecond,
-} from '../../services/upload/simple-example/simple-example-parsed';
 import { ProblemSolution } from '../../stuff/algorithms/petri-net/prime-miner/regions/petri-net-region/region-ilp-solver';
 import { IlpSolver, VariableType } from './ilp-solver/ilp-solver';
 
@@ -17,8 +14,8 @@ const createGlpk: () => Promise<GLPK> = require('glpk.js').default;
   providedIn: 'root',
 })
 export class PetriNetRegionsService {
-  // TODO: Partial order should be a parameter!
   computeRegions(
+    partialOrders: PartialOrder[],
     petriNet: PetriNet,
     invalidPlaces: string[]
   ): Observable<void> {
@@ -26,19 +23,13 @@ export class PetriNetRegionsService {
       switchMap((glpk) => {
         const solver = new IlpSolver(glpk);
         return solver
-          .computeRegions(
-            [
-              parsedSimpleExampleLogInvalid,
-              parsedSimpleExampleLogInvalidSecond,
-            ],
-            petriNet,
-            invalidPlaces[0]
-          )
+          .computeRegions(partialOrders, petriNet, invalidPlaces)
           .pipe(map((solutions) => this.handleSolutions(solutions, solver)));
       })
     );
   }
 
+  // TODO: Handle solutions!
   private handleSolutions(solutions: ProblemSolution[], solver: IlpSolver) {
     console.warn(solutions);
 

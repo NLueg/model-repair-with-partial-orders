@@ -63,23 +63,30 @@ export class IlpSolver {
   computeRegions(
     partialOrders: Array<PartialOrder>,
     petriNet: PetriNet,
-    placeIdToCheck: string
+    invalidPlaces: string[]
   ): Observable<ProblemSolution[]> {
-    const baseConstraints = this.buildBasicIlpForPartialOrders(
-      partialOrders,
-      petriNet,
-      placeIdToCheck
-    );
+    const baseConstraints = this.buildBasicIlpForPartialOrders(partialOrders);
 
     const baseIlp = this.setUpBaseIlp();
 
-    const problems = this._directlyFollowsExtractor
-      .oneWayDirectlyFollows()
-      .map((pair) => ({
-        baseConstraints,
-        baseIlp,
-        pair,
-      }));
+    const pairs = this._directlyFollowsExtractor.oneWayDirectlyFollows();
+    const validPlaces = petriNet.places.filter(
+      (p) => !invalidPlaces.includes(p.id)
+    );
+    const pairsThatArentHandled = pairs.filter(
+      ([source, target]) =>
+        !validPlaces.some(
+          (p) =>
+            p.incomingArcs.some((incoming) => incoming.source === source) &&
+            p.outgoingArcs.some((outgoing) => outgoing.target === target)
+        )
+    );
+
+    const problems = pairsThatArentHandled.map((pair) => ({
+      baseConstraints,
+      baseIlp,
+      pair,
+    }));
 
     return from(problems).pipe(
       concatMap((problem) => {
@@ -148,9 +155,7 @@ export class IlpSolver {
   }
 
   private buildBasicIlpForPartialOrders(
-    partialOrders: Array<PartialOrder>,
-    petriNet: PetriNet,
-    placeIdToCheck: string
+    partialOrders: Array<PartialOrder>
   ): Array<SubjectTo> {
     const baseIlpConstraints: Array<SubjectTo> = [];
 
@@ -161,28 +166,6 @@ export class IlpSolver {
         baseIlpConstraints.push(...this.tokenFlow(e, i));
       }
       baseIlpConstraints.push(...this.initialMarking(events, i));
-    }
-
-    // TODO: Only generate constraints for the place that is being checked
-    // TODO: I want to generate a place, that can replace the invalid one
-    // TODO: I remove this place and try to find a new one
-    // TODO: I have to tell the solver, that there is an existing net!!!
-    const validPlaces = petriNet.places.filter((p) => p.id !== placeIdToCheck);
-    for (const place of validPlaces) {
-      for (const incoming of place.incomingArcs) {
-        // TODO: add constraint for each incoming arc
-      }
-      for (const outgoing of place.outgoingArcs) {
-        // TODO: add constraint for each incoming arc
-      }
-    }
-
-    const invalidPlace = petriNet.places.find((p) => p.id === placeIdToCheck)!;
-    for (const incoming of invalidPlace.incomingArcs) {
-      // TODO: add constraint for each incoming arc
-    }
-    for (const outgoing of invalidPlace.outgoingArcs) {
-      // TODO: add constraint for each incoming arc
     }
 
     return baseIlpConstraints;

@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
 import { Observable, Subject } from 'rxjs';
 
@@ -9,15 +9,11 @@ const allowedExtensions = ['txt', 'pn', 'pnml'];
 @Injectable({
   providedIn: 'root',
 })
-export class UploadService implements OnDestroy {
+export class UploadService {
   private upload$: Subject<string>;
 
   constructor(private toastr: ToastrService) {
     this.upload$ = new Subject<string>();
-  }
-
-  ngOnDestroy(): void {
-    this.upload$.complete();
   }
 
   getUpload$(): Observable<string> {

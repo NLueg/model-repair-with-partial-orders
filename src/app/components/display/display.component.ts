@@ -43,7 +43,7 @@ export class DisplayComponent {
 
             // TODO: Generate repair suggestions for each place
             return this.petriNetRegionsService
-              .computeRegions(petriNet, invalidPlaces)
+              .computeRegions(partialOrders, petriNet, invalidPlaces)
               .pipe(map(() => invalidPlaces));
           }),
           map((invalidPlaces) => {

@@ -7,6 +7,7 @@ import {
 } from '../../parser/parsing-constants';
 import { PnmlPage, PnmlWrapper } from './pnml.type';
 
+// TODO: Parse to petri-net!
 export function getRunTextFromPnml(xmlContent: string): string {
   const options: X2jOptionsOptional = {
     attributeNamePrefix: '',
