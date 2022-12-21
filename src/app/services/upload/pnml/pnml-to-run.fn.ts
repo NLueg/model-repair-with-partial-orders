@@ -2,11 +2,12 @@ import { X2jOptionsOptional, XMLParser } from 'fast-xml-parser';
 
 import {
   arcsAttribute,
-  eventsAttribute,
-  typeKey,
+  netTypeKey,
+  transitionsAttribute,
 } from '../../parser/parsing-constants';
 import { PnmlPage, PnmlWrapper } from './pnml.type';
 
+// TODO: Parse to petri-net!
 export function getRunTextFromPnml(xmlContent: string): string {
   const options: X2jOptionsOptional = {
     attributeNamePrefix: '',
@@ -18,8 +19,8 @@ export function getRunTextFromPnml(xmlContent: string): string {
   const pnml: PnmlWrapper = parser.parse(xmlContent);
   const page: PnmlPage = pnml.pnml.net.page ?? pnml.pnml.net;
 
-  const lines = [typeKey];
-  lines.push(eventsAttribute);
+  const lines = [netTypeKey];
+  lines.push(transitionsAttribute);
   page.transition.forEach((transition) => {
     const name = transition.name?.text;
     if (name && name !== transition.id) {

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 
 import { Arc } from '../../../classes/diagram/arc';
-import { Element } from '../../../classes/diagram/element';
-import { Run } from '../../../classes/diagram/run';
+import { PetriNet } from '../../../classes/diagram/petri-net';
+import { Transition } from '../../../classes/diagram/transition';
 import { LayoutService } from '../../layout.service';
 
 const encoding = '<?xml version="1.0" encoding="UTF-8"?>\n';
@@ -16,13 +16,13 @@ const transitionDimension = 40;
 export class RunToPnmlService {
   constructor(private _layoutService: LayoutService) {}
 
-  parseRunToPnml(name: string, run: Run): string {
+  parseRunToPnml(name: string, run: PetriNet): string {
     const { parsedRun, places } = this.layoutRun(run);
-    const parsedPlaces = parsedRun.elements.filter((element) =>
+    const parsedPlaces = parsedRun.transitions.filter((element) =>
       places.find((place) => element.label === place.label)
     );
 
-    const transitionText = parsedRun.elements
+    const transitionText = parsedRun.transitions
       .filter(
         (element) => !places.find((place) => element.label === place.label)
       )
@@ -44,12 +44,16 @@ export class RunToPnmlService {
 </pnml>`;
   }
 
-  private layoutRun(run: Run): { parsedRun: Run; places: Element[] } {
-    const places: Element[] = run.arcs.map((arc) => {
+  private layoutRun(run: PetriNet): {
+    parsedRun: PetriNet;
+    places: Transition[];
+  } {
+    const places: Transition[] = run.arcs.map((arc) => {
       const name = getPlaceNameByArc(arc);
       return {
         label: name,
         id: name,
+        type: 'transition',
         incomingArcs: [],
         outgoingArcs: [],
       };
@@ -57,6 +61,7 @@ export class RunToPnmlService {
     places.unshift({
       id: firstPlaceId,
       label: firstPlaceId,
+      type: 'transition',
       incomingArcs: [],
       outgoingArcs: [],
     });
@@ -64,23 +69,24 @@ export class RunToPnmlService {
     const newArcArray: Arc[] = run.arcs.flatMap((arc) => {
       const placeName = getPlaceNameByArc(arc);
       return [
-        { source: arc.source, target: placeName, breakpoints: [] },
-        { source: placeName, target: arc.target, breakpoints: [] },
+        { source: arc.source, target: placeName, breakpoints: [], weight: 1 },
+        { source: placeName, target: arc.target, breakpoints: [], weight: 1 },
       ];
     });
 
     //Add arc from first place to all start-events
-    run.elements
+    run.transitions
       .filter((e) => e.incomingArcs.length == 0)
       .forEach((e) => {
         newArcArray.unshift({
           source: firstPlaceId,
           target: e.id,
           breakpoints: [],
+          weight: 1,
         });
       });
 
-    const elements = [...run.elements, ...places].map((element) => {
+    const elements = [...run.transitions, ...places].map((element) => {
       element.incomingArcs = newArcArray.filter(
         (arc) => arc.target === element.id
       );
@@ -92,8 +98,8 @@ export class RunToPnmlService {
 
     const parsedRun = this._layoutService.layout({
       arcs: newArcArray,
-      elements,
-      warnings: [],
+      transitions: elements,
+      places: [],
       text: '',
     }).run;
 
@@ -104,7 +110,7 @@ export class RunToPnmlService {
   }
 }
 
-function parseTransition(transition: Element): string {
+function parseTransition(transition: Transition): string {
   return `               <transition id="${transition.id}">
                     <name>
                         <text>${transition.label}</text>
@@ -123,7 +129,7 @@ function parseTransition(transition: Element): string {
                </transition>`;
 }
 
-function parsePlaces(places: Element[]): string {
+function parsePlaces(places: Transition[]): string {
   return places
     .map((place, index) => {
       return `               <place id="${place.id}">
@@ -146,7 +152,7 @@ function parsePlaces(places: Element[]): string {
     .join(`\n`);
 }
 
-function parseArcs(run: Run): string {
+function parseArcs(run: PetriNet): string {
   return run.arcs
     .map(
       (arc) => `               <arc id="A"

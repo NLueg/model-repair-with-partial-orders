@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { Run } from '../classes/diagram/run';
+import { PetriNet } from '../classes/diagram/petri-net';
 import { LayoutService } from './layout.service';
 
 describe('LayoutService', () => {
@@ -167,7 +167,7 @@ describe('LayoutService', () => {
   });
 });
 
-const exampleInput: Run = {
+const exampleInput: PetriNet = {
   text: '.type run\n.events\nt1\nt2\nt3\nt4\nt5\nt6\n.arcs\nt1 t2\nt2 t4\nt4 t5\nt5 t6\nt6 t3\n',
   arcs: [
     { source: 't1', target: 't2', breakpoints: [] },
@@ -176,7 +176,7 @@ const exampleInput: Run = {
     { source: 't5', target: 't6', breakpoints: [] },
     { source: 't6', target: 't3', breakpoints: [] },
   ],
-  elements: [
+  transitions: [
     {
       id: 't1',
       label: 't1',

@@ -1,5 +1,5 @@
-import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Component } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
 
 import { DownloadService } from '../../../services/download/download.service';
 
@@ -18,9 +18,7 @@ export class DownloadPopoverComponent {
   ) {}
 
   download(): void {
-    this._downloadService.downloadNet(
-      this.downloadName
-    );
+    this._downloadService.downloadNet(this.downloadName);
     this.closePopover();
   }
 

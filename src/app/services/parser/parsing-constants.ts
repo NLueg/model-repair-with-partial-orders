@@ -1,7 +1,11 @@
-export const typeKey = '.type run';
+export const netTypeKey = '.type pn';
+
+export const logTypeKey = '.type log';
+
+export const transitionsAttribute = '.transitions';
 
 export const eventsAttribute = '.events';
 
-export const arcsAttribute = '.arcs';
+export const placesAttribute = '.places';
 
-export const offsetAttribute = '.offset';
+export const arcsAttribute = '.arcs';

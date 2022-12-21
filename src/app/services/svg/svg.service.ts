@@ -1,17 +1,13 @@
 import { Injectable } from '@angular/core';
 
-import {
-  Arc,
-  Breakpoint,
-  doesArcBelongToCurrentRun,
-} from '../../classes/diagram/arc';
+import { Arc, Breakpoint } from '../../classes/diagram/arc';
 import { Coordinates } from '../../classes/diagram/coordinates';
-import {
-  doesElementBelongToCurrentRun,
-  Element,
-} from '../../classes/diagram/element';
+import { ConcreteElementWithArcs } from '../../classes/diagram/draggable';
 import { getIntersection } from '../../classes/diagram/functions/display.fn';
-import { Run } from '../../classes/diagram/run';
+import { getElementsWithArcs } from '../../classes/diagram/functions/net-helper.fn';
+import { PetriNet } from '../../classes/diagram/petri-net';
+import { Place } from '../../classes/diagram/place';
+import { Transition } from '../../classes/diagram/transition';
 import {
   breakpointPositionAttribute,
   breakpointTrail,
@@ -27,44 +23,31 @@ import {
   providedIn: 'root',
 })
 export class SvgService {
-  public createSvgElements(run: Run, merge: boolean): Array<SVGElement> {
+  public createSvgElements(run: PetriNet): Array<SVGElement> {
     const result: Array<SVGElement> = [];
-    const offset = run.offset ?? { x: 0, y: 0 };
+
+    const elements: (Transition | Place)[] = getElementsWithArcs(run);
 
     run.arcs.forEach((arc) => {
-      const source = run.elements.find((el) => el.id === arc.source);
-      const target = run.elements.find((el) => el.id === arc.target);
-      const arrow = createSvgForArc(arc, source, target, merge, offset);
+      const source = elements.find((el) => el.id === arc.source);
+      const target = elements.find((el) => el.id === arc.target);
+      const arrow = createSvgForArc(arc, source, target);
       if (arrow) {
         arrow.forEach((a) => {
           result.push(a);
         });
       }
     });
-    run.elements.forEach((el) => {
-      result.push(...createSvgForElement(el, merge, offset));
+    elements.forEach((el) => {
+      result.push(...createSvgForElement(el));
     });
     return result;
   }
 }
 
-function createSvgForElement(
-  element: Element,
-  highlight: boolean,
-  offset: Coordinates
-): SVGElement[] {
-  const svg = createSvgElement('rect');
-  const x = (element.x ?? 0) + offset.x;
-  const y = (element.y ?? 0) + offset.y;
-  svg.setAttribute('x', `${x}`);
-  svg.setAttribute('y', `${y}`);
-  svg.setAttribute('width', `${eventSize}`);
-  svg.setAttribute('height', `${eventSize}`);
-  svg.setAttribute('stroke', 'black');
-  svg.setAttribute('stroke-width', '2');
-  svg.setAttribute('fill-opacity', '0');
-  svg.setAttribute(layerPosYAttibute, `${element.layerPos ?? 0}`);
-  svg.setAttribute(eventIdAttribute, `${element.id}`);
+function createSvgForElement(element: Transition | Place): SVGElement[] {
+  const x = element.x ?? 0;
+  const y = element.y ?? 0;
 
   const text = createSvgElement('foreignObject');
   text.setAttribute('x', `${x - (100 - eventSize) / 2}`);
@@ -75,9 +58,43 @@ function createSvgForElement(
   text.setAttribute('width', `${width}`);
   text.setAttribute('describes-event', element.id);
   const span = document.createElement('span');
-  span.setAttribute('title', element.label);
-  span.textContent = element.label;
+
+  let svg: SVGElement;
+
+  if (element.type === 'transition') {
+    svg = createSvgElement('rect');
+    svg.setAttribute('x', `${x}`);
+    svg.setAttribute('y', `${y}`);
+    svg.setAttribute('width', `${eventSize}`);
+    svg.setAttribute('height', `${eventSize}`);
+    svg.setAttribute('stroke', 'black');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('fill-opacity', '0');
+    svg.setAttribute(layerPosYAttibute, `${element.layerPos ?? 0}`);
+    svg.setAttribute(eventIdAttribute, `${element.id}`);
+
+    span.setAttribute('title', element.label);
+    span.textContent = element.label;
+  } else {
+    const radius = eventSize / 2;
+
+    svg = createSvgElement('circle');
+    svg.setAttribute('cx', `${x + radius}`);
+    svg.setAttribute('cy', `${y + radius}`);
+    svg.setAttribute('r', `${radius}`);
+    svg.setAttribute('stroke', element.invalid ? 'red' : 'black');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('fill-opacity', '0');
+    svg.setAttribute(layerPosYAttibute, `${element.layerPos ?? 0}`);
+    svg.setAttribute(eventIdAttribute, `${element.id}`);
+
+    span.setAttribute('title', element.id);
+    span.textContent = element.id;
+  }
+
   text.append(span);
+
+  // TODO: Specific layout for places
 
   // TODO: This is how colors are changed!
   /* if (doesElementBelongToCurrentRun(element) && highlight) {
@@ -94,10 +111,8 @@ function createSvgElement(name: string): SVGElement {
 
 function createSvgForArc(
   arc: Arc,
-  source: Element | undefined,
-  target: Element | undefined,
-  highlight: boolean,
-  offset: Coordinates
+  source: ConcreteElementWithArcs | undefined,
+  target: ConcreteElementWithArcs | undefined
 ): SVGElement[] {
   const elements: SVGElement[] = [];
 
@@ -123,16 +138,15 @@ function createSvgForArc(
     elements.push(
       createLine(
         {
-          x: start.x + offset.x,
-          y: start.y + offset.y,
+          x: start.x,
+          y: start.y,
         },
         {
-          x: end.x + offset.x,
-          y: end.y + offset.y,
+          x: end.x,
+          y: end.y,
         },
         arc,
         {
-          highlight: highlight && doesArcBelongToCurrentRun(arc),
           showArrow: true,
           hasFromAttribute: true,
           hasToAttribute: true,
@@ -140,7 +154,7 @@ function createSvgForArc(
       )
     );
   } else {
-    //source -> first breakpoint
+    // source -> first breakpoint
     const start = getIntersection(
       (source.x ?? 0) + eventSize / 2,
       (source.y ?? 0) + eventSize / 2,
@@ -151,42 +165,40 @@ function createSvgForArc(
     elements.push(
       createLine(
         {
-          x: start.x + offset.x,
-          y: start.y + offset.y,
+          x: start.x,
+          y: start.y,
         },
         {
-          x: arc.breakpoints[0].x + eventSize / 2 + offset.x,
-          y: arc.breakpoints[0].y + eventSize / 2 + offset.y,
+          x: arc.breakpoints[0].x + eventSize / 2,
+          y: arc.breakpoints[0].y + eventSize / 2,
         },
         arc,
         {
-          highlight: highlight && doesArcBelongToCurrentRun(arc),
           showArrow: false,
           hasFromAttribute: true,
         }
       )
     );
-    //breakpoint -> next breakpoint
+    // breakpoint -> next breakpoint
     for (let i = 0; i < arc.breakpoints.length - 1; i++) {
       elements.push(
         createLine(
           {
-            x: arc.breakpoints[i].x + eventSize / 2 + offset.x,
-            y: arc.breakpoints[i].y + eventSize / 2 + offset.y,
+            x: arc.breakpoints[i].x + eventSize / 2,
+            y: arc.breakpoints[i].y + eventSize / 2,
           },
           {
-            x: arc.breakpoints[i + 1].x + eventSize / 2 + offset.x,
-            y: arc.breakpoints[i + 1].y + eventSize / 2 + offset.y,
+            x: arc.breakpoints[i + 1].x + eventSize / 2,
+            y: arc.breakpoints[i + 1].y + eventSize / 2,
           },
           arc,
           {
-            highlight: highlight && doesArcBelongToCurrentRun(arc),
             showArrow: false,
           }
         )
       );
     }
-    //last breakpoint -> target
+    // last breakpoint -> target
     const end = getIntersection(
       (target.x ?? 0) + eventSize / 2,
       (target.y ?? 0) + eventSize / 2,
@@ -197,34 +209,23 @@ function createSvgForArc(
     elements.push(
       createLine(
         {
-          x:
-            arc.breakpoints[arc.breakpoints.length - 1].x +
-            eventSize / 2 +
-            offset.x,
-          y:
-            arc.breakpoints[arc.breakpoints.length - 1].y +
-            eventSize / 2 +
-            offset.y,
+          x: arc.breakpoints[arc.breakpoints.length - 1].x + eventSize / 2,
+          y: arc.breakpoints[arc.breakpoints.length - 1].y + eventSize / 2,
         },
         {
-          x: end.x + offset.x,
-          y: end.y + offset.y,
+          x: end.x,
+          y: end.y,
         },
         arc,
         {
-          highlight: highlight && doesArcBelongToCurrentRun(arc),
           showArrow: true,
           hasToAttribute: true,
         }
       )
     );
-    elements.push(
-      createCircle(arc.breakpoints, 0, source.id, target.id, offset)
-    );
+    elements.push(createCircle(arc.breakpoints, 0, source.id, target.id));
     for (let i = 0; i < arc.breakpoints.length - 1; i++) {
-      elements.push(
-        createCircle(arc.breakpoints, i + 1, source.id, target.id, offset)
-      );
+      elements.push(createCircle(arc.breakpoints, i + 1, source.id, target.id));
     }
   }
 
@@ -238,12 +239,7 @@ function createLine(
   displayInfo: ArcDisplayInfo
 ): SVGElement {
   const line = createSvgElement('line');
-  if (displayInfo.highlight) {
-    // TODO: Change color like this!
-    // line.setAttribute('stroke', highlightColor);
-  } else {
-    line.setAttribute('stroke', 'black');
-  }
+  line.setAttribute('stroke', 'black');
   line.setAttribute('stroke-width', '1');
   if (displayInfo.hasFromAttribute) {
     line.setAttribute(fromTransitionAttribute, arc.source);
@@ -252,11 +248,7 @@ function createLine(
     line.setAttribute(toTransitionAttribute, arc.target);
   }
   if (displayInfo.showArrow) {
-    if (displayInfo.highlight) {
-      line.setAttribute('marker-end', 'url(#arrowheadhightlight )');
-    } else {
-      line.setAttribute('marker-end', 'url(#arrowhead)');
-    }
+    line.setAttribute('marker-end', 'url(#arrowhead)');
   }
   line.setAttribute('x1', `${fromCoords.x}`);
   line.setAttribute('y1', `${fromCoords.y}`);
@@ -269,12 +261,11 @@ function createCircle(
   breakpoints: Array<Breakpoint>,
   positionInRun: number,
   sourceLabel: string,
-  targetLabel: string,
-  offset: Coordinates
+  targetLabel: string
 ): SVGElement {
   const breakpoint = breakpoints[positionInRun];
-  const x = breakpoint.x + eventSize / 2 + offset.x;
-  const y = breakpoint.y + eventSize / 2 + offset.y;
+  const x = breakpoint.x + eventSize / 2;
+  const y = breakpoint.y + eventSize / 2;
   const circle = createSvgElement('circle');
   circle.setAttribute('r', `${circleSize}`);
   circle.setAttribute('cx', `${x}`);
@@ -296,7 +287,6 @@ function createCircle(
 }
 
 type ArcDisplayInfo = {
-  highlight: boolean;
   showArrow: boolean;
   hasFromAttribute?: boolean;
   hasToAttribute?: boolean;

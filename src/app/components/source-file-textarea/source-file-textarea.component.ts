@@ -3,24 +3,16 @@ import { FormControl } from '@angular/forms';
 import {
   debounceTime,
   distinctUntilChanged,
-  first,
   Observable,
   Subscription,
 } from 'rxjs';
 
-import {
-  Coordinates,
-  CoordinatesInfo,
-} from '../../classes/diagram/coordinates';
-import { resolveWarnings } from '../../classes/diagram/functions/run-helper.fn';
-import { isRunEmpty, Run } from '../../classes/diagram/run';
+import { CoordinatesInfo } from '../../classes/diagram/coordinates';
+import { isRunEmpty, PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../../services/display.service';
 import { ParserService } from '../../services/parser/parser.service';
-import { offsetAttribute } from '../../services/parser/parsing-constants';
-import {
-  exampleContent1,
-  exampleContent2,
-} from '../../services/upload/example-file';
+import { netTypeKey } from '../../services/parser/parsing-constants';
+import { simpleExamplePetriNet } from '../../services/upload/simple-example/simple-example-texts';
 import { UploadService } from '../../services/upload/upload.service';
 import {
   removeCoordinates,
@@ -39,17 +31,11 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
   private _sub: Subscription;
   private _fileSub: Subscription;
   private _coordsSub: Subscription;
-  private _offsetSub: Subscription;
 
   private _resetEventSubscription?: Subscription;
 
   textareaFc: FormControl;
-
-  hasPreviousRun$: Observable<boolean>;
-  hasNextRun$: Observable<boolean>;
   isCurrentRunEmpty$: Observable<boolean>;
-  getCurrentRunIndex$: Observable<number>;
-  getRunCount$: Observable<number>;
 
   @Input()
   resetEvent?: Observable<void>;
@@ -58,30 +44,14 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
   runHint = '';
 
   constructor(
-    private _parserService: ParserService,
+    private parserService: ParserService,
     private _displayService: DisplayService,
     private _uploadService: UploadService
   ) {
     this.textareaFc = new FormControl();
 
-    this.hasPreviousRun$ = this._displayService
-      .hasPreviousRun$()
-      .pipe(distinctUntilChanged());
-
-    this.hasNextRun$ = this._displayService
-      .hasNextRun$()
-      .pipe(distinctUntilChanged());
-
     this.isCurrentRunEmpty$ = this._displayService
       .isCurrentRunEmpty$()
-      .pipe(distinctUntilChanged());
-
-    this.getCurrentRunIndex$ = this._displayService
-      .getCurrentRunIndex$()
-      .pipe(distinctUntilChanged());
-
-    this.getRunCount$ = this._displayService
-      .getRunCount$()
       .pipe(distinctUntilChanged());
 
     this._sub = this.textareaFc.valueChanges
@@ -91,10 +61,6 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     this._coordsSub = this._displayService
       .coordsInfoAdded()
       .subscribe((val) => this.addLayerPosInfo(val));
-
-    this._offsetSub = this._displayService
-      .offsetInfoAdded()
-      .subscribe((val) => this.addOffsetInfo(val));
 
     this._fileSub = this._uploadService
       .getUpload$()
@@ -108,9 +74,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     this._resetEventSubscription = this.resetEvent?.subscribe(() =>
       this.removeOffset()
     );
-    this.processNewSource(exampleContent1);
-    this.processNewSource(exampleContent2);
-    this.previousRun();
+    this.processNewSource(simpleExamplePetriNet);
   }
 
   ngOnDestroy(): void {
@@ -119,61 +83,35 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     this._fileSub.unsubscribe();
   }
 
-  nextRun(): void {
-    const run = this._displayService.setNextRun();
-    this.updateShownRun(run);
-  }
-
-  previousRun(): void {
-    const run = this._displayService.setPreviousRun();
-    this.updateShownRun(run);
-  }
-
-  removeRun(): void {
-    const run = this._displayService.removeCurrentRun();
-    this.updateShownRun(run);
-  }
-
-  addRun(): void {
-    const run = this._displayService.addEmptyRun();
-    this.updateShownRun(run);
-  }
-
-  reset(): void {
-    this._displayService.clearRuns();
-
-    this._displayService.currentRun$.pipe(first()).subscribe((currentRun) => {
-      this.updateShownRun(currentRun);
-    });
-  }
-
-  resolveWarnings(): void {
-    this._displayService.currentRun$.pipe(first()).subscribe((currentRun) => {
-      currentRun = resolveWarnings(currentRun);
-      this.updateShownRun(currentRun, true);
-    });
-  }
-
   private processSourceChange(newSource: string): void {
     const errors = new Set<string>();
-    const result = this._parserService.parse(newSource, errors);
+    const result = this.parserService.parsePetriNet(newSource, errors);
     this.updateValidation(result, errors);
 
     if (!result) return;
-    if (result.offset) {
-      this._displayService.updateOffsetInfo(result.offset);
-    }
-    this._displayService.updateCurrentRun(result);
+    this._displayService.setNewNet(result);
   }
 
   private processNewSource(newSource: string): void {
     const errors = new Set<string>();
-    const result = this._parserService.parse(newSource, errors);
-    this.updateValidation(result, errors);
 
-    if (!result) return;
-    this._displayService.registerRun(result);
-    this.textareaFc.setValue(newSource);
+    if (newSource.trim().startsWith(netTypeKey)) {
+      const petriNet = this.parserService.parsePetriNet(newSource, errors);
+      console.warn(petriNet);
+      this.updateValidation(petriNet, errors);
+      if (!petriNet) return;
+
+      this._displayService.setNewNet(petriNet);
+      this.textareaFc.setValue(newSource);
+    } else {
+      const partialOrder = this.parserService.parsePartialOrder(
+        newSource,
+        errors
+      );
+      if (!partialOrder) return;
+
+      this._displayService.appendNewPartialOrder(partialOrder);
+    }
   }
 
   private addLayerPosInfo(coordinatesInfo: Array<CoordinatesInfo>): void {
@@ -185,25 +123,6 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     }
   }
 
-  private addOffsetInfo(offset: Coordinates): void {
-    let currentValue = this.textareaFc.value;
-    if (!currentValue) {
-      return;
-    }
-
-    if (!currentValue.endsWith('\n')) {
-      currentValue += '\n';
-    }
-    const offsetString = `${offsetAttribute}\n${offset.x} ${offset.y}`;
-    const patternString = '\\.offset\\n-?\\d+ -?\\d+';
-    const replacePattern = new RegExp(patternString, 'g');
-    let newValue = currentValue + offsetString;
-    if (replacePattern.test(currentValue)) {
-      newValue = currentValue.replace(replacePattern, offsetString);
-    }
-    this.textareaFc.setValue(newValue, { emitEvent: true });
-  }
-
   public removeCoordinates(): void {
     const newText = removeCoordinates(this.textareaFc.value);
     this.textareaFc.setValue(newText);
@@ -212,44 +131,34 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
 
   public removeOffset(): void {
     const contentLines = this.textareaFc.value.split('\n');
-    let isOffsetLine = false;
     let first = true;
     let newText = '';
     for (const line of contentLines) {
-      if (line === offsetAttribute) {
-        isOffsetLine = true;
-        newText += '\n';
-      }
-      if (!isOffsetLine) {
-        if (first) {
-          newText = newText + line;
-          first = false;
-        } else {
-          newText = newText + '\n' + line;
-        }
+      if (first) {
+        newText = newText + line;
+        first = false;
+      } else {
+        newText = newText + '\n' + line;
       }
     }
     this.textareaFc.setValue(newText);
     this.processSourceChange(newText);
-    this._displayService.setOffsetInfo({ x: 0, y: 0 });
   }
 
-  private updateShownRun(run: Run, emitEvent = true): void {
+  private updateShownRun(run: PetriNet, emitEvent = true): void {
     this.textareaFc.setValue(run.text, { emitEvent: emitEvent });
     this.updateValidation(run);
   }
 
   private updateValidation(
-    run: Run | null,
+    run: PetriNet | null,
     errors: Set<string> = new Set<string>()
   ): void {
-    this.runHint = [...errors, ...(run ? run.warnings : [])].join('\n');
+    this.runHint = [...errors].join('\n');
 
     if (!run || errors.size > 0) {
       this.textareaFc.setErrors({ 'invalid run': true });
       this.runValidationStatus = 'error';
-    } else if (run.warnings.length > 0) {
-      this.runValidationStatus = 'warn';
     } else if (!isRunEmpty(run)) {
       this.runValidationStatus = 'success';
     } else {

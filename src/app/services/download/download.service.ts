@@ -1,9 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { saveAs } from 'file-saver';
-import JSZip from 'jszip';
 import { first, Subject } from 'rxjs';
 
-import { Run } from '../../classes/diagram/run';
+import { PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../display.service';
 import { RunToPnmlService } from './run-to-pnml/run-to-pnml.service';
 
@@ -24,23 +22,21 @@ export class DownloadService implements OnDestroy {
     this._download$.complete();
   }
 
-  downloadNet(
-    name: string
-  ): void {
-    this._displayService.currentRun$.pipe(first()).subscribe((run) => {
-      const fileEnding = getFileEndingForFormat();
-      const fileName = name
-        ? `${name}.${fileEnding}`
-        : `${Date.now()}_run.${fileEnding}`;
+  downloadNet(name: string): void {
+    this._displayService
+      .getPetriNet$()
+      .pipe(first())
+      .subscribe((run) => {
+        const fileEnding = getFileEndingForFormat();
+        const fileName = name
+          ? `${name}.${fileEnding}`
+          : `${Date.now()}_run.${fileEnding}`;
 
-      this.downloadRun(fileName, run);
-    });
+        this.downloadRun(fileName, run);
+      });
   }
 
-  private downloadRun(
-    name: string,
-    run: Run
-  ): void {
+  private downloadRun(name: string, run: PetriNet): void {
     // TODO: Just download text
     const fileContent = this._runToPnmlService.parseRunToPnml(name, run);
 

@@ -1,43 +1,76 @@
-export const exampleContent1 = `.type run
-.events
-1 | Reise planen
-2 | Prüfen
-3 | Flug suchen
-4 | Flug buchen
-5 | Hotel suchen
-6 | Hotel buchen
-7 | Unterlagen speichern
+export const examplePetriNet = `.type pn
+.transitions
+a a
+b b
+c c
+d d
+e e
+f f
+.places
+p1 2
+p2 0
+p3 1
+p4 2
+p5 1
+p6 0
+p7 1
 .arcs
-1 2
-2 3
-2 5
-3 4
-4 7
-5 6
-6 7
+p1 a
+a p2
+p2 c
+c p5
+p5 a
+p2 b
+b p3
+p3 d
+d p7
+p7 d
+p7 c
+c p7
+d p6
+c p4
+p4 e 3
+e p6
+p6 f 3
 `;
 
-export const exampleContent2 = `.type run
+export const exampleLog = `.type log
 .events
-1 | Reise planen
-2 | Prüfen
-3 | Änderung anfordern
-4 | Reise planen
-5 | Prüfen
-6 | Flug suchen
-7 | Flug buchen
-8 | Hotel suchen
-9 | Hotel buchen
-10 | Unterlagen speichern
+e1 a
+e2 d
+e3 c
+e4 a
+e5 b
+e6 d
+e7 e
+e8 f
 .arcs
-1 2
-2 3
-3 4
-4 5
-5 6
-5 8
-6 7
-7 10
-8 9
-9 10
+e1 e3
+e2 e3
+e3 e4
+e4 e5
+e5 e6
+e6 e8
+e3 e7
+e7 e8
+`;
+
+export const exampleLogInvalid = `.type log
+.events
+e1 a
+e2 d
+e3 c
+e4 a
+e5 b
+e6 d
+e7 e
+e8 f
+.arcs
+e1 e3
+e2 e3
+e4 e5
+e5 e6
+e6 e8
+e3 e7
+e7 e8
 `;

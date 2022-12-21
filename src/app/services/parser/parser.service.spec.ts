@@ -1,7 +1,24 @@
 import { TestBed } from '@angular/core/testing';
 import { ToastrService } from 'ngx-toastr';
 
-import { exampleContent1 } from '../upload/example-file';
+import {
+  exampleLog,
+  exampleLogInvalid,
+  examplePetriNet,
+} from '../upload/example-file';
+import {
+  parsedInvalidPartialorder,
+  parsedPartialOrder,
+  parsedPetriNet,
+} from '../upload/example-file-parsed';
+import {
+  parsedSimpleExampleLogInvalid,
+  parsedSimpleExamplePetriNet,
+} from '../upload/simple-example/simple-example-parsed';
+import {
+  simpleExampleLogInvalid,
+  simpleExamplePetriNet,
+} from '../upload/simple-example/simple-example-texts';
 import { ParserService } from './parser.service';
 
 describe('ParserService', () => {
@@ -9,7 +26,12 @@ describe('ParserService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [{ provide: ToastrService, useValue: { toasts: [] } }],
+      providers: [
+        {
+          provide: ToastrService,
+          useValue: { toasts: [], warning: jest.fn() },
+        },
+      ],
     });
     service = TestBed.inject(ParserService);
   });
@@ -18,180 +40,38 @@ describe('ParserService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should parse example content', () => {
+  it('parseNet should parse example petri net', () => {
     const errors = new Set<string>();
-    const result = service.parse(exampleContent1, errors);
+    const result = service.parsePetriNet(examplePetriNet, errors);
 
-    expect(result).toEqual({
-      arcs: [
-        {
-          breakpoints: [],
-          source: '1',
-          target: '2',
-        },
-        {
-          breakpoints: [],
-          source: '2',
-          target: '3',
-        },
-        {
-          breakpoints: [],
-          source: '2',
-          target: '5',
-        },
-        {
-          breakpoints: [],
-          source: '3',
-          target: '4',
-        },
-        {
-          breakpoints: [],
-          source: '4',
-          target: '7',
-        },
-        {
-          breakpoints: [],
-          source: '5',
-          target: '6',
-        },
-        {
-          breakpoints: [],
-          source: '6',
-          target: '7',
-        },
-      ],
-      elements: [
-        {
-          id: '1',
-          incomingArcs: [],
-          label: 'Reise planen',
-          outgoingArcs: [
-            {
-              breakpoints: [],
-              source: '1',
-              target: '2',
-            },
-          ],
-        },
-        {
-          id: '2',
-          incomingArcs: [
-            {
-              breakpoints: [],
-              source: '1',
-              target: '2',
-            },
-          ],
-          label: 'Prüfen',
-          outgoingArcs: [
-            {
-              breakpoints: [],
-              source: '2',
-              target: '3',
-            },
-            {
-              breakpoints: [],
-              source: '2',
-              target: '5',
-            },
-          ],
-        },
-        {
-          id: '3',
-          incomingArcs: [
-            {
-              breakpoints: [],
-              source: '2',
-              target: '3',
-            },
-          ],
-          label: 'Flug suchen',
-          outgoingArcs: [
-            {
-              breakpoints: [],
-              source: '3',
-              target: '4',
-            },
-          ],
-        },
-        {
-          id: '4',
-          incomingArcs: [
-            {
-              breakpoints: [],
-              source: '3',
-              target: '4',
-            },
-          ],
-          label: 'Flug buchen',
-          outgoingArcs: [
-            {
-              breakpoints: [],
-              source: '4',
-              target: '7',
-            },
-          ],
-        },
-        {
-          id: '5',
-          incomingArcs: [
-            {
-              breakpoints: [],
-              source: '2',
-              target: '5',
-            },
-          ],
-          label: 'Hotel suchen',
-          outgoingArcs: [
-            {
-              breakpoints: [],
-              source: '5',
-              target: '6',
-            },
-          ],
-        },
-        {
-          id: '6',
-          incomingArcs: [
-            {
-              breakpoints: [],
-              source: '5',
-              target: '6',
-            },
-          ],
-          label: 'Hotel buchen',
-          outgoingArcs: [
-            {
-              breakpoints: [],
-              source: '6',
-              target: '7',
-            },
-          ],
-        },
-        {
-          id: '7',
-          incomingArcs: [
-            {
-              breakpoints: [],
-              source: '4',
-              target: '7',
-            },
-            {
-              breakpoints: [],
-              source: '6',
-              target: '7',
-            },
-          ],
-          label: 'Unterlagen speichern',
-          outgoingArcs: [],
-        },
-      ],
-      offset: {
-        x: 0,
-        y: 0,
-      },
-      text: '.type run\n.events\n1 | Reise planen\n2 | Prüfen\n3 | Flug suchen\n4 | Flug buchen\n5 | Hotel suchen\n6 | Hotel buchen\n7 | Unterlagen speichern\n.arcs\n1 2\n2 3\n2 5\n3 4\n4 7\n5 6\n6 7\n',
-      warnings: [],
-    });
+    expect(result).toEqual(parsedPetriNet);
+  });
+
+  it('parseLog should parse example log', () => {
+    const errors = new Set<string>();
+    const result = service.parsePartialOrder(exampleLog, errors);
+
+    expect(result).toEqual(parsedPartialOrder);
+  });
+
+  it('parseLog should parse invalid example log', () => {
+    const errors = new Set<string>();
+    const result = service.parsePartialOrder(exampleLogInvalid, errors);
+
+    expect(result).toEqual(parsedInvalidPartialorder);
+  });
+
+  it('parseNet should parse simple example petri net', () => {
+    const errors = new Set<string>();
+    const result = service.parsePetriNet(simpleExamplePetriNet, errors);
+
+    expect(result).toEqual(parsedSimpleExamplePetriNet);
+  });
+
+  it('parseLog should parse simple invalid example log', () => {
+    const errors = new Set<string>();
+    const result = service.parsePartialOrder(simpleExampleLogInvalid, errors);
+
+    expect(result).toEqual(parsedSimpleExampleLogInvalid);
   });
 });

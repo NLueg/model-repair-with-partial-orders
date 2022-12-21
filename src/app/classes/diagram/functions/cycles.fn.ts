@@ -1,23 +1,12 @@
 import { Arc } from '../arc';
-import { Element } from '../element';
-import { Run } from '../run';
+import { PetriNet } from '../petri-net';
 
-export function hasCycles(run: Run): boolean {
-  return getCycles(run).length > 0;
-}
-
-export function getCycles(run: Run): Arc[] {
+export function getCycles(run: PetriNet): Arc[] {
   const visitedArcs = new Set<Arc>();
-  const cyclicArcs = new Array<Arc>();
+  const cyclicArcs: Arc[] = [];
 
+  const visitedTransitions = new Set<string>();
   run.arcs.forEach((arc) => {
-    const visitedTransitions = new Set<Element>();
-
-    const source = run.elements.find((element) => element.id === arc.source);
-    if (source) {
-      visitedTransitions.add(source);
-    }
-
     checkArcCycle(run, arc, visitedArcs, visitedTransitions, cyclicArcs);
   });
   return cyclicArcs;
@@ -32,13 +21,13 @@ export function getCycles(run: Run): Arc[] {
  * @param cyclicArcs last arcs when a cycle occurs
  */
 function checkArcCycle(
-  currentRun: Run,
+  currentRun: PetriNet,
   arc: Arc,
   visitedArcs: Set<Arc>,
-  visitedTransitions: Set<Element>,
+  visitedTransitions: Set<string>,
   cyclicArcs: Arc[]
 ): void {
-  const target = currentRun.elements.find(
+  const target = currentRun.transitions.find(
     (element) => element.id === arc.target
   );
   if (visitedArcs.has(arc) || !target) {
@@ -46,16 +35,14 @@ function checkArcCycle(
   }
   visitedArcs.add(arc);
 
-  //transition already visited in this sequence?
-
-  if (visitedTransitions.has(target)) {
+  // transition already visited in this sequence?
+  if (visitedTransitions.has(target.id)) {
     cyclicArcs.push(arc);
     return;
   }
-  visitedTransitions.add(target);
+  visitedTransitions.add(target.id);
 
   //continue with the sequences
-
   target.outgoingArcs.forEach((outArc) => {
     checkArcCycle(
       currentRun,
@@ -65,6 +52,4 @@ function checkArcCycle(
       cyclicArcs
     );
   });
-
-  visitedTransitions.delete(target);
 }

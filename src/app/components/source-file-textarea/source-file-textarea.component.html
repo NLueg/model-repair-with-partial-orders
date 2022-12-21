@@ -1,8 +1,3 @@
-<span class="run-info">
-  Run: {{ (getCurrentRunIndex$ | async)! + 1 }} /
-  {{ getRunCount$ | async }}
-</span>
-
 <mat-form-field appearance="outline" class="textarea" [matTooltip]="runHint">
   <mat-label class="input-label">
     <span>Source file</span>
@@ -26,72 +21,4 @@
     cdkAutosizeMaxRows="20"
     [formControl]="textareaFc"
   ></textarea>
-
-  <mat-divider></mat-divider>
-  <div fxLayout="row" fxLayoutAlign="space-evenly start">
-    <button
-      mat-icon-button
-      aria-label="Previous run"
-      matTooltip="Previous run"
-      [disabled]="(hasPreviousRun$ | async) === false"
-      (click)="previousRun()"
-    >
-      <mat-icon>navigate_before</mat-icon>
-    </button>
-    <button
-      mat-icon-button
-      aria-label="Next run"
-      matTooltip="Next run"
-      [disabled]="(hasNextRun$ | async) === false"
-      (click)="nextRun()"
-    >
-      <mat-icon>navigate_next</mat-icon>
-    </button>
-  </div>
-  <div fxLayout="row" fxLayoutAlign="space-evenly start">
-    <button
-      mat-icon-button
-      aria-label="Delete current run"
-      matTooltip="Delete current run"
-      color="warn"
-      [disabled]="
-        (isCurrentRunEmpty$ | async) &&
-        (hasPreviousRun$ | async) === false &&
-        (hasNextRun$ | async) === false
-      "
-      (click)="removeRun()"
-    >
-      <mat-icon>delete_forever</mat-icon>
-    </button>
-    <button
-      mat-icon-button
-      aria-label="Add empty run"
-      matTooltip="Add empty run"
-      color="primary"
-      (click)="addRun()"
-    >
-      <mat-icon>add_circle</mat-icon>
-    </button>
-    <button
-      mat-icon-button
-      aria-label="Delete all runs"
-      matTooltip="Delete all runs"
-      color="warn"
-      (click)="reset()"
-    >
-      <mat-icon>restart_alt</mat-icon>
-    </button>
-  </div>
-  <button
-    *ngIf="runValidationStatus === 'warn'"
-    class="resolve-button"
-    color="accent"
-    matSuffix
-    mat-icon-button
-    aria-label="Resolve warnings"
-    matTooltip="Resolve warnings"
-    (click)="resolveWarnings()"
-  >
-    <mat-icon>auto_fix_high</mat-icon>
-  </button>
 </mat-form-field>
