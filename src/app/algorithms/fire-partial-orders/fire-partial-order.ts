@@ -13,7 +13,7 @@ import {
   EventItem,
   Transition,
 } from '../../classes/diagram/transition';
-import { MaxFlowPreflowN3 } from '../../stuff/algorithms/flow-network/max-flow-preflow-n3';
+import { MaxFlowPreflowN3 } from './max-flow-preflow-n3';
 
 export class ValidationResult {
   public valid: boolean;

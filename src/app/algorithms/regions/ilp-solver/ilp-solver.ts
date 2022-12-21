@@ -4,14 +4,11 @@ import { concatMap, from, Observable, ReplaySubject, tap, toArray } from 'rxjs';
 import { PartialOrder } from '../../../classes/diagram/partial-order';
 import { PetriNet } from '../../../classes/diagram/petri-net';
 import { EventItem } from '../../../classes/diagram/transition';
-import { ConstraintsWithNewVariables } from '../../../stuff/algorithms/petri-net/prime-miner/regions/petri-net-region/constraints-with-new-variables';
-import { ProblemSolution } from '../../../stuff/algorithms/petri-net/prime-miner/regions/petri-net-region/region-ilp-solver';
-import { Bound } from '../../../stuff/models/glpk/bound';
-import { VariableName } from '../../../stuff/models/glpk/glpk-constants';
-import { SubjectTo } from '../../../stuff/models/glpk/subject-to';
-import { Variable } from '../../../stuff/models/glpk/variable';
+import { arraify } from '../arraify';
+import { ConstraintsWithNewVariables } from './constraints-with-new-variables';
 import { DirectlyFollowsExtractor } from './directly-follows-extractor';
-import { Constraint, Goal, MessageLevel } from './glpk-constants';
+import { Bound, SubjectTo, Variable } from './solver-classes';
+import { Constraint, Goal, MessageLevel } from './solver-constants';
 
 export enum VariableType {
   INITIAL_MARKING,
@@ -22,6 +19,17 @@ export enum VariableType {
 export interface SolutionVariable {
   label: string;
   type: VariableType;
+}
+
+export interface ProblemSolution {
+  ilp: LP;
+  solution: Result;
+}
+
+export enum VariableName {
+  INITIAL_MARKING = 'm0',
+  OUTGOING_ARC_WEIGHT_PREFIX = 'out',
+  INGOING_ARC_WEIGHT_PREFIX = 'in',
 }
 
 export class IlpSolver {
@@ -405,8 +413,4 @@ export class IlpSolver {
       )
       .join(' ');
   }
-}
-
-function arraify<T>(a: T | Array<T>): Array<T> {
-  return Array.isArray(a) ? a : [a];
 }

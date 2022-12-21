@@ -4,8 +4,11 @@ import { from, map, Observable, switchMap } from 'rxjs';
 
 import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
-import { ProblemSolution } from '../../stuff/algorithms/petri-net/prime-miner/regions/petri-net-region/region-ilp-solver';
-import { IlpSolver, VariableType } from './ilp-solver/ilp-solver';
+import {
+  IlpSolver,
+  ProblemSolution,
+  VariableType,
+} from './ilp-solver/ilp-solver';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const createGlpk: () => Promise<GLPK> = require('glpk.js').default;
@@ -14,6 +17,7 @@ const createGlpk: () => Promise<GLPK> = require('glpk.js').default;
   providedIn: 'root',
 })
 export class PetriNetRegionsService {
+  // TODO: Better name & return something
   computeRegions(
     partialOrders: PartialOrder[],
     petriNet: PetriNet,

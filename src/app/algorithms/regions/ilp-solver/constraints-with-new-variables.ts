@@ -1,4 +1,5 @@
-import { SubjectTo } from '../../../../../models/glpk/subject-to';
+import { arraify } from '../arraify';
+import { SubjectTo } from './solver-classes';
 
 export class ConstraintsWithNewVariables {
   private readonly _binaryVariables: Array<string>;
@@ -14,16 +15,12 @@ export class ConstraintsWithNewVariables {
       ? constraints
       : [constraints];
     if (binaryVariables !== undefined) {
-      this._binaryVariables = Array.isArray(binaryVariables)
-        ? binaryVariables
-        : [binaryVariables];
+      this._binaryVariables = arraify(binaryVariables);
     } else {
       this._binaryVariables = [];
     }
     if (integerVariables !== undefined) {
-      this._integerVariables = Array.isArray(integerVariables)
-        ? integerVariables
-        : [integerVariables];
+      this._integerVariables = arraify(integerVariables);
     } else {
       this._integerVariables = [];
     }
