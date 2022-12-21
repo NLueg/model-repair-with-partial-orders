@@ -6,4 +6,4 @@
 
 
 Editor for displaying partial languages on a canvas.
-You can find the live version [here](https://partielle-sprachen.web.app/).
+You can find the live version [here](https://model-repair.web.app/).
