@@ -24,7 +24,7 @@ export class MapSet<K, V> {
     }
   }
 
-  public has(key: K, value: V) {
+  has(key: K, value: V): boolean {
     return this._map.has(key) && this._map.get(key)!.has(value);
   }
 

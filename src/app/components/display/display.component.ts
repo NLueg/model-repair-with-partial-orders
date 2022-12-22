@@ -1,3 +1,4 @@
+import { Point } from '@angular/cdk/drag-drop';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { map, Observable, of, switchMap } from 'rxjs';
 
@@ -27,8 +28,8 @@ export class DisplayComponent {
     private petriNetRegionsService: PetriNetRegionsService
   ) {
     this.svgElements$ = this.displayService.getPetriNet$().pipe(
-      map((currentRun) => this.layoutService.layout(currentRun).run),
-      switchMap((petriNet) =>
+      map((currentRun) => this.layoutService.layout(currentRun)),
+      switchMap(({ net, point }) =>
         this.displayService.getPartialOrders$().pipe(
           switchMap((partialOrders) => {
             if (partialOrders.length === 0) {
@@ -36,37 +37,45 @@ export class DisplayComponent {
             }
 
             const invalidPlaces = this.firePartialOrder(
-              petriNet,
+              net,
               partialOrders[partialOrders.length - 1]
             );
 
             // TODO: Generate repair suggestions for each place
             return this.petriNetRegionsService
-              .computeRegions(partialOrders, petriNet, invalidPlaces)
+              .computeRegions(partialOrders, net, invalidPlaces)
               .pipe(map(() => invalidPlaces));
           }),
           map((invalidPlaces) => {
-            petriNet.places.forEach((place) => {
+            net.places.forEach((place) => {
               place.invalid = undefined;
             });
             for (const place of invalidPlaces) {
-              const foundPlace = petriNet.places.find((p) => p.id === place);
+              const foundPlace = net.places.find((p) => p.id === place);
               if (foundPlace) {
                 foundPlace.invalid = true;
               }
             }
-            return petriNet;
+            return { net, point };
           })
         )
       ),
-      map((modifiedRun) => {
+      map(({ net, point }) => {
+        let offset: Point;
+
         if (this.canvas && this.canvas.drawingArea) {
-          const w = this.canvas.drawingArea.nativeElement.clientWidth;
-          const h = this.canvas.drawingArea.nativeElement.clientHeight;
-          if (w > 0 && h > 0)
-            this.layoutService.centerPetriNet(modifiedRun, w / 2, h / 2);
+          const canvasWidth = this.canvas.drawingArea.nativeElement.clientWidth;
+          const canvasHeight =
+            this.canvas.drawingArea.nativeElement.clientHeight;
+
+          offset = {
+            x: (canvasWidth - point.x) / 2,
+            y: (canvasHeight - point.y) / 2,
+          };
+        } else {
+          offset = { x: 0, y: 0 };
         }
-        return [...this.svgService.createSvgElements(modifiedRun)];
+        return [...this.svgService.createNetElements(net, offset)];
       })
     );
   }

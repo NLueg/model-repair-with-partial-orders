@@ -101,12 +101,12 @@ export class RunToPnmlService {
       transitions: elements,
       places: [],
       text: '',
-    }).run;
+    });
 
     return {
       places,
       parsedRun,
-    };
+    } as any;
   }
 }
 

@@ -23,6 +23,7 @@ export function getTransitiveArcs(run: PetriNet): Set<Arc> {
     );
     followingArcs.forEach((followingArc) => {
       possibleArcs.push({
+        weight: 1,
         source: arc.source,
         target: followingArc.target,
         breakpoints: [],
@@ -46,6 +47,7 @@ export function getTransitiveArcs(run: PetriNet): Set<Arc> {
           source: arc.source,
           target: followingArc.target,
           breakpoints: [],
+          weight: 1,
         });
       });
     });

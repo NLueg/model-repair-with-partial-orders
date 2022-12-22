@@ -40,7 +40,6 @@ export class ParserService {
   private readonly transitionRegex = /^(\S*)\s*(.*)$/;
   private readonly placeRegex = /^(\S*)\s*(\d*)$/;
   private readonly arcRegex = /^(\S*)\s*(\S*)\s*(\d*)$/;
-  private readonly breakpointRegex = new RegExp('\\[\\d+\\]');
 
   parsePartialOrder(content: string, errors: Set<string>): PartialOrder | null {
     const contentLines = content.split('\n');
@@ -151,26 +150,6 @@ export class ParserService {
                 );
                 if (source && target) {
                   concatEvents(source, target);
-                }
-
-                let trimmedLineTmp = trimmedLine;
-                while (this.breakpointRegex.test(trimmedLineTmp)) {
-                  const layerPos = parseInt(
-                    trimmedLineTmp.substring(
-                      trimmedLineTmp.indexOf('[') + 1,
-                      trimmedLineTmp.indexOf(']')
-                    )
-                  );
-                  breakpoints.push({
-                    x: 0,
-                    y: 0,
-                    layerPos: layerPos,
-                    arc: arc,
-                  });
-                  arc.breakpoints = breakpoints;
-                  trimmedLineTmp = trimmedLineTmp.substring(
-                    trimmedLineTmp.indexOf(']') + 1
-                  );
                 }
               }
             } else {
@@ -330,26 +309,6 @@ export class ParserService {
                   `File contains duplicate arcs`,
                   `Duplicate arcs are ignored`
                 );
-              } else {
-                let trimmedLineTmp = trimmedLine;
-                while (this.breakpointRegex.test(trimmedLineTmp)) {
-                  const layerPos = parseInt(
-                    trimmedLineTmp.substring(
-                      trimmedLineTmp.indexOf('[') + 1,
-                      trimmedLineTmp.indexOf(']')
-                    )
-                  );
-                  breakpoints.push({
-                    x: 0,
-                    y: 0,
-                    layerPos: layerPos,
-                    arc: arc,
-                  });
-                  arc.breakpoints = breakpoints;
-                  trimmedLineTmp = trimmedLineTmp.substring(
-                    trimmedLineTmp.indexOf(']') + 1
-                  );
-                }
               }
             } else {
               this.toastr.warning(

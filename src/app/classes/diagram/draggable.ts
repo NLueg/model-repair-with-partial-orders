@@ -8,13 +8,13 @@ export type Draggable = {
 };
 
 export interface ConcreteElement {
+  id: string;
   x?: number;
   y?: number;
   layerPos?: number;
 }
 
 export interface ConcreteElementWithArcs extends ConcreteElement {
-  id: string;
   incomingArcs: Arc[];
   outgoingArcs: Arc[];
 }

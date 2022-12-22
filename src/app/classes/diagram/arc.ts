@@ -9,14 +9,7 @@ export type Arc = {
 };
 
 export interface Breakpoint extends ConcreteElement {
+  type: 'breakpoint';
   x: number;
   y: number;
-  arc: Arc;
-  layerPos?: number;
-}
-
-export function doesArcBelongToCurrentRun(arc: Arc): boolean {
-  if (arc.currentRun) {
-    return true;
-  } else return false;
 }
