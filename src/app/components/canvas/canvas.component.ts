@@ -3,13 +3,12 @@ import {
   ElementRef,
   EventEmitter,
   Input,
-  OnChanges,
   OnDestroy,
+  OnInit,
   Output,
-  SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { Draggable } from 'src/app/classes/diagram/draggable';
 
 import { CoordinatesInfo } from '../../classes/diagram/coordinates';
@@ -35,11 +34,11 @@ import {
   templateUrl: './canvas.component.html',
   styleUrls: ['./canvas.component.scss'],
 })
-export class CanvasComponent implements OnChanges, OnDestroy {
+export class CanvasComponent implements OnInit, OnDestroy {
   @ViewChild('drawingArea') drawingArea: ElementRef<SVGElement> | undefined;
 
   @Input()
-  svgElements: SVGElement[] = [];
+  svgElements$?: Observable<SVGElement[]>;
 
   @Input()
   canvasHeight = 400;
@@ -62,15 +61,19 @@ export class CanvasComponent implements OnChanges, OnDestroy {
     this._sub?.unsubscribe();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['svgElements'] && this.drawingArea) {
+  ngOnInit(): void {
+    this.svgElements$?.subscribe((elements) => {
+      if (!this.drawingArea) {
+        return;
+      }
+
       this.clearDrawingArea();
-      for (const element of this.svgElements) {
+      for (const element of elements) {
         this.drawingArea.nativeElement.appendChild(element);
       }
       this.registerCanvasMouseHandler(this.drawingArea.nativeElement);
       this.registerSingleMouseHandler(this.drawingArea.nativeElement);
-    }
+    });
   }
 
   private clearDrawingArea() {
@@ -88,6 +91,7 @@ export class CanvasComponent implements OnChanges, OnDestroy {
 
   private registerCanvasMouseHandler(drawingArea: SVGElement) {
     drawingArea.onmousedown = (e) => {
+      console.log(e);
       this._stateHandler.initMouseDownForRun(e);
     };
 

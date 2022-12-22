@@ -97,7 +97,6 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
 
     if (newSource.trim().startsWith(netTypeKey)) {
       const petriNet = this.parserService.parsePetriNet(newSource, errors);
-      console.warn(petriNet);
       this.updateValidation(petriNet, errors);
       if (!petriNet) return;
 
@@ -143,11 +142,6 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     }
     this.textareaFc.setValue(newText);
     this.processSourceChange(newText);
-  }
-
-  private updateShownRun(run: PetriNet, emitEvent = true): void {
-    this.textareaFc.setValue(run.text, { emitEvent: emitEvent });
-    this.updateValidation(run);
   }
 
   private updateValidation(

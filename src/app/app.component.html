@@ -5,6 +5,13 @@
   >
   <h2>... especially functioning nets 🛠️</h2>
 
+  <p>
+    With this tool you can check whether a Petri net can be enabled by your
+    log(s). <br />
+    You will see which places are not enabled and you will receive
+    recommendations to solve the issues.
+  </p>
+
   <main>
     <app-display class="padding full-size"></app-display>
     <button
@@ -13,13 +20,13 @@
       class="reset-button"
       color="primary"
     >
-      Reset
+      Reset layout
     </button>
   </main>
 
   <div fxLayout="row" fxLayoutAlign="space-evenly start">
     <app-template-button
-      buttonText="Upload"
+      buttonText="Upload a Petri net and logs"
       buttonIcon="upload"
       (buttonAction)="openFileSelector()"
       (dropAction)="dropFiles($event)"

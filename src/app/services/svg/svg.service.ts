@@ -56,8 +56,6 @@ export class SvgService {
     );
     this.applyStyle(transEl, style);
 
-    registerElement(transition, transEl);
-
     const textEl = this.createTextElement(transition.label as string);
     textEl.setAttribute('x', '' + (getNumber(transition.x) + offset.x));
     textEl.setAttribute(
@@ -76,7 +74,6 @@ export class SvgService {
     placeEl.setAttribute('cx', '' + (getNumber(place.x) + offset.x));
     placeEl.setAttribute('cy', '' + (getNumber(place.y) + offset.y));
     this.applyStyle(placeEl, PLACE_STYLE);
-    registerElement(place, placeEl);
     const textEl = this.createTextElement(place.id);
     textEl.setAttribute('x', '' + (getNumber(place.x) + offset.x));
     textEl.setAttribute(
@@ -198,7 +195,6 @@ export class SvgService {
     result.classList.add('drag-point');
     result.setAttribute('cx', '' + (dragPoint.x + offset.x));
     result.setAttribute('cy', '' + (dragPoint.y + offset.y));
-    registerElement(dragPoint, result);
     return result;
   }
 
@@ -329,28 +325,3 @@ function getPoint(element: ConcreteElement): Point {
     y: getNumber(element.y),
   };
 }
-
-function registerElement(element: ConcreteElement, svgElement: SVGElement) {
-  svgElement.onmousedown = (event) => {
-    processMouseDown(element, event);
-  };
-}
-
-function processMouseDown(element: ConcreteElement, event: MouseEvent) {
-  event.stopPropagation();
-  /* this._dragging = true;
-  this._preDragPosition = { x: this.x, y: this.y };
-  this._svgOffset = this.svgOffset();
-  this._lastPoint = { x: event.x, y: event.y };*/
-}
-/*
-function svgOffset(): Point {
-  if (this._element === undefined) {
-    throw new Error('Element not set. SVG offset cannot be computed!');
-  }
-  return {
-    x: parseInt(this._element.getAttribute(this.svgX()) ?? '0') - this.x,
-    y: parseInt(this._element.getAttribute(this.svgY()) ?? '0') - this.y,
-  };
-}
-*/

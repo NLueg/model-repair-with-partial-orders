@@ -35,6 +35,14 @@ svg foreignObject {
     }
 }
 
+.drag-point {
+  fill-opacity: 0;
+
+  &:hover {
+    fill-opacity: 0.5;
+  }
+}
+
 
 :root {
     --success-color: #4CAF50;
