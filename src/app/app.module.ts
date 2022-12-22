@@ -1,3 +1,4 @@
+import { OverlayModule } from '@angular/cdk/overlay';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -21,6 +22,7 @@ import { DisplayComponent } from './components/display/display.component';
 import { DownloadComponent } from './components/download/download.component';
 import { DownloadPopoverComponent } from './components/download/download-popover/download-popover.component';
 import { FooterComponent } from './components/footer/footer.component';
+import { RepairMenuComponent } from './components/repair-menu/repair-menu.component';
 import { SourceFileTextareaComponent } from './components/source-file-textarea/source-file-textarea.component';
 import { TemplateButtonComponent } from './components/template-button/template-button.component';
 
@@ -34,6 +36,7 @@ import { TemplateButtonComponent } from './components/template-button/template-b
     DownloadComponent,
     CanvasComponent,
     DownloadPopoverComponent,
+    RepairMenuComponent,
   ],
   imports: [
     BrowserModule,
@@ -54,6 +57,7 @@ import { TemplateButtonComponent } from './components/template-button/template-b
     MatCheckboxModule,
     FormsModule,
     MatDialogModule,
+    OverlayModule,
   ],
   bootstrap: [AppComponent],
 })

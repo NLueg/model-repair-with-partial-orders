@@ -117,7 +117,6 @@ export class LayoutService {
       transitions: [],
       places: [],
       arcs: [],
-      text: '',
     };
     net.places.forEach((p) => {
       result.places.push({

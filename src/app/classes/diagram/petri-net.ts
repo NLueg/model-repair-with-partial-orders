@@ -3,7 +3,6 @@ import { Place } from './place';
 import { Transition } from './transition';
 
 export interface PetriNet {
-  text: string;
   transitions: Transition[];
   places: Place[];
   arcs: Arc[];

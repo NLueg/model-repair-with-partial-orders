@@ -14,14 +14,48 @@
 
   <main>
     <app-display class="padding full-size"></app-display>
-    <button
-      mat-raised-button
-      (click)="resetSvgPositioning()"
-      class="reset-button"
-      color="primary"
-    >
-      Reset layout
-    </button>
+
+    <div class="button-bar">
+      <div class="button-bar__group">
+        <button
+          *ngIf="netCommandService.undoQueue.length > 0"
+          mat-raised-button
+          (click)="netCommandService.undo()"
+          class="reset-button"
+          color="primary"
+        >
+          <mat-icon
+            aria-hidden="false"
+            aria-label="Undo icon"
+            fontIcon="undo"
+          ></mat-icon>
+          Undo correction
+        </button>
+        <button
+          *ngIf="netCommandService.redoQueue.length > 0"
+          mat-raised-button
+          (click)="netCommandService.redo()"
+          class="reset-button"
+          color="primary"
+        >
+          <mat-icon
+            aria-hidden="false"
+            aria-label="Redo icon"
+            fontIcon="redo"
+          ></mat-icon>
+          Redo correction
+        </button>
+      </div>
+
+      <button
+        mat-raised-button
+        (click)="resetSvgPositioning()"
+        class="reset-button"
+        color="primary"
+      >
+        Reset layout
+      </button>
+    </div>
   </main>
 
   <div fxLayout="row" fxLayoutAlign="space-evenly start">

@@ -1,6 +1,5 @@
 import clonedeep from 'lodash.clonedeep';
 
-import { emptyContent } from '../../../services/empty-file';
 import {
   arcsAttribute,
   netTypeKey,
@@ -163,7 +162,6 @@ export function copyRun(run: PetriNet, copyCoordinates: boolean): PetriNet {
     return clonedeep(run);
   } else {
     const targetRun: PetriNet = {
-      text: '',
       transitions: [],
       arcs: [],
       places: [],
@@ -186,7 +184,6 @@ export function copyRun(run: PetriNet, copyCoordinates: boolean): PetriNet {
 
 export function getEmptyNet(): PetriNet {
   return {
-    text: emptyContent,
     transitions: [],
     places: [],
     arcs: [],

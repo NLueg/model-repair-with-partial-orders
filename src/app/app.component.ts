@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Subject } from 'rxjs';
 
 import { DownloadService } from './services/download/download.service';
+import { NetCommandService } from './services/repair/net-command.service';
 import { UploadService } from './services/upload/upload.service';
 
 @Component({
@@ -13,8 +14,9 @@ export class AppComponent {
   resetPositioningSubject: Subject<void> = new Subject<void>();
 
   constructor(
-    private _uploadService: UploadService,
-    private _downloadService: DownloadService
+    private uploadService: UploadService,
+    private downloadService: DownloadService,
+    public netCommandService: NetCommandService
   ) {}
 
   resetSvgPositioning(): void {
@@ -22,12 +24,12 @@ export class AppComponent {
   }
 
   public openFileSelector(): void {
-    this._uploadService.openFileSelector();
+    this.uploadService.openFileSelector();
   }
 
   public dropFiles(event: DragEvent): void {
     if (event.dataTransfer?.files) {
-      this._uploadService.uploadFiles(event.dataTransfer.files);
+      this.uploadService.uploadFiles(event.dataTransfer.files);
     }
   }
 }

@@ -100,7 +100,6 @@ export class RunToPnmlService {
       arcs: newArcArray,
       transitions: elements,
       places: [],
-      text: '',
     });
 
     return {

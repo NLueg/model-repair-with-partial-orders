@@ -1,5 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
-@import '~ngx-toastr/toastr';
+@import 'ngx-toastr/toastr';
+@import '@angular/cdk/overlay-prebuilt.css';
+@import "theme";
 
 html { height: 100%; }
 body {
@@ -48,7 +50,9 @@ svg foreignObject {
     --success-color: #4CAF50;
     --warn-color: #ff9800;
     --error-color: #f44336;
+    --fancy-grey: #f5f5f5;
 
+    --border-radius: 5px;
     --spaces: 8px;
     --spaces-x2: calc(var(--spaces) * 2);
     --spaces-x3: calc(var(--spaces) * 3);
@@ -67,4 +71,14 @@ svg foreignObject {
         fill-opacity: 0.5;
         transition: fill-opacity .25s ease-out;
     }
+}
+
+circle.place.place--invalid {
+  cursor: pointer;
+}
+
+.current-overlay {
+  background: var(--fancy-grey);
+  border-radius: var(--border-radius);
+  box-shadow: rgba(0, 0, 0, 0.35) 0 5px 15px;
 }

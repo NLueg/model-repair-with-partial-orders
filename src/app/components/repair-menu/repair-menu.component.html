@@ -1,0 +1,14 @@
+<div *ngIf="shownTextsForSolutions.length > 0; else emptyText">
+  <button
+    mat-button
+    *ngFor="let model of shownTextsForSolutions"
+    (click)="useSolution(model.solution)"
+  >
+    {{ model.text }}
+  </button>
+</div>
+<ng-template #emptyText>
+  <div>
+    <p>I don't found any solution 😢</p>
+  </div>
+</ng-template>

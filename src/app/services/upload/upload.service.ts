@@ -16,6 +16,10 @@ export class UploadService {
     this.upload$ = new Subject<string>();
   }
 
+  setUploadText(text: string): void {
+    this.upload$.next(text);
+  }
+
   getUpload$(): Observable<string> {
     return this.upload$.asObservable();
   }

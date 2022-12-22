@@ -15,6 +15,7 @@ import {
   TEXT_STYLE,
   TRANSITION_STYLE,
 } from '../element-style';
+import { RepairService } from '../repair/repair.service';
 
 @Injectable({
   providedIn: 'root',
@@ -24,7 +25,9 @@ export class SvgService {
   private readonly ARC_WEIGHT_OFFSET_VERTICAL = 15;
   private readonly ARC_WEIGHT_OFFSET_HORIZONTAL = 10;
 
-  public createNetElements(net: PetriNet, offset: Point): Array<SVGElement> {
+  constructor(private repairService: RepairService) {}
+
+  createNetElements(net: PetriNet, offset: Point): Array<SVGElement> {
     const result: Array<SVGElement> = [];
     for (const transition of net.transitions) {
       result.push(...this.createTransitionElement(transition, offset));
@@ -71,6 +74,7 @@ export class SvgService {
 
   private createPlaceElement(place: Place, offset: Point): Array<SVGElement> {
     const placeEl = this.createSvgElement('circle');
+    placeEl.classList.add('place');
     placeEl.setAttribute('cx', '' + (getNumber(place.x) + offset.x));
     placeEl.setAttribute('cy', '' + (getNumber(place.y) + offset.y));
     this.applyStyle(placeEl, PLACE_STYLE);
@@ -85,13 +89,39 @@ export class SvgService {
           offset.y)
     );
     const result = [placeEl, textEl];
-    if (place.marking > 0) {
+
+    if (place.invalid) {
+      placeEl.classList.add('place--invalid');
+      placeEl.setAttribute('stroke', 'red');
+
+      const titleEl = this.createSvgElement('title');
+      titleEl.textContent =
+        'Invalid place. Click to see possibilities to solve the issues!';
+      placeEl.appendChild(titleEl);
+
+      const markingEl = this.createTextElement('!');
+      markingEl.setAttribute('x', '' + (getNumber(place.x) + offset.x));
+      markingEl.setAttribute('y', '' + (getNumber(place.y) + offset.y));
+      markingEl.setAttribute('width', '48');
+      markingEl.setAttribute('height', '48');
+      markingEl.setAttribute('stroke', 'red');
+      markingEl.setAttribute('font-size', '2em');
+      result.push(markingEl);
+
+      placeEl.addEventListener('click', () =>
+        this.repairService.showRepairPopover(
+          placeEl.getBoundingClientRect(),
+          place.id
+        )
+      );
+    } else if (place.marking > 0) {
       const markingEl = this.createTextElement('' + place.marking);
       markingEl.setAttribute('x', '' + (getNumber(place.x) + offset.x));
       markingEl.setAttribute('y', '' + (getNumber(place.y) + offset.y));
       markingEl.setAttribute('font-size', '1.5em');
       result.push(markingEl);
     }
+
     return result;
   }
 

@@ -1,5 +1,5 @@
 import { GLPK, LP, Result } from 'glpk.js';
-import { concatMap, from, Observable, ReplaySubject, tap, toArray } from 'rxjs';
+import { concatMap, from, Observable, ReplaySubject, toArray } from 'rxjs';
 
 import { PartialOrder } from '../../../classes/diagram/partial-order';
 import { PetriNet } from '../../../classes/diagram/petri-net';
@@ -46,7 +46,6 @@ export class IlpSolver {
   private constraintCount = 0;
 
   private readonly _allVariables: Set<string>;
-  private readonly _placeVariables: Set<string>;
   private readonly _poVariableNames: Set<string>;
 
   private readonly _labelVariableMapIngoing: Map<string, string>;
@@ -55,31 +54,35 @@ export class IlpSolver {
   private readonly _inverseLabelVariableMapOutgoing: Map<string, string>;
   private readonly _directlyFollowsExtractor: DirectlyFollowsExtractor;
 
-  constructor(private glpk: GLPK) {
+  private baseIlp: LP;
+  private baseConstraints: Array<SubjectTo>;
+  private pairs: Array<[first: string, second: string]>;
+
+  constructor(
+    private glpk: GLPK,
+    private partialOrders: Array<PartialOrder>,
+    private petriNet: PetriNet
+  ) {
     this._directlyFollowsExtractor = new DirectlyFollowsExtractor();
     this._allVariables = new Set<string>();
-    this._placeVariables = new Set<string>();
     this._poVariableNames = new Set<string>();
     this._labelVariableMapIngoing = new Map<string, string>();
     this._labelVariableMapOutgoing = new Map<string, string>();
     this._inverseLabelVariableMapIngoing = new Map<string, string>();
     this._inverseLabelVariableMapOutgoing = new Map<string, string>();
+
+    this.baseConstraints = this.buildBasicIlpForPartialOrders(partialOrders);
+
+    this.baseIlp = this.setUpBaseIlp();
+
+    this.pairs = this._directlyFollowsExtractor.oneWayDirectlyFollows();
   }
 
-  computeRegions(
-    partialOrders: Array<PartialOrder>,
-    petriNet: PetriNet,
-    invalidPlaces: string[]
-  ): Observable<ProblemSolution[]> {
-    const baseConstraints = this.buildBasicIlpForPartialOrders(partialOrders);
-
-    const baseIlp = this.setUpBaseIlp();
-
-    const pairs = this._directlyFollowsExtractor.oneWayDirectlyFollows();
-    const validPlaces = petriNet.places.filter(
-      (p) => !invalidPlaces.includes(p.id)
+  computeSolutions(invalidPlace: string): Observable<ProblemSolution[]> {
+    const validPlaces = this.petriNet.places.filter(
+      (p) => p.id !== invalidPlace
     );
-    const pairsThatArentHandled = pairs.filter(
+    const pairsThatArentHandled = this.pairs.filter(
       ([source, target]) =>
         !validPlaces.some(
           (p) =>
@@ -89,8 +92,8 @@ export class IlpSolver {
     );
 
     const problems = pairsThatArentHandled.map((pair) => ({
-      baseConstraints,
-      baseIlp,
+      baseConstraints: this.baseConstraints,
+      baseIlp: this.baseIlp,
       pair,
     }));
 
@@ -104,11 +107,7 @@ export class IlpSolver {
           )
         );
       }),
-      toArray(),
-      tap(() => {
-        console.log('Ingoing', this._labelVariableMapIngoing);
-        console.log('Outgoing', this._labelVariableMapOutgoing);
-      })
+      toArray()
     );
   }
 

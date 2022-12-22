@@ -7,6 +7,7 @@ import {
   addEventItem,
   addPlace,
   addTransition,
+  getElementsWithArcs,
   setRefs,
 } from '../../classes/diagram/functions/net-helper.fn';
 import {
@@ -176,7 +177,6 @@ export class ParserService {
   parsePetriNet(content: string, errors: Set<string>): PetriNet | null {
     const contentLines = content.split('\n');
     const petriNet: PetriNet = {
-      text: content,
       transitions: [],
       arcs: [],
       places: [],
@@ -298,6 +298,23 @@ export class ParserService {
                 weight = Number(splitLine[2]);
               }
 
+              const elements = getElementsWithArcs(petriNet);
+              const parsedSource = elements.find(
+                (transition) => transition.id === source
+              );
+              const parsedTarget = elements.find(
+                (transition) => transition.id === target
+              );
+              if (!parsedSource || !parsedTarget) {
+                this.toastr.error(
+                  `An arc between ${source} and ${target} is invalid`,
+                  `Unable to parse file`
+                );
+                throw Error(
+                  `An arc between ${source} and ${target} is invalid`
+                );
+              }
+
               const arc = {
                 weight: weight || 1,
                 source: source,
@@ -343,18 +360,6 @@ export class ParserService {
         `Invalid arcs are ignored`
       );
     }
-
-    /**
-     * TODO: Reactivate this check!!!
-     * -> Does not work for arcs which target not exists
-    if (hasTransitiveArcs(petriNet)) {
-      removeTransitives(petriNet);
-      this.toastr.warning(
-        `Transitive arcs are ignored`,
-        `File contains transitive arcs`
-      );
-      setRefs(petriNet);
-    } */
 
     return petriNet;
   }

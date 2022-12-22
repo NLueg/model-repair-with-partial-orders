@@ -41,16 +41,17 @@ export class DisplayComponent {
               partialOrders[partialOrders.length - 1]
             );
 
-            // TODO: Generate repair suggestions for each place
-            return this.petriNetRegionsService
-              .computeRegions(partialOrders, net, invalidPlaces)
-              .pipe(map(() => invalidPlaces));
+            return this.petriNetRegionsService.computeRegions(
+              partialOrders,
+              net,
+              invalidPlaces
+            );
           }),
           map((invalidPlaces) => {
             net.places.forEach((place) => {
               place.invalid = undefined;
             });
-            for (const place of invalidPlaces) {
+            for (const place of invalidPlaces.map((p) => p.place)) {
               const foundPlace = net.places.find((p) => p.id === place);
               if (foundPlace) {
                 foundPlace.invalid = true;

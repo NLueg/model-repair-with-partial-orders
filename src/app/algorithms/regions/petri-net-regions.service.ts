@@ -1,9 +1,14 @@
 import { Injectable } from '@angular/core';
 import { GLPK } from 'glpk.js';
-import { from, map, Observable, switchMap } from 'rxjs';
+import { combineLatest, from, map, Observable, of, switchMap, tap } from 'rxjs';
 
 import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
+import {
+  AutoSolution,
+  PlaceSolutions,
+} from '../../services/repair/repair.model';
+import { RepairService } from '../../services/repair/repair.service';
 import {
   IlpSolver,
   ProblemSolution,
@@ -17,52 +22,73 @@ const createGlpk: () => Promise<GLPK> = require('glpk.js').default;
   providedIn: 'root',
 })
 export class PetriNetRegionsService {
-  // TODO: Better name & return something
+  constructor(private repairService: RepairService) {}
+
   computeRegions(
     partialOrders: PartialOrder[],
     petriNet: PetriNet,
     invalidPlaces: string[]
-  ): Observable<void> {
+  ): Observable<PlaceSolutions[]> {
     return from(createGlpk()).pipe(
       switchMap((glpk) => {
-        const solver = new IlpSolver(glpk);
-        return solver
-          .computeRegions(partialOrders, petriNet, invalidPlaces)
-          .pipe(map((solutions) => this.handleSolutions(solutions, solver)));
+        if (invalidPlaces.length === 0) {
+          return of([]);
+        }
+
+        const solver = new IlpSolver(glpk, partialOrders, petriNet);
+
+        return combineLatest(
+          invalidPlaces.map((place) =>
+            solver.computeSolutions(place).pipe(
+              map((solutions) => ({
+                place,
+                solutions: this.handleSolutions(solutions, solver),
+              }))
+            )
+          )
+        ).pipe(
+          tap((solutions) => {
+            console.log('Generated solutions', solutions);
+            this.repairService.saveNewSolutions(solutions);
+          })
+        );
       })
     );
   }
 
-  // TODO: Handle solutions!
-  private handleSolutions(solutions: ProblemSolution[], solver: IlpSolver) {
-    console.warn(solutions);
-
-    for (const placeSolution of solutions) {
-      console.warn('====== PLACE START ======');
-      Object.entries(placeSolution.solution.result.vars).forEach(
-        ([variable, value]) => {
-          if (value === 0) {
-            return;
-          }
-          const decoded = solver.getInverseVariableMapping(variable);
-          if (decoded === null) {
-            return;
-          }
+  private handleSolutions(
+    solutions: ProblemSolution[],
+    solver: IlpSolver
+  ): AutoSolution[] {
+    return solutions.flatMap((solution) =>
+      Object.entries(solution.solution.result.vars)
+        .filter(
+          ([variable, value]) =>
+            value !== 0 && solver.getInverseVariableMapping(variable) !== null
+        )
+        .map(([variable, value]) => {
+          const decoded = solver.getInverseVariableMapping(variable)!;
 
           switch (decoded.type) {
             case VariableType.INITIAL_MARKING:
-              console.log('Marking for place ', value);
-              return;
+              return {
+                type: 'increase-marking',
+                newMarking: value,
+              };
             case VariableType.INGOING_WEIGHT:
-              console.log(`Add transition from place to ${decoded.label}`);
-              return;
+              return {
+                type: 'incoming-arc',
+                incoming: decoded.label,
+                marking: value,
+              };
             case VariableType.OUTGOING_WEIGHT:
-              console.log(`Add transition from ${decoded.label} to place`);
-              return;
+              return {
+                type: 'outgoing-arc',
+                outgoing: decoded.label,
+                marking: value,
+              };
           }
-        }
-      );
-      console.warn('====== PLACE END ======');
-    }
+        })
+    );
   }
 }

@@ -35,10 +35,16 @@
     border: 2px dotted lightgrey;
     border-radius: var(--spaces);
 
-    .reset-button {
-        position: absolute;
-        right: 10px;
-        bottom: 10px;
+    .button-bar {
+      position: absolute;
+      width: 100%;
+      bottom: 0;
+      display: flex;
+      justify-content: space-between;
+
+      button {
+        margin: var(--spaces);
+      }
     }
   }
 }
