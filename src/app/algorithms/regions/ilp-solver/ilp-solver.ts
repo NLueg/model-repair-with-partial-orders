@@ -66,8 +66,6 @@ export class IlpSolver {
     this._inverseLabelVariableMapOutgoing = new Map<string, string>();
   }
 
-  // TODO: How to get the event log into this?! - This currently only the initial petri net
-  // TODO: Probably you need to combine the event log with the petri net
   computeRegions(
     partialOrders: Array<PartialOrder>,
     petriNet: PetriNet,

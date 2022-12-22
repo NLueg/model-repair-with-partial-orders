@@ -30,7 +30,6 @@ export class DisplayComponent {
       map((currentRun) => this.layoutService.layout(currentRun).run),
       switchMap((petriNet) =>
         this.displayService.getPartialOrders$().pipe(
-          // TODO: Fire more partial orders
           switchMap((partialOrders) => {
             if (partialOrders.length === 0) {
               return of([]);

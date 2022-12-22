@@ -125,7 +125,7 @@ export class CanvasComponent implements OnChanges, OnDestroy {
 
     if (this._stateHandler.runIsMoved()) {
       /*
-        TODO: Currently now offset is supported!
+        TODO: Currently no offset is supported!
         this._displayService.setOffsetInfo(
           this._stateHandler.getGlobalChangesForRun()
         );

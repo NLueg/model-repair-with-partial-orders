@@ -33,7 +33,6 @@ export enum ValidationPhase {
 
 type InnerFireResult = { branchPlaces: string[] };
 
-// TODO: Refactor this!
 export class FirePartialOrder {
   private readonly idToEventMap = new Map<string, EventItem>();
   private readonly idToPlaceMap = new Map<string, Place>();
@@ -52,7 +51,6 @@ export class FirePartialOrder {
     this.petriNet.places.forEach((p) => this.idToPlaceMap.set(p.id, p));
   }
 
-  // TODO: Refactor me!
   /**
    * Fires the partial order in the net and returns the ids of invalid places.
    * @returns The ids of invalid places.
@@ -212,7 +210,6 @@ export class FirePartialOrder {
     );
   }
 
-  // TODO: Refactor me!
   private fire(
     eventQueue: Array<EventItem>,
     validPlaces: Array<boolean>,
@@ -310,7 +307,6 @@ export class FirePartialOrder {
     });
   }
 
-  // TODO: Refactor me!
   private checkFlowForPlace(place: Place, events: Array<EventItem>): boolean {
     const n = events.length * 2 + 2;
     const SOURCE = 0;

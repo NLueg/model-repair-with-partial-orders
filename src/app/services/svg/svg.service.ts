@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 
 import { Arc, Breakpoint } from '../../classes/diagram/arc';
 import { Coordinates } from '../../classes/diagram/coordinates';
-import { ConcreteElementWithArcs } from '../../classes/diagram/draggable';
 import { getIntersection } from '../../classes/diagram/functions/display.fn';
 import { getElementsWithArcs } from '../../classes/diagram/functions/net-helper.fn';
 import { PetriNet } from '../../classes/diagram/petri-net';
@@ -57,12 +56,11 @@ function createSvgForElement(element: Transition | Place): SVGElement[] {
   text.setAttribute('height', `${height}`);
   text.setAttribute('width', `${width}`);
   text.setAttribute('describes-event', element.id);
+
   const span = document.createElement('span');
 
-  let svg: SVGElement;
-
   if (element.type === 'transition') {
-    svg = createSvgElement('rect');
+    const svg = createSvgElement('rect');
     svg.setAttribute('x', `${x}`);
     svg.setAttribute('y', `${y}`);
     svg.setAttribute('width', `${eventSize}`);
@@ -75,32 +73,36 @@ function createSvgForElement(element: Transition | Place): SVGElement[] {
 
     span.setAttribute('title', element.label);
     span.textContent = element.label;
-  } else {
-    const radius = eventSize / 2;
+    text.append(span);
 
-    svg = createSvgElement('circle');
-    svg.setAttribute('cx', `${x + radius}`);
-    svg.setAttribute('cy', `${y + radius}`);
-    svg.setAttribute('r', `${radius}`);
-    svg.setAttribute('stroke', element.invalid ? 'red' : 'black');
-    svg.setAttribute('stroke-width', '2');
-    svg.setAttribute('fill-opacity', '0');
-    svg.setAttribute(layerPosYAttibute, `${element.layerPos ?? 0}`);
-    svg.setAttribute(eventIdAttribute, `${element.id}`);
-
-    span.setAttribute('title', element.id);
-    span.textContent = element.id;
+    return [svg, text];
   }
 
+  const radius = eventSize / 2;
+
+  const svg = createSvgElement('circle');
+  svg.setAttribute('cx', `${x + radius}`);
+  svg.setAttribute('cy', `${y + radius}`);
+  svg.setAttribute('r', `${radius}`);
+  svg.setAttribute('stroke', element.invalid ? 'red' : 'black');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('fill-opacity', '0');
+  svg.setAttribute(layerPosYAttibute, `${element.layerPos ?? 0}`);
+  svg.setAttribute(eventIdAttribute, `${element.id}`);
+
+  span.setAttribute('title', element.id);
+  span.textContent = element.id;
   text.append(span);
 
-  // TODO: Specific layout for places
-
-  // TODO: This is how colors are changed!
-  /* if (doesElementBelongToCurrentRun(element) && highlight) {
-    svg.setAttribute('stroke', highlightColor);
-    text.setAttribute('style', `color: ${highlightColor};`);
-  }*/
+  if (element.marking > 0) {
+    const marking = createSvgElement('text');
+    marking.setAttribute('x', `${x + radius}`);
+    marking.setAttribute('y', `${y + eventSize / 2}`);
+    marking.setAttribute('font-size', '1.5em');
+    applyStyle(marking, TEXT_STYLE);
+    marking.textContent = String(element.marking);
+    return [svg, text, marking];
+  }
 
   return [svg, text];
 }
@@ -111,8 +113,8 @@ function createSvgElement(name: string): SVGElement {
 
 function createSvgForArc(
   arc: Arc,
-  source: ConcreteElementWithArcs | undefined,
-  target: ConcreteElementWithArcs | undefined
+  source: Transition | Place | undefined,
+  target: Transition | Place | undefined
 ): SVGElement[] {
   const elements: SVGElement[] = [];
 
@@ -223,9 +225,13 @@ function createSvgForArc(
         }
       )
     );
-    elements.push(createCircle(arc.breakpoints, 0, source.id, target.id));
+    elements.push(
+      createCircleForBreakpoint(arc.breakpoints, 0, source.id, target.id)
+    );
     for (let i = 0; i < arc.breakpoints.length - 1; i++) {
-      elements.push(createCircle(arc.breakpoints, i + 1, source.id, target.id));
+      elements.push(
+        createCircleForBreakpoint(arc.breakpoints, i + 1, source.id, target.id)
+      );
     }
   }
 
@@ -257,7 +263,7 @@ function createLine(
   return line;
 }
 
-function createCircle(
+function createCircleForBreakpoint(
   breakpoints: Array<Breakpoint>,
   positionInRun: number,
   sourceLabel: string,
@@ -286,8 +292,21 @@ function createCircle(
   return circle;
 }
 
+function applyStyle(element: SVGElement, style: object) {
+  for (const entry of Object.entries(style)) {
+    element.setAttribute(entry[0], entry[1]);
+  }
+}
+
 type ArcDisplayInfo = {
   showArrow: boolean;
   hasFromAttribute?: boolean;
   hasToAttribute?: boolean;
+};
+
+const TEXT_STYLE = {
+  'text-anchor': 'middle', // horizontal alignment
+  'dominant-baseline': 'central', // vertical alignment
+  'pointer-events': 'none',
+  style: 'user-select: none',
 };

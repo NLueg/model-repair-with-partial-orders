@@ -319,7 +319,6 @@ export class ParserService {
                 weight = Number(splitLine[2]);
               }
 
-              // TODO: Support weighted arcs
               const arc = {
                 weight: weight || 1,
                 source: source,
