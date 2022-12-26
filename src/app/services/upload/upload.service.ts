@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
-import { Observable, Subject } from 'rxjs';
+import { Observable, ReplaySubject, Subject } from 'rxjs';
 
 const allowedExtensions = ['txt', 'pn', 'pnml'];
 
@@ -8,18 +8,18 @@ const allowedExtensions = ['txt', 'pn', 'pnml'];
   providedIn: 'root',
 })
 export class UploadService {
-  private upload$: Subject<string>;
+  private currentUpload$: Subject<string>;
 
   constructor(private toastr: ToastrService) {
-    this.upload$ = new Subject<string>();
+    this.currentUpload$ = new ReplaySubject<string>(1);
   }
 
   setUploadText(text: string): void {
-    this.upload$.next(text);
+    this.currentUpload$.next(text);
   }
 
   getUpload$(): Observable<string> {
-    return this.upload$.asObservable();
+    return this.currentUpload$.asObservable();
   }
 
   checkFiles(files: FileList): boolean {
@@ -70,7 +70,7 @@ export class UploadService {
         if (fileExtension?.toLowerCase() === 'pnml') {
           // TODO: Parse pnml!
         }
-        this.upload$.next(content);
+        this.currentUpload$.next(content);
       };
 
       reader.readAsText(file);
