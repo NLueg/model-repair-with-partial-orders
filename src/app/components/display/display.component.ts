@@ -1,6 +1,14 @@
 import { Point } from '@angular/cdk/drag-drop';
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { map, Observable, of, switchMap } from 'rxjs';
+import {
+  BehaviorSubject,
+  map,
+  Observable,
+  of,
+  shareReplay,
+  Subject,
+  switchMap,
+} from 'rxjs';
 
 import { FirePartialOrder } from '../../algorithms/fire-partial-orders/fire-partial-order';
 import { PetriNetRegionsService } from '../../algorithms/regions/petri-net-regions.service';
@@ -21,12 +29,25 @@ export class DisplayComponent {
   @ViewChild('canvas') canvas: CanvasComponent | undefined;
   @ViewChild('svg_wrapper') svgWrapper: ElementRef<HTMLElement> | undefined;
 
+  invalidPlaceCount$: Subject<{ count: number } | null>;
+
+  tracesCount$: Observable<number>;
+
   constructor(
     private layoutService: LayoutService,
     private svgService: SvgService,
     private displayService: DisplayService,
     private petriNetRegionsService: PetriNetRegionsService
   ) {
+    this.invalidPlaceCount$ = new BehaviorSubject<{ count: number } | null>(
+      null
+    );
+
+    this.tracesCount$ = this.displayService.getPartialOrders$().pipe(
+      map((partialOrders) => partialOrders.length),
+      shareReplay(1)
+    );
+
     this.svgElements$ = this.displayService.getPetriNet$().pipe(
       map((currentRun) => this.layoutService.layout(currentRun)),
       switchMap(({ net, point }) =>
@@ -40,6 +61,7 @@ export class DisplayComponent {
               net,
               partialOrders[partialOrders.length - 1]
             );
+            this.invalidPlaceCount$.next({ count: invalidPlaces.length });
 
             return this.petriNetRegionsService.computeRegions(
               partialOrders,

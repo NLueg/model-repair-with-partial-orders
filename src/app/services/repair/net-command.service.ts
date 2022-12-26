@@ -5,6 +5,7 @@ import { AutoRepair } from '../../algorithms/regions/parse-solutions.fn';
 import { PetriNet } from '../../classes/diagram/petri-net';
 import { Place } from '../../classes/diagram/place';
 import { DisplayService } from '../display.service';
+import { generateTextFromNet } from '../parser/net-to-text.func';
 import {
   arcsAttribute,
   netTypeKey,
@@ -34,11 +35,11 @@ export class NetCommandService {
           return null;
         }
 
+        this.undoQueue.push(generateTextFromNet(petriNet));
         return generateTextForNewNet(placeIndex, petriNet, solution);
       }),
       tap((newNet) => {
         if (newNet) {
-          this.undoQueue.push(newNet);
           this.uploadService.setUploadText(newNet);
         }
       })
@@ -51,8 +52,13 @@ export class NetCommandService {
       return;
     }
 
-    this.redoQueue.push(net);
-    this.uploadService.setUploadText(net);
+    this.uploadService
+      .getUpload$()
+      .pipe(first())
+      .subscribe((currentUpload) => {
+        this.redoQueue.push(currentUpload);
+        this.uploadService.setUploadText(net);
+      });
   }
 
   redo(): void {
@@ -61,8 +67,13 @@ export class NetCommandService {
       return;
     }
 
-    this.undoQueue.push(net);
-    this.uploadService.setUploadText(net);
+    this.uploadService
+      .getUpload$()
+      .pipe(first())
+      .subscribe((currentUpload) => {
+        this.undoQueue.push(currentUpload);
+        this.uploadService.setUploadText(net);
+      });
   }
 }
 

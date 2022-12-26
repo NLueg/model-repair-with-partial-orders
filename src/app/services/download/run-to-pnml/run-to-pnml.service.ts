@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
-import { Arc } from '../../../classes/diagram/arc';
 import { PetriNet } from '../../../classes/diagram/petri-net';
+import { Place } from '../../../classes/diagram/place';
 import { Transition } from '../../../classes/diagram/transition';
 import { LayoutService } from '../../layout.service';
 
@@ -14,25 +14,18 @@ const transitionDimension = 40;
   providedIn: 'root',
 })
 export class RunToPnmlService {
-  constructor(private _layoutService: LayoutService) {}
+  constructor(private layoutService: LayoutService) {}
 
   // TODO: Fix me!
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  parseRunToPnml(name: string, run: any): string {
-    const { parsedRun, places } = this.layoutRun(run);
-    const parsedPlaces = parsedRun.transitions.filter((element) =>
-      places.find((place) => element.label === place.label)
-    );
+  convertPetriNetToPnml(name: string, petriNet: PetriNet): string {
+    const { net } = this.layoutService.layout(petriNet);
 
-    const transitionText = parsedRun.transitions
-      .filter(
-        (element) => !places.find((place) => element.label === place.label)
-      )
+    const transitionText = net.transitions
       .map((element) => parseTransition(element))
       .join(`\n`);
 
-    const placesText = parsePlaces(parsedPlaces);
-    const arcsText = parseArcs(parsedRun);
+    const placesText = parsePlaces(net.places);
+    const arcsText = parseArcs(net);
 
     return `${encoding}
 <pnml>
@@ -44,70 +37,6 @@ export class RunToPnmlService {
           </page>
      </net>
 </pnml>`;
-  }
-
-  private layoutRun(run: PetriNet): {
-    parsedRun: PetriNet;
-    places: Transition[];
-  } {
-    const places: Transition[] = run.arcs.map((arc) => {
-      const name = getPlaceNameByArc(arc);
-      return {
-        label: name,
-        id: name,
-        type: 'transition',
-        incomingArcs: [],
-        outgoingArcs: [],
-      };
-    });
-    places.unshift({
-      id: firstPlaceId,
-      label: firstPlaceId,
-      type: 'transition',
-      incomingArcs: [],
-      outgoingArcs: [],
-    });
-
-    const newArcArray: Arc[] = run.arcs.flatMap((arc) => {
-      const placeName = getPlaceNameByArc(arc);
-      return [
-        { source: arc.source, target: placeName, breakpoints: [], weight: 1 },
-        { source: placeName, target: arc.target, breakpoints: [], weight: 1 },
-      ];
-    });
-
-    //Add arc from first place to all start-events
-    run.transitions
-      .filter((e) => e.incomingArcs.length == 0)
-      .forEach((e) => {
-        newArcArray.unshift({
-          source: firstPlaceId,
-          target: e.id,
-          breakpoints: [],
-          weight: 1,
-        });
-      });
-
-    const elements = [...run.transitions, ...places].map((element) => {
-      element.incomingArcs = newArcArray.filter(
-        (arc) => arc.target === element.id
-      );
-      element.outgoingArcs = newArcArray.filter(
-        (arc) => arc.source === element.id
-      );
-      return element;
-    });
-
-    const parsedRun = this._layoutService.layout({
-      arcs: newArcArray,
-      transitions: elements,
-      places: [],
-    });
-
-    return {
-      places,
-      parsedRun,
-    } as any;
   }
 }
 
@@ -130,12 +59,12 @@ function parseTransition(transition: Transition): string {
                </transition>`;
 }
 
-function parsePlaces(places: Transition[]): string {
+function parsePlaces(places: Place[]): string {
   return places
     .map((place, index) => {
       return `               <place id="${place.id}">
                     <name>
-                         <text>${place.label}</text>
+                         <text>${place.id}</text>
                          <graphics>
                               <offset x="${place.x ?? 0}" y="${
         (place.y ?? 0) + transitionDimension ?? 0
@@ -153,8 +82,8 @@ function parsePlaces(places: Transition[]): string {
     .join(`\n`);
 }
 
-function parseArcs(run: PetriNet): string {
-  return run.arcs
+function parseArcs(petriNet: PetriNet): string {
+  return petriNet.arcs
     .map(
       (arc) => `               <arc id="A"
                     source="${arc.source}" target="${arc.target}">
@@ -165,8 +94,4 @@ function parseArcs(run: PetriNet): string {
                </arc>`
     )
     .join(`\n `);
-}
-
-function getPlaceNameByArc(arc: Arc): string {
-  return `${arc.source}${arc.target}`;
 }

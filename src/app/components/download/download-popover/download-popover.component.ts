@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 
 import { DownloadService } from '../../../services/download/download.service';
+import { DownloadFormat } from '../download.const';
 
 @Component({
   selector: 'app-download-popover',
@@ -9,6 +10,7 @@ import { DownloadService } from '../../../services/download/download.service';
   styleUrls: ['./download-popover.component.scss'],
 })
 export class DownloadPopoverComponent {
+  fileFormat: DownloadFormat = 'pn';
   downloadName = '';
   compression = false;
 
@@ -18,7 +20,7 @@ export class DownloadPopoverComponent {
   ) {}
 
   download(): void {
-    this._downloadService.downloadNet(this.downloadName);
+    this._downloadService.downloadNet(this.downloadName, this.fileFormat);
     this.closePopover();
   }
 

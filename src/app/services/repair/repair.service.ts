@@ -65,6 +65,7 @@ export class RepairService {
 
     const componentRef = this.overlayRef.attach(componentPortal);
     componentRef.instance.placeId = place;
+    componentRef.instance.overlayRef = this.overlayRef;
     componentRef.instance.solutions = solutionsForPlace
       .filter((s) => s.solutions)
       .map((s) => s.solutions!);

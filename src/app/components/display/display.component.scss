@@ -1,4 +1,32 @@
-.canvas {
+:host {
+  .canvas {
     width: 100%;
     height: 400px;
+  }
+
+  mat-icon {
+    margin-right: 4px;
+
+    &.color_success {
+      color: var(--success-color);
+    }
+
+    &.color_warning {
+      color: var(--warn-color);
+    }
+
+    &.color_error {
+      color: var(--error-color);
+    }
+  }
+
+  .outer-container {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .inner-container {
+    display: flex;
+    align-items: center;
+  }
 }

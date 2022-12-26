@@ -63,7 +63,6 @@ export class PetriNetRegionsService {
     solutions: ProblemSolution[],
     solver: IlpSolver
   ): ParsableSolution[] {
-    console.warn('====== PLACE START ======');
     return solutions.flatMap((solution) =>
       Object.entries(solution.solution.result.vars)
         .filter(

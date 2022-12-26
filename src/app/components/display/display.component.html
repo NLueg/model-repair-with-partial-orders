@@ -1,3 +1,27 @@
+<div
+  class="margin-spaces outer-container"
+  *ngIf="invalidPlaceCount$ | async as invalidPlaceCount"
+>
+  <div class="inner-container">
+    <ng-container *ngIf="invalidPlaceCount.count === 0">
+      <mat-icon class="color_success"> check_circle </mat-icon>
+      <span>All places are valid!</span>
+    </ng-container>
+    <ng-container *ngIf="invalidPlaceCount.count === 1">
+      <mat-icon class="color_error"> error_outline </mat-icon>
+      <span>{{ invalidPlaceCount.count }} invalid place found</span>
+    </ng-container>
+    <ng-container *ngIf="invalidPlaceCount.count > 1">
+      <mat-icon class="color_error"> error_outline </mat-icon>
+      <span>{{ invalidPlaceCount.count }} invalid place found</span>
+    </ng-container>
+  </div>
+
+  <div class="inner-container" *ngIf="tracesCount$ | async as tracesCount">
+    {{ tracesCount }} traces loaded
+  </div>
+</div>
+
 <div #svg_wrapper>
   <app-canvas #canvas [svgElements$]="svgElements$"></app-canvas>
 </div>

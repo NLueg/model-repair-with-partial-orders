@@ -7,17 +7,13 @@ import {
   Subscription,
 } from 'rxjs';
 
-import { CoordinatesInfo } from '../../classes/diagram/coordinates';
 import { isRunEmpty, PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../../services/display.service';
 import { ParserService } from '../../services/parser/parser.service';
 import { netTypeKey } from '../../services/parser/parsing-constants';
 import { simpleExamplePetriNet } from '../../services/upload/simple-example/simple-example-texts';
 import { UploadService } from '../../services/upload/upload.service';
-import {
-  removeCoordinates,
-  updateCoordsInText,
-} from './update-coords-in-text.fn';
+import { removeCoordinates } from './update-coords-in-text.fn';
 
 type Valid = 'error' | 'warn' | 'success';
 
@@ -30,7 +26,6 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
   @Input() events: Observable<void> | undefined;
   private _sub: Subscription;
   private _fileSub: Subscription;
-  private _coordsSub: Subscription;
 
   private _resetEventSubscription?: Subscription;
 
@@ -57,10 +52,6 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     this._sub = this.textareaFc.valueChanges
       .pipe(debounceTime(400))
       .subscribe((val) => this.processSourceChange(val));
-
-    this._coordsSub = this.displayService
-      .coordsInfoAdded()
-      .subscribe((val) => this.addLayerPosInfo(val));
 
     this._fileSub = this.uploadService
       .getUpload$()
@@ -110,15 +101,6 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
       if (!partialOrder) return;
 
       this.displayService.appendNewPartialOrder(partialOrder);
-    }
-  }
-
-  private addLayerPosInfo(coordinatesInfo: Array<CoordinatesInfo>): void {
-    const newValue = updateCoordsInText(this.textareaFc.value, coordinatesInfo);
-
-    if (newValue) {
-      this.textareaFc.setValue(newValue, { emitEvent: false });
-      this.processSourceChange(newValue);
     }
   }
 

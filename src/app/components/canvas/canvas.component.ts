@@ -43,9 +43,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
   @Input()
   canvasHeight = 400;
 
-  @Input()
-  persistUiChangesForRunInTextarea = true;
-
   @Output()
   coordinateChanged = new EventEmitter<CoordinatesInfo[]>();
 
@@ -109,9 +106,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
       }
     };
     drawingArea.onmouseup = () => {
-      if (this.persistUiChangesForRunInTextarea) {
-        this.persistOffset();
-      }
       this.stateHandler.resetCanvasHandlers();
     };
     drawingArea.onmouseenter = () => {
@@ -120,21 +114,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
     drawingArea.onmouseleave = () => {
       this.stateHandler.resetCanvasHandlers();
     };
-  }
-
-  private persistOffset() {
-    if (!this.persistUiChangesForRunInTextarea) {
-      return;
-    }
-
-    if (this.stateHandler.runIsMoved()) {
-      /*
-        TODO: Currently no offset is supported!
-        this._displayService.setOffsetInfo(
-          this._stateHandler.getGlobalChangesForRun()
-        );
-       */
-    }
   }
 
   private registerSingleMouseHandler(drawingArea: SVGElement) {
@@ -300,28 +279,12 @@ export class CanvasComponent implements OnInit, OnDestroy {
   persistLayerPosition(elements: Array<HTMLElement>): void {
     const coordinates = this.getCoordinates(elements);
     this.coordinateChanged.next(coordinates);
-
-    if (this.persistUiChangesForRunInTextarea) {
-      this.displayService.setCoordsInfo(coordinates);
-    }
   }
 
   public createDraggable(element: HTMLElement): Draggable | null {
     return DraggingCreationService.createDraggableFromElement(
       element,
       this.drawingArea
-    );
-  }
-
-  public findInfoText(element: HTMLElement): string {
-    if (!this.drawingArea) {
-      return '';
-    }
-    return (
-      DraggingCreationService.findInfoElementForTransition(
-        element,
-        this.drawingArea
-      )?.textContent ?? ''
     );
   }
 

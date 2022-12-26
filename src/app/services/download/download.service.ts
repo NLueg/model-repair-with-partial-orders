@@ -2,7 +2,9 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { first, Subject } from 'rxjs';
 
 import { PetriNet } from '../../classes/diagram/petri-net';
+import { DownloadFormat } from '../../components/download/download.const';
 import { DisplayService } from '../display.service';
+import { generateTextFromNet } from '../parser/net-to-text.func';
 import { RunToPnmlService } from './run-to-pnml/run-to-pnml.service';
 
 @Injectable({
@@ -22,23 +24,29 @@ export class DownloadService implements OnDestroy {
     this._download$.complete();
   }
 
-  downloadNet(name: string): void {
+  downloadNet(name: string, fileFormat: DownloadFormat): void {
     this.displayService
       .getPetriNet$()
       .pipe(first())
       .subscribe((run) => {
-        const fileEnding = getFileEndingForFormat();
+        const fileEnding = getFileEndingForFormat(fileFormat);
         const fileName = name
           ? `${name}.${fileEnding}`
           : `${Date.now()}_run.${fileEnding}`;
 
-        this.downloadRun(fileName, run);
+        this.downloadRun(fileName, fileFormat, run);
       });
   }
 
-  private downloadRun(name: string, run: PetriNet): void {
-    // TODO: Just download text
-    const fileContent = this.runToPnmlService.parseRunToPnml(name, run);
+  private downloadRun(
+    name: string,
+    fileFormat: DownloadFormat,
+    petriNet: PetriNet
+  ): void {
+    const fileContent =
+      fileFormat === 'pn'
+        ? generateTextFromNet(petriNet)
+        : this.runToPnmlService.convertPetriNetToPnml(name, petriNet);
 
     const downloadLink: HTMLAnchorElement = document.createElement('a');
     downloadLink.download = name;
@@ -49,7 +57,6 @@ export class DownloadService implements OnDestroy {
   }
 }
 
-// TODO: Maybe support *.pnml and *.pn
-function getFileEndingForFormat(): string {
-  return 'pn';
+function getFileEndingForFormat(fileFormat: DownloadFormat): string {
+  return fileFormat === 'pn' ? 'pn' : 'pnml';
 }

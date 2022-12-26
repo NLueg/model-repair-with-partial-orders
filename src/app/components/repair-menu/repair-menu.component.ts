@@ -1,3 +1,4 @@
+import { OverlayRef } from '@angular/cdk/overlay';
 import { Component, OnInit } from '@angular/core';
 
 import { AutoRepair } from '../../algorithms/regions/parse-solutions.fn';
@@ -12,6 +13,7 @@ export class RepairMenuComponent implements OnInit {
   placeId = '';
   solutions: AutoRepair[] = [];
   shownTextsForSolutions: { text: string; solution: AutoRepair }[] = [];
+  overlayRef?: OverlayRef;
 
   constructor(private netCommandService: NetCommandService) {}
 
@@ -23,7 +25,9 @@ export class RepairMenuComponent implements OnInit {
   }
 
   useSolution(solution: AutoRepair): void {
-    this.netCommandService.repairNet(this.placeId, solution).subscribe();
+    this.netCommandService
+      .repairNet(this.placeId, solution)
+      .subscribe(() => this.overlayRef?.dispose());
   }
 }
 

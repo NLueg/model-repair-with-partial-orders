@@ -13,7 +13,6 @@ export class StatehandlerService {
 
   private _mouseMoveRun: boolean;
   private _childElementInFocus: boolean;
-  private _runMoved: boolean;
   private _globalChanges: Coordinates = { x: 0, y: 0 };
   private _localChanges: Coordinates = { x: 0, y: 0 };
   private _localChangesRun: Coordinates = { x: 0, y: 0 };
@@ -23,7 +22,6 @@ export class StatehandlerService {
   constructor() {
     this._mouseMoveRun = false;
     this._childElementInFocus = false;
-    this._runMoved = false;
   }
 
   public initMouseDownForRun(event: MouseEvent): void {
@@ -52,9 +50,6 @@ export class StatehandlerService {
       x: event.offsetX - this._globalChanges.x,
       y: event.offsetY - this._globalChanges.y,
     };
-    if (this._localChangesRun.x !== 0 || this._localChangesRun.y !== 0) {
-      this._runMoved = true;
-    }
     this._localChanges = {
       x: event.offsetX - this._globalChanges.x,
       y: event.offsetY - this._globalChanges.y,
@@ -108,7 +103,6 @@ export class StatehandlerService {
     this._mouseMoveRun = false;
     this._movedChildElement = undefined;
     this._activeNeighbourElement = undefined;
-    this._runMoved = false;
   }
 
   public getLocalChangesForRun(): Coordinates {
@@ -129,10 +123,6 @@ export class StatehandlerService {
 
   public getMovedDraggable(): Draggable | undefined {
     return this._movedChildElement;
-  }
-
-  public runIsMoved(): boolean {
-    return this._runMoved;
   }
 
   public getVerticalChanges(): number {
@@ -167,6 +157,5 @@ export class StatehandlerService {
     this._mouseMoveRun = false;
     this._movedChildElement = undefined;
     this._activeNeighbourElement = undefined;
-    this._runMoved = false;
   }
 }

@@ -1,65 +1,9 @@
-import clonedeep from 'lodash.clonedeep';
-
-import {
-  arcsAttribute,
-  netTypeKey,
-  transitionsAttribute,
-} from '../../../services/parser/parsing-constants';
 import { Arc } from '../arc';
 import { ConcreteElementWithArcs } from '../draggable';
 import { PartialOrder } from '../partial-order';
 import { PetriNet } from '../petri-net';
 import { Place } from '../place';
 import { EventItem, Transition } from '../transition';
-
-export function generateTextForRun(run: PetriNet): string {
-  const lines = [netTypeKey];
-  lines.push(transitionsAttribute);
-  run.transitions.forEach((e) => {
-    const identifier = e.label === e.id ? e.id : `${e.id + ' | ' + e.label}`;
-
-    if (e.layerPos) lines.push(`${identifier} [${e.layerPos}]`);
-    else lines.push(identifier);
-  });
-
-  lines.push(arcsAttribute);
-  lines.push(
-    ...run.arcs
-      .filter((arc) => {
-        const source = run.transitions.find(
-          (element) => element.id === arc.source
-        );
-        const target = run.transitions.find(
-          (element) => element.id === arc.target
-        );
-        return source && target;
-      })
-      .map((arc) => arc.source + ' ' + arc.target + getBreakpointInfo(arc))
-  );
-  return lines.join('\n');
-}
-
-function getBreakpointInfo(arc: Arc): string {
-  let text = '';
-  if (arc.breakpoints.length > 0) {
-    text = '';
-    arc.breakpoints.forEach((breakpoint) => {
-      text += `[${breakpoint.layerPos}]`;
-    });
-  }
-
-  return text;
-}
-
-export function removeCycles(run: PetriNet, cycleArcs: Arc[]): void {
-  cycleArcs.forEach((arc) => {
-    run.arcs.splice(
-      run.arcs.findIndex((a) => a === arc),
-      1
-    );
-  });
-  setRefs(run);
-}
 
 export function addTransition(
   petriNet: PetriNet,
@@ -135,51 +79,6 @@ export function setRefs(net: PetriNet): boolean {
   });
 
   return check;
-}
-
-export function copyArc(arc: Arc): Arc {
-  return {
-    weight: arc.weight,
-    source: arc.source,
-    target: arc.target,
-    breakpoints: [],
-    currentRun: arc.currentRun,
-  };
-}
-
-export function copyElement(element: Transition): Transition {
-  return {
-    label: element.label,
-    incomingArcs: [],
-    outgoingArcs: [],
-    id: element.id,
-    type: 'transition',
-  };
-}
-
-export function copyRun(run: PetriNet, copyCoordinates: boolean): PetriNet {
-  if (copyCoordinates) {
-    return clonedeep(run);
-  } else {
-    const targetRun: PetriNet = {
-      transitions: [],
-      arcs: [],
-      places: [],
-    };
-
-    run.transitions.forEach((e) => {
-      targetRun.transitions.push(copyElement(e));
-    });
-
-    run.arcs.forEach((a) => {
-      targetRun.arcs.push(copyArc(a));
-    });
-
-    setRefs(targetRun);
-    generateTextForRun(targetRun);
-
-    return targetRun;
-  }
 }
 
 export function getEmptyNet(): PetriNet {

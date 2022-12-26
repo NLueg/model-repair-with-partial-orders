@@ -9,6 +9,16 @@
     <input matInput [(ngModel)]="downloadName" />
   </mat-form-field>
 
+  <mat-label id="format-radio-group-label">File format</mat-label>
+  <mat-radio-group
+    color="primary"
+    [(ngModel)]="fileFormat"
+    aria-labelledby="format-radio-group-label"
+  >
+    <mat-radio-button value="pn">Petri-Net</mat-radio-button>
+    <mat-radio-button value="pnml">PNML</mat-radio-button>
+  </mat-radio-group>
+
   <div class="buttons"></div>
 </div>
 

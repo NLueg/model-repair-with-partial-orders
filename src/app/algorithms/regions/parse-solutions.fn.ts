@@ -27,8 +27,6 @@ type ArcDefinition = { transitionId: string; weight: number };
 export function parseSolution(
   placeSolutions: ParsableSolution[]
 ): AutoRepair | null {
-  console.log(placeSolutions);
-
   const singlePlaceSolution = getSinglePlaceSolution(placeSolutions);
   if (!singlePlaceSolution || singlePlaceSolution.type === 'marking') {
     return singlePlaceSolution;

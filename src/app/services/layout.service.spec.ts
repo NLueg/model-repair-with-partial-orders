@@ -16,7 +16,7 @@ describe('LayoutService', () => {
   });
 
   // TODO: Fix me
-  xit('should layout example content correctly', () => {
+  it('should layout example content correctly', () => {
     const { net, point } = service.layout(parsedPetriNet);
 
     expect(point).toEqual('');

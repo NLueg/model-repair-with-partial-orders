@@ -310,6 +310,7 @@ export class ParserService {
                   `An arc between ${source} and ${target} is invalid`,
                   `Unable to parse file`
                 );
+                errors.add(`An arc between ${source} and ${target} is invalid`);
                 throw Error(
                   `An arc between ${source} and ${target} is invalid`
                 );
