@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
+import { AutoRepair } from '../../algorithms/regions/parse-solutions.fn';
 import { NetCommandService } from '../../services/repair/net-command.service';
-import { AutoSolution } from '../../services/repair/repair.model';
 
 @Component({
   selector: 'app-repair-menu',
@@ -10,20 +10,30 @@ import { AutoSolution } from '../../services/repair/repair.model';
 })
 export class RepairMenuComponent implements OnInit {
   placeId = '';
-  solutions: AutoSolution[] = [];
-  shownTextsForSolutions: { text: string; solution: AutoSolution[] }[] = [];
+  solutions: AutoRepair[] = [];
+  shownTextsForSolutions: { text: string; solution: AutoRepair }[] = [];
 
   constructor(private netCommandService: NetCommandService) {}
 
-  // TODO: Support multiple solutions
   ngOnInit(): void {
-    // TODO: Solution to Text!
-    this.shownTextsForSolutions = [
-      { text: 'Increase Marking of Place A by 1', solution: this.solutions },
-    ];
+    this.shownTextsForSolutions = this.solutions.map((solution) => {
+      const text = generateTextForAutoRepair(solution);
+      return { text, solution };
+    });
   }
 
-  useSolution(solution: AutoSolution[]): void {
-    this.netCommandService.repairNet(this.placeId, this.solutions);
+  useSolution(solution: AutoRepair): void {
+    this.netCommandService.repairNet(this.placeId, solution).subscribe();
   }
+}
+
+// TODO: Better texts!
+function generateTextForAutoRepair(solution: AutoRepair): string {
+  if (solution.type === 'replace-place') {
+    return `Replace with ${solution.places.length} new places`;
+  }
+  if (solution.type === 'marking') {
+    return `Increase marking to ${solution.newMarking}`;
+  }
+  return 'Update existing place';
 }

@@ -18,7 +18,7 @@
     <div class="button-bar">
       <div class="button-bar__group">
         <button
-          *ngIf="netCommandService.undoQueue.length > 0"
+          [disabled]="netCommandService.undoQueue.length === 0"
           mat-raised-button
           (click)="netCommandService.undo()"
           class="reset-button"
@@ -32,7 +32,7 @@
           Undo correction
         </button>
         <button
-          *ngIf="netCommandService.redoQueue.length > 0"
+          [disabled]="netCommandService.redoQueue.length === 0"
           mat-raised-button
           (click)="netCommandService.redo()"
           class="reset-button"

@@ -26,6 +26,24 @@ export const parsedSimpleExamplePetriNet = {
       target: 'b',
       weight: 1,
     },
+    {
+      breakpoints: [],
+      source: 'b',
+      target: 'p3',
+      weight: 1,
+    },
+    {
+      breakpoints: [],
+      source: 'c',
+      target: 'p3',
+      weight: 1,
+    },
+    {
+      breakpoints: [],
+      source: 'p3',
+      target: 'd',
+      weight: 1,
+    },
   ],
   places: [
     {
@@ -69,8 +87,34 @@ export const parsedSimpleExamplePetriNet = {
       ],
       type: 'place',
     },
+    {
+      id: 'p3',
+      incomingArcs: [
+        {
+          breakpoints: [],
+          source: 'b',
+          target: 'p3',
+          weight: 1,
+        },
+        {
+          breakpoints: [],
+          source: 'c',
+          target: 'p3',
+          weight: 1,
+        },
+      ],
+      marking: 0,
+      outgoingArcs: [
+        {
+          breakpoints: [],
+          source: 'p3',
+          target: 'd',
+          weight: 1,
+        },
+      ],
+      type: 'place',
+    },
   ],
-  text: '.type pn\n.transitions\na a\nb b\nc c\n.places\np1 1\np2 0\n.arcs\np1 a\na p2\np2 c\np2 b\n',
   transitions: [
     {
       id: 'a',
@@ -104,7 +148,14 @@ export const parsedSimpleExamplePetriNet = {
         },
       ],
       label: 'b',
-      outgoingArcs: [],
+      outgoingArcs: [
+        {
+          breakpoints: [],
+          source: 'b',
+          target: 'p3',
+          weight: 1,
+        },
+      ],
       type: 'transition',
     },
     {
@@ -118,6 +169,27 @@ export const parsedSimpleExamplePetriNet = {
         },
       ],
       label: 'c',
+      outgoingArcs: [
+        {
+          breakpoints: [],
+          source: 'c',
+          target: 'p3',
+          weight: 1,
+        },
+      ],
+      type: 'transition',
+    },
+    {
+      id: 'd',
+      incomingArcs: [
+        {
+          breakpoints: [],
+          source: 'p3',
+          target: 'd',
+          weight: 1,
+        },
+      ],
+      label: 'd',
       outgoingArcs: [],
       type: 'transition',
     },
@@ -136,6 +208,12 @@ export const parsedSimpleExampleLogInvalid: PartialOrder = {
       breakpoints: [],
       source: 'e2',
       target: 'e3',
+      weight: 1,
+    },
+    {
+      breakpoints: [],
+      source: 'e3',
+      target: 'e4',
       weight: 1,
     },
   ],
@@ -162,15 +240,24 @@ export const parsedSimpleExampleLogInvalid: PartialOrder = {
       id: 'e3',
       incomingArcs: [],
       label: 'c',
-      nextEvents: [],
+      nextEvents: ['e4'],
       outgoingArcs: [],
       previousEvents: ['e2'],
       type: 'event',
     },
+    {
+      id: 'e4',
+      incomingArcs: [],
+      label: 'd',
+      nextEvents: [],
+      outgoingArcs: [],
+      previousEvents: ['e3'],
+      type: 'event',
+    },
   ],
-  finalEvents: ['e3'],
+  finalEvents: ['e4'],
   initialEvents: ['e1'],
-  text: '.type log\n.events\ne1 a\ne2 b\ne3 c\n.arcs\ne1 e2\ne2 e3\n',
+  text: '.type log\n.events\ne1 a\ne2 b\ne3 c\ne4 d\n.arcs\ne1 e2\ne2 e3\ne3 e4\n',
 };
 
 export const parsedSimpleExampleLogInvalidSecond: PartialOrder = {

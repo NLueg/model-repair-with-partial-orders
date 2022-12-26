@@ -52,9 +52,9 @@ export class CanvasComponent implements OnInit, OnDestroy {
   private _sub: Subscription | undefined;
 
   constructor(
-    private _svgService: SvgService,
-    private _displayService: DisplayService,
-    private _stateHandler: StatehandlerService
+    private svgService: SvgService,
+    private displayService: DisplayService,
+    private stateHandler: StatehandlerService
   ) {}
 
   ngOnDestroy(): void {
@@ -92,19 +92,19 @@ export class CanvasComponent implements OnInit, OnDestroy {
   private registerCanvasMouseHandler(drawingArea: SVGElement) {
     drawingArea.onmousedown = (e) => {
       console.log(e);
-      this._stateHandler.initMouseDownForRun(e);
+      this.stateHandler.initMouseDownForRun(e);
     };
 
     drawingArea.onmousemove = (e) => {
-      if (this._stateHandler.childIsBeingDragged()) {
+      if (this.stateHandler.childIsBeingDragged()) {
         this.moveChildElementIfExisting();
-        this._stateHandler.updateChangeStateDraggable(e);
+        this.stateHandler.updateChangeStateDraggable(e);
       }
-      if (this._stateHandler.runIsMoving()) {
-        this._stateHandler.updateChangeStateRun(e);
+      if (this.stateHandler.runIsMoving()) {
+        this.stateHandler.updateChangeStateRun(e);
         MoveElementsService.moveRun(
           drawingArea,
-          this._stateHandler.getLocalChangesForRun()
+          this.stateHandler.getLocalChangesForRun()
         );
       }
     };
@@ -112,13 +112,13 @@ export class CanvasComponent implements OnInit, OnDestroy {
       if (this.persistUiChangesForRunInTextarea) {
         this.persistOffset();
       }
-      this._stateHandler.resetCanvasHandlers();
+      this.stateHandler.resetCanvasHandlers();
     };
     drawingArea.onmouseenter = () => {
-      this._stateHandler.resetCanvasHandlers();
+      this.stateHandler.resetCanvasHandlers();
     };
     drawingArea.onmouseleave = () => {
-      this._stateHandler.resetCanvasHandlers();
+      this.stateHandler.resetCanvasHandlers();
     };
   }
 
@@ -127,7 +127,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this._stateHandler.runIsMoved()) {
+    if (this.stateHandler.runIsMoved()) {
       /*
         TODO: Currently no offset is supported!
         this._displayService.setOffsetInfo(
@@ -151,36 +151,36 @@ export class CanvasComponent implements OnInit, OnDestroy {
       return;
     }
     element.event.onmouseenter = () => {
-      this._stateHandler.disableMouseMoveForRun();
+      this.stateHandler.disableMouseMoveForRun();
     };
 
     element.event.onmousedown = (e) => {
-      this._stateHandler.initMouseDownForDraggable(e);
+      this.stateHandler.initMouseDownForDraggable(e);
     };
 
     element.event.onmousemove = (e) => {
-      if (this._stateHandler.draggableCanBeMoved(element, e)) {
-        this.moveDraggable(this._stateHandler.getMovedDraggable() as Draggable);
+      if (this.stateHandler.draggableCanBeMoved(element, e)) {
+        this.moveDraggable(this.stateHandler.getMovedDraggable() as Draggable);
       }
     };
     element.event.onmouseleave = () => {
-      this._stateHandler.disableFocusForChildElement();
+      this.stateHandler.disableFocusForChildElement();
     };
     element.event.onmouseup = () => {
       this.resetChildElementIfExisting();
-      this._stateHandler.resetGlobalHandlers();
+      this.stateHandler.resetGlobalHandlers();
     };
   }
 
   private resetChildElementIfExisting(): void {
-    const movedChildElement = this._stateHandler.getMovedDraggable();
+    const movedChildElement = this.stateHandler.getMovedDraggable();
     if (movedChildElement !== undefined) {
       MoveElementsService.resetPositionForDraggable(movedChildElement);
     }
   }
 
   private moveChildElementIfExisting(): void {
-    const movedChildElement = this._stateHandler.getMovedDraggable();
+    const movedChildElement = this.stateHandler.getMovedDraggable();
     if (movedChildElement !== undefined) {
       this.moveDraggable(movedChildElement);
     }
@@ -188,7 +188,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
   private moveDraggable(draggable: Draggable) {
     this.determineActiveNeighbourElement(draggable);
-    const y = this._stateHandler.getVerticalChanges();
+    const y = this.stateHandler.getVerticalChanges();
     const transition = draggable.event;
     const currentCoords =
       FindElementsService.createCoordsFromElement(transition);
@@ -206,7 +206,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
   }
 
   private handlePassedElement(draggable: Draggable) {
-    const passedElement = this._stateHandler.getActiveNeighbourElement();
+    const passedElement = this.stateHandler.getActiveNeighbourElement();
     const movingElement = draggable.event;
     if (passedElement === undefined) {
       return;
@@ -222,11 +222,11 @@ export class CanvasComponent implements OnInit, OnDestroy {
     movingElement.removeAttribute(originalYAttribute);
     passedElement.event.removeAttribute(originalYAttribute);
 
-    this._stateHandler.resetCanvasHandlers();
+    this.stateHandler.resetCanvasHandlers();
   }
 
   private checkForPassedElement(movingElement: HTMLElement): boolean {
-    const activeNeighbour = this._stateHandler.getActiveNeighbourElement();
+    const activeNeighbour = this.stateHandler.getActiveNeighbourElement();
     if (activeNeighbour === undefined) {
       return false;
     }
@@ -283,14 +283,14 @@ export class CanvasComponent implements OnInit, OnDestroy {
       if (direction === 'up') {
         if (asInt(e, localYAttribute) < asInt(transition, yAttribute)) {
           if (draggable !== null) {
-            this._stateHandler.setActiveNeighbourElement(draggable, direction);
+            this.stateHandler.setActiveNeighbourElement(draggable, direction);
           }
         }
       }
       if (direction === 'down') {
         if (asInt(eLocal, localYAttribute) > asInt(transition, yAttribute)) {
           if (draggable !== null) {
-            this._stateHandler.setActiveNeighbourElement(draggable, direction);
+            this.stateHandler.setActiveNeighbourElement(draggable, direction);
           }
         }
       }
@@ -302,7 +302,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
     this.coordinateChanged.next(coordinates);
 
     if (this.persistUiChangesForRunInTextarea) {
-      this._displayService.setCoordsInfo(coordinates);
+      this.displayService.setCoordsInfo(coordinates);
     }
   }
 

@@ -16,7 +16,9 @@ const transitionDimension = 40;
 export class RunToPnmlService {
   constructor(private _layoutService: LayoutService) {}
 
-  parseRunToPnml(name: string, run: PetriNet): string {
+  // TODO: Fix me!
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  parseRunToPnml(name: string, run: any): string {
     const { parsedRun, places } = this.layoutRun(run);
     const parsedPlaces = parsedRun.transitions.filter((element) =>
       places.find((place) => element.label === place.label)

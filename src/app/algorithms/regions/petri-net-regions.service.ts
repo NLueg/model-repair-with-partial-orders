@@ -5,7 +5,7 @@ import { combineLatest, from, map, Observable, of, switchMap, tap } from 'rxjs';
 import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
 import {
-  AutoSolution,
+  ParsableSolution,
   PlaceSolutions,
 } from '../../services/repair/repair.model';
 import { RepairService } from '../../services/repair/repair.service';
@@ -14,6 +14,7 @@ import {
   ProblemSolution,
   VariableType,
 } from './ilp-solver/ilp-solver';
+import { parseSolution } from './parse-solutions.fn';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const createGlpk: () => Promise<GLPK> = require('glpk.js').default;
@@ -42,7 +43,9 @@ export class PetriNetRegionsService {
             solver.computeSolutions(place).pipe(
               map((solutions) => ({
                 place,
-                solutions: this.handleSolutions(solutions, solver),
+                solutions: parseSolution(
+                  this.handleSolutions(solutions, solver)
+                ),
               }))
             )
           )
@@ -59,7 +62,8 @@ export class PetriNetRegionsService {
   private handleSolutions(
     solutions: ProblemSolution[],
     solver: IlpSolver
-  ): AutoSolution[] {
+  ): ParsableSolution[] {
+    console.warn('====== PLACE START ======');
     return solutions.flatMap((solution) =>
       Object.entries(solution.solution.result.vars)
         .filter(
@@ -75,13 +79,13 @@ export class PetriNetRegionsService {
                 type: 'increase-marking',
                 newMarking: value,
               };
-            case VariableType.INGOING_WEIGHT:
+            case VariableType.INCOMING_TRANSITION_WEIGHT:
               return {
                 type: 'incoming-arc',
                 incoming: decoded.label,
                 marking: value,
               };
-            case VariableType.OUTGOING_WEIGHT:
+            case VariableType.OUTGOING_TRANSITION_WEIGHT:
               return {
                 type: 'outgoing-arc',
                 outgoing: decoded.label,

@@ -1,4 +1,6 @@
-export type AutoSolution =
+import { AutoRepair } from '../../algorithms/regions/parse-solutions.fn';
+
+export type ParsableSolution =
   | {
       type: 'increase-marking';
       newMarking: number;
@@ -14,4 +16,4 @@ export type AutoSolution =
       marking: number;
     };
 
-export type PlaceSolutions = { place: string; solutions: AutoSolution[] };
+export type PlaceSolutions = { place: string; solutions: AutoRepair | null };

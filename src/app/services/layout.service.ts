@@ -179,6 +179,9 @@ export class LayoutService {
 
     while (nodes.length > 0) {
       const currentLayerNodes = this.nodesWithoutIncomingArcs(nodes, arcs);
+      if (currentLayerNodes.length === 0) {
+        break;
+      }
       const cln = new Set<ConcreteElement>(currentLayerNodes);
       nodes = nodes.filter((n) => !cln.has(n));
 

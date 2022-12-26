@@ -22,7 +22,7 @@ export class RepairService {
   }
 
   showRepairPopover(ref: DOMRect, place: string): void {
-    const solutionsForPlace = this.solutions.find((s) => s.place === place);
+    const solutionsForPlace = this.solutions.filter((s) => s.place === place);
     if (!solutionsForPlace) {
       this.toastr.warning(`No solutions found for place ${place}`);
       return;
@@ -63,12 +63,10 @@ export class RepairService {
         this.overlayRef?.dispose();
       });
 
-    window.onscroll = () => {
-      console.warn('Scrolling');
-      this.overlayRef?.updatePosition();
-    };
-
     const componentRef = this.overlayRef.attach(componentPortal);
-    componentRef.instance.solutions = solutionsForPlace.solutions;
+    componentRef.instance.placeId = place;
+    componentRef.instance.solutions = solutionsForPlace
+      .filter((s) => s.solutions)
+      .map((s) => s.solutions!);
   }
 }

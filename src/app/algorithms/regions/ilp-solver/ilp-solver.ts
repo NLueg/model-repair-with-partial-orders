@@ -12,8 +12,8 @@ import { Constraint, Goal, MessageLevel } from './solver-constants';
 
 export enum VariableType {
   INITIAL_MARKING,
-  INGOING_WEIGHT,
-  OUTGOING_WEIGHT,
+  OUTGOING_TRANSITION_WEIGHT,
+  INCOMING_TRANSITION_WEIGHT,
 }
 
 export interface SolutionVariable {
@@ -282,7 +282,7 @@ export class IlpSolver {
       }
       return {
         label,
-        type: VariableType.INGOING_WEIGHT,
+        type: VariableType.OUTGOING_TRANSITION_WEIGHT,
       };
     } else if (variable.startsWith(VariableName.OUTGOING_ARC_WEIGHT_PREFIX)) {
       const label = this._inverseLabelVariableMapOutgoing.get(variable);
@@ -293,7 +293,7 @@ export class IlpSolver {
       }
       return {
         label,
-        type: VariableType.OUTGOING_WEIGHT,
+        type: VariableType.INCOMING_TRANSITION_WEIGHT,
       };
     }
     return null;

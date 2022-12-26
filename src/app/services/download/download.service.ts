@@ -12,8 +12,8 @@ export class DownloadService implements OnDestroy {
   private _download$: Subject<string>;
 
   constructor(
-    private _displayService: DisplayService,
-    private _runToPnmlService: RunToPnmlService
+    private displayService: DisplayService,
+    private runToPnmlService: RunToPnmlService
   ) {
     this._download$ = new Subject<string>();
   }
@@ -23,7 +23,7 @@ export class DownloadService implements OnDestroy {
   }
 
   downloadNet(name: string): void {
-    this._displayService
+    this.displayService
       .getPetriNet$()
       .pipe(first())
       .subscribe((run) => {
@@ -38,7 +38,7 @@ export class DownloadService implements OnDestroy {
 
   private downloadRun(name: string, run: PetriNet): void {
     // TODO: Just download text
-    const fileContent = this._runToPnmlService.parseRunToPnml(name, run);
+    const fileContent = this.runToPnmlService.parseRunToPnml(name, run);
 
     const downloadLink: HTMLAnchorElement = document.createElement('a');
     downloadLink.download = name;

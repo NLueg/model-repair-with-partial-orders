@@ -45,12 +45,12 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
 
   constructor(
     private parserService: ParserService,
-    private _displayService: DisplayService,
-    private _uploadService: UploadService
+    private displayService: DisplayService,
+    private uploadService: UploadService
   ) {
     this.textareaFc = new FormControl();
 
-    this.isCurrentRunEmpty$ = this._displayService
+    this.isCurrentRunEmpty$ = this.displayService
       .isCurrentRunEmpty$()
       .pipe(distinctUntilChanged());
 
@@ -58,11 +58,11 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
       .pipe(debounceTime(400))
       .subscribe((val) => this.processSourceChange(val));
 
-    this._coordsSub = this._displayService
+    this._coordsSub = this.displayService
       .coordsInfoAdded()
       .subscribe((val) => this.addLayerPosInfo(val));
 
-    this._fileSub = this._uploadService
+    this._fileSub = this.uploadService
       .getUpload$()
       .subscribe((content) => this.processNewSource(content));
   }
@@ -89,7 +89,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     this.updateValidation(result, errors);
 
     if (!result) return;
-    this._displayService.setNewNet(result);
+    this.displayService.setNewNet(result);
   }
 
   private processNewSource(newSource: string): void {
@@ -100,7 +100,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
       this.updateValidation(petriNet, errors);
       if (!petriNet) return;
 
-      this._displayService.setNewNet(petriNet);
+      this.displayService.setNewNet(petriNet);
       this.textareaFc.setValue(newSource);
     } else {
       const partialOrder = this.parserService.parsePartialOrder(
@@ -109,7 +109,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
       );
       if (!partialOrder) return;
 
-      this._displayService.appendNewPartialOrder(partialOrder);
+      this.displayService.appendNewPartialOrder(partialOrder);
     }
   }
 

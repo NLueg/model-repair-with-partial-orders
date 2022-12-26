@@ -272,7 +272,6 @@ export const parsedPetriNet: PetriNet = {
       type: 'place',
     },
   ],
-  text: '.type pn\n.transitions\na a\nb b\nc c\nd d\ne e\nf f\n.places\np1 2\np2 0\np3 1\np4 2\np5 1\np6 0\np7 1\n.arcs\np1 a\na p2\np2 c\nc p5\np5 a\np2 b\nb p3\np3 d\nd p7\np7 d\np7 c\nc p7\nd p6\nc p4\np4 e 3\ne p6\np6 f 3\n',
   transitions: [
     {
       id: 'a',

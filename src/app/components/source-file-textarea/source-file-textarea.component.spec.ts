@@ -16,10 +16,9 @@ describe('SourceFileTextareaComponent', () => {
     getUpload$: () => of(undefined),
   };
 
-  const run: PetriNet = {
-    text: '',
+  const petriNet: PetriNet = {
+    places: [],
     transitions: [],
-    warnings: [],
     arcs: [],
   };
 
@@ -31,7 +30,8 @@ describe('SourceFileTextareaComponent', () => {
     getRunCount$: () => of(undefined),
     coordsInfoAdded: () => of(undefined),
     offsetInfoAdded: () => of(undefined),
-    setPreviousRun: () => run,
+    setPreviousRun: () => petriNet,
+    setNewNet: jest.fn(),
     registerRun: jest.fn(),
   };
 
@@ -39,7 +39,7 @@ describe('SourceFileTextareaComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [SourceFileTextareaComponent],
       providers: [
-        { provide: ParserService, useValue: { parse: () => run } },
+        { provide: ParserService, useValue: { parsePetriNet: () => petriNet } },
         { provide: DisplayService, useValue: mockDisplayService },
         { provide: UploadService, useValue: mockUploadService },
       ],
