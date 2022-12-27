@@ -22,6 +22,9 @@ type PnmlPlace = {
   name: {
     text: string;
   };
+  initialMarking: {
+    text: number;
+  };
 };
 
 type PnmlTransitions = {

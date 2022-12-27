@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
 import { Observable, ReplaySubject, Subject } from 'rxjs';
 
+import { getRunTextFromPnml } from './pnml/pnml-to-run.fn';
+
 const allowedExtensions = ['txt', 'pn', 'pnml'];
 
 @Injectable({
@@ -65,11 +67,12 @@ export class UploadService {
       const fileExtension = getExtensionForFileName(file.name);
 
       reader.onload = () => {
-        const content: string = reader.result as string;
+        let content: string = reader.result as string;
 
         if (fileExtension?.toLowerCase() === 'pnml') {
-          // TODO: Parse pnml!
+          content = getRunTextFromPnml(content);
         }
+        console.log(content);
         this.currentUpload$.next(content);
       };
 
