@@ -72,7 +72,6 @@ export class UploadService {
         if (fileExtension?.toLowerCase() === 'pnml') {
           content = getRunTextFromPnml(content);
         }
-        console.log(content);
         this.currentUpload$.next(content);
       };
 
