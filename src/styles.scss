@@ -86,3 +86,23 @@ circle.place.place--invalid {
 .margin-spaces {
   margin: var(--spaces);
 }
+
+.color_success {
+  color: var(--success-color);
+  --color: var(--success-color);
+}
+
+.color_warning {
+  color: var(--warn-color);
+  --color: var(--warn-color);
+}
+
+.color_error {
+  color: var(--error-color);
+  --color: var(--error-color);
+}
+
+.color_primary {
+  color: var(--primary-color);
+  --color: var(--primary-color);
+}

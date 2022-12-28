@@ -2,7 +2,6 @@ import { Arc } from './arc';
 import { EventItem } from './transition';
 
 export interface PartialOrder {
-  text: string;
   events: EventItem[];
   arcs: Arc[];
 

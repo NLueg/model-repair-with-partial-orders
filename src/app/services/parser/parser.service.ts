@@ -42,10 +42,12 @@ export class ParserService {
   private readonly placeRegex = /^(\S*)\s*(\d*)$/;
   private readonly arcRegex = /^(\S*)\s*(\S*)\s*(\d*)$/;
 
-  parsePartialOrder(content: string, errors: Set<string>): PartialOrder | null {
+  parsePartialOrder(
+    content: string,
+    errors?: Set<string>
+  ): PartialOrder | null {
     const contentLines = content.split('\n');
     const partialOrder: PartialOrder = {
-      text: content,
       events: [],
       arcs: [],
     };
@@ -62,7 +64,7 @@ export class ParserService {
           if (trimmedLine === logTypeKey) {
             currentParsingState = 'type';
           } else {
-            errors.add(
+            errors?.add(
               `The type of the file with the net has to be '` + netTypeKey + `'`
             );
             this.toastr.error(
@@ -80,7 +82,7 @@ export class ParserService {
             currentParsingState = 'arcs';
             break;
           } else {
-            errors.add(`The file contains invalid parts`);
+            errors?.add(`The file contains invalid parts`);
             this.toastr.error(
               `The file contains invalid parts`,
               `Unable to parse file`
@@ -105,7 +107,7 @@ export class ParserService {
             currentParsingState = 'places';
             break;
           } else {
-            errors.add(`Unable to parse file`);
+            errors?.add(`Unable to parse file`);
             this.toastr.error(`Error`, `Unable to parse file`);
             return null;
           }
@@ -164,7 +166,7 @@ export class ParserService {
             currentParsingState = 'transitions';
             break;
           } else {
-            errors.add(`Unable to parse file`);
+            errors?.add(`Unable to parse file`);
             this.toastr.error(`Error`, `Unable to parse file`);
             return null;
           }

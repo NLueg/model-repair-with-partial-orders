@@ -8,6 +8,10 @@ export interface PetriNet {
   arcs: Arc[];
 }
 
-export function isRunEmpty(run: PetriNet): boolean {
-  return run.arcs.length === 0 && run.transitions.length === 0;
+export function isNetEmpty(petriNet: PetriNet): boolean {
+  return (
+    petriNet.arcs.length === 0 &&
+    petriNet.places.length === 0 &&
+    petriNet.transitions.length === 0
+  );
 }

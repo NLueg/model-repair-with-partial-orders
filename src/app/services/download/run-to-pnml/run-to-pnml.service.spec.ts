@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
+import { parsedPetriNet } from '../../upload/example-file-parsed';
 import { RunToPnmlService } from './run-to-pnml.service';
 
 describe('RunToPnmlService', () => {
@@ -15,7 +16,10 @@ describe('RunToPnmlService', () => {
   });
 
   it('should parse example run to pnml', () => {
-    const result = service.convertPetriNetToPnml(`my name.pnml`, exampleRun);
+    const result = service.convertPetriNetToPnml(
+      `my name.pnml`,
+      parsedPetriNet
+    );
 
     expect(result).toEqual(parsedPnml);
   });
@@ -356,54 +360,3 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
           </page>
      </net>
 </pnml>`;
-
-const exampleRun = {
-  arcs: [
-    { source: 't1', target: 't2', breakpoints: [] },
-    { source: 't2', target: 't4', breakpoints: [] },
-    { source: 't4', target: 't3', breakpoints: [] },
-    { source: 't4', target: 't5', breakpoints: [] },
-    { source: 't5', target: 't3', breakpoints: [] },
-    { source: 't5', target: 't6', breakpoints: [] },
-    { source: 't6', target: 't3', breakpoints: [] },
-  ],
-  transitions: [
-    {
-      id: 't1',
-      label: 't1',
-      incomingArcs: [],
-      outgoingArcs: [],
-    },
-    {
-      id: 't2',
-      label: 't2',
-      incomingArcs: [],
-      outgoingArcs: [],
-    },
-    {
-      id: 't3',
-      label: 't3',
-      incomingArcs: [],
-      outgoingArcs: [],
-    },
-    {
-      id: 't4',
-      label: 't4',
-      incomingArcs: [],
-      outgoingArcs: [],
-    },
-    {
-      id: 't5',
-      label: 't5',
-      incomingArcs: [],
-      outgoingArcs: [],
-    },
-    {
-      id: 't6',
-      label: 't6',
-      incomingArcs: [],
-      outgoingArcs: [],
-    },
-  ],
-  warnings: [],
-};

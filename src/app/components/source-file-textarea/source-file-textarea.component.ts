@@ -1,21 +1,23 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import {
+  combineLatest,
   debounceTime,
   distinctUntilChanged,
+  first,
   Observable,
   Subscription,
 } from 'rxjs';
 
-import { isRunEmpty, PetriNet } from '../../classes/diagram/petri-net';
+import { isNetEmpty, PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../../services/display.service';
 import { ParserService } from '../../services/parser/parser.service';
-import { netTypeKey } from '../../services/parser/parsing-constants';
-import { simpleExamplePetriNet } from '../../services/upload/simple-example/simple-example-texts';
 import { UploadService } from '../../services/upload/upload.service';
-import { removeCoordinates } from './update-coords-in-text.fn';
 
 type Valid = 'error' | 'warn' | 'success';
+
+const emptyContent =
+  '.type pn\n' + '.transitions\n\n' + '.places\n\n' + '.arcs\n';
 
 @Component({
   selector: 'app-source-file-textarea',
@@ -55,17 +57,23 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
 
     this._fileSub = this.uploadService
       .getUpload$()
-      .subscribe((content) => this.processNewSource(content));
+      .subscribe((content) => this.textareaFc.setValue(content));
+
+    combineLatest([
+      this.displayService.getPetriNet$(),
+      this.displayService.getCurrentErrors$(),
+    ]).subscribe(([petriNet, errors]) => {
+      this.updateValidation(petriNet, errors);
+    });
   }
 
   ngOnInit(): void {
-    this._resetEventSubscription = this.resetEvent?.subscribe(() =>
-      this.removeCoordinates()
-    );
-    this._resetEventSubscription = this.resetEvent?.subscribe(() =>
-      this.removeOffset()
-    );
-    this.processNewSource(simpleExamplePetriNet);
+    this.uploadService
+      .getUpload$()
+      .pipe(first())
+      .subscribe((content) => {
+        this.textareaFc.setValue(content || emptyContent);
+      });
   }
 
   ngOnDestroy(): void {
@@ -80,50 +88,8 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     this.updateValidation(result, errors);
 
     if (!result) return;
-    this.displayService.setNewNet(result);
-  }
 
-  private processNewSource(newSource: string): void {
-    const errors = new Set<string>();
-
-    if (newSource.trim().startsWith(netTypeKey)) {
-      const petriNet = this.parserService.parsePetriNet(newSource, errors);
-      this.updateValidation(petriNet, errors);
-      if (!petriNet) return;
-
-      this.displayService.setNewNet(petriNet);
-      this.textareaFc.setValue(newSource);
-    } else {
-      const partialOrder = this.parserService.parsePartialOrder(
-        newSource,
-        errors
-      );
-      if (!partialOrder) return;
-
-      this.displayService.appendNewPartialOrder(partialOrder);
-    }
-  }
-
-  public removeCoordinates(): void {
-    const newText = removeCoordinates(this.textareaFc.value);
-    this.textareaFc.setValue(newText);
-    this.processSourceChange(newText);
-  }
-
-  public removeOffset(): void {
-    const contentLines = this.textareaFc.value.split('\n');
-    let first = true;
-    let newText = '';
-    for (const line of contentLines) {
-      if (first) {
-        newText = newText + line;
-        first = false;
-      } else {
-        newText = newText + '\n' + line;
-      }
-    }
-    this.textareaFc.setValue(newText);
-    this.processSourceChange(newText);
+    this.displayService.setNewNet(result, errors);
   }
 
   private updateValidation(
@@ -135,7 +101,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     if (!run || errors.size > 0) {
       this.textareaFc.setErrors({ 'invalid run': true });
       this.runValidationStatus = 'error';
-    } else if (!isRunEmpty(run)) {
+    } else if (!isNetEmpty(run)) {
       this.runValidationStatus = 'success';
     } else {
       this.runValidationStatus = null;

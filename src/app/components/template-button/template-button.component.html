@@ -1,4 +1,4 @@
-<div fxLayout="column" fxLayoutAlign="start center">
+<div fxLayout="column" fxLayoutAlign="start center" class="{{ styleClass }}">
   {{ buttonText }}
   <div
     class="interactive-square"
@@ -11,7 +11,7 @@
     (dragover)="dragStart($event)"
     (dragleave)="dragEnd($event)"
   >
-    <mat-icon class="larger-icon">
+    <mat-icon class="larger-icon {{ styleClass }}">
       {{ buttonIcon }}
     </mat-icon>
   </div>

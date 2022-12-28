@@ -1,32 +1,47 @@
 import { getRunTextFromPnml } from './pnml-to-run.fn';
 
 describe('pnml-to-run', () => {
-    it('should parse example correctly', () => {
-        const result = getRunTextFromPnml(exampleContent);
+  it('should parse example correctly', () => {
+    const result = getRunTextFromPnml(exampleContent);
 
-        expect(result).toEqual(
-            '.type run\n' +
-                '.events\n' +
-                'T1 | a\n' +
-                'T2 | x\n' +
-                'T3 | b\n' +
-                'T4 | y\n' +
-                'T5 | c\n' +
-                'T6 | u\n' +
-                'T7 | v\n' +
-                '.arcs\n' +
-                'T1 T2\n' +
-                'T1 T6\n' +
-                'T2 T3\n' +
-                'T6 T3\n' +
-                'T3 T4\n' +
-                'T3 T7\n' +
-                'T4 T5\n' +
-                'T7 T5\n' +
-                'T6 T7\n' +
-                'T2 T4'
-        );
-    });
+    expect(result).toEqual(
+      '.type pn\n' +
+        '.transitions\n' +
+        'T1 a\n' +
+        'T2 x\n' +
+        'T3 b\n' +
+        'T4 y\n' +
+        'T5 c\n' +
+        'T6 u\n' +
+        'T7 v\n' +
+        '.places\n' +
+        'P0 1\n' +
+        'P1 0\n' +
+        'P2 0\n' +
+        'P3 0\n' +
+        'P4 0\n' +
+        'P5 0\n' +
+        'P6 0\n' +
+        '.arcs\n' +
+        'P0 T1\n' +
+        'T1 P1\n' +
+        'P1 T2\n' +
+        'P1 T6\n' +
+        'T2 P2\n' +
+        'P2 T3\n' +
+        'T6 P2\n' +
+        'T3 P3\n' +
+        'P3 T4\n' +
+        'P3 T7\n' +
+        'T4 P4\n' +
+        'P4 T5\n' +
+        'T7 P4\n' +
+        'T6 P5\n' +
+        'P5 T7\n' +
+        'T2 P6\n' +
+        'P6 T4'
+    );
+  });
 });
 
 const exampleContent = `

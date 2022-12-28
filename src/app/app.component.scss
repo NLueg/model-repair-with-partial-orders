@@ -47,4 +47,32 @@
       }
     }
   }
+
+  .empty-button-list {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    height: 100%;
+    margin-bottom: var(--spaces);
+  }
+
+  .submit-button-row {
+    display: flex;
+    justify-content: center;
+    margin: var(--spaces-x2);
+
+    > button {
+      padding: var(--spaces) var(--spaces-x4);
+    }
+  }
+
+  .text-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    > mat-icon {
+      margin-right: 4px;
+    }
+  }
 }

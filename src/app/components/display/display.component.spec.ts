@@ -29,6 +29,7 @@ describe('DisplayComponent', () => {
           provide: DisplayService,
           useValue: {
             getPetriNet$: () => of(parsedPetriNet),
+            getPartialOrders$: () => of([]),
           },
         },
         {

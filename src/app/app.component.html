@@ -12,66 +12,142 @@
     recommendations to solve the issues.
   </p>
 
-  <main>
-    <app-display class="padding full-size"></app-display>
+  <ng-container *ngIf="partialOrderCount$ | async as partialOrderCount">
+    <ng-container
+      *ngIf="
+        hasPartialOrders && partialOrderCount.count > 0;
+        else initialContent
+      "
+    >
+      <main>
+        <app-display class="padding full-size"></app-display>
 
-    <div class="button-bar">
-      <div class="button-bar__group">
-        <button
-          [disabled]="netCommandService.undoQueue.length === 0"
-          mat-raised-button
-          (click)="netCommandService.undo()"
-          class="reset-button"
-          color="primary"
-        >
-          <mat-icon
-            aria-hidden="false"
-            aria-label="Undo icon"
-            fontIcon="undo"
-          ></mat-icon>
-          Undo correction
-        </button>
-        <button
-          [disabled]="netCommandService.redoQueue.length === 0"
-          mat-raised-button
-          (click)="netCommandService.redo()"
-          class="reset-button"
-          color="primary"
-        >
-          <mat-icon
-            aria-hidden="false"
-            aria-label="Redo icon"
-            fontIcon="redo"
-          ></mat-icon>
-          Redo correction
-        </button>
+        <div class="button-bar">
+          <div class="button-bar__group">
+            <button
+              [disabled]="netCommandService.undoQueue.length === 0"
+              mat-raised-button
+              (click)="netCommandService.undo()"
+              class="reset-button"
+              color="primary"
+            >
+              <mat-icon
+                aria-hidden="false"
+                aria-label="Undo icon"
+                fontIcon="undo"
+              ></mat-icon>
+              Undo correction
+            </button>
+            <button
+              [disabled]="netCommandService.redoQueue.length === 0"
+              mat-raised-button
+              (click)="netCommandService.redo()"
+              class="reset-button"
+              color="primary"
+            >
+              <mat-icon
+                aria-hidden="false"
+                aria-label="Redo icon"
+                fontIcon="redo"
+              ></mat-icon>
+              Redo correction
+            </button>
+          </div>
+
+          <button
+            mat-raised-button
+            (click)="resetSvgPositioning()"
+            class="reset-button"
+            color="primary"
+          >
+            Reset layout
+          </button>
+        </div>
+      </main>
+
+      <div fxLayout="row" fxLayoutAlign="space-evenly start">
+        <app-template-button
+          buttonText="Upload new petri net or add new logs"
+          buttonIcon="upload"
+          (buttonAction)="openFileSelector(undefined)"
+          (dropAction)="dropFiles($event, undefined)"
+        ></app-template-button>
+
+        <app-source-file-textarea
+          [resetEvent]="resetPositioningSubject.asObservable()"
+        ></app-source-file-textarea>
+
+        <app-download></app-download>
       </div>
+    </ng-container>
 
-      <button
-        mat-raised-button
-        (click)="resetSvgPositioning()"
-        class="reset-button"
-        color="primary"
-      >
-        Reset layout
-      </button>
-    </div>
-  </main>
+    <ng-template #initialContent>
+      <main>
+        <div class="initial-content">
+          <p>
+            Before you can use the tool, you need to upload one ore more logs.
+            Also you can upload a Petri net to have a starting point.
+            Alternatively you can create a new net with this tool.
+          </p>
+        </div>
 
-  <div fxLayout="row" fxLayoutAlign="space-evenly start">
-    <app-template-button
-      buttonText="Upload a Petri net and logs"
-      buttonIcon="upload"
-      (buttonAction)="openFileSelector()"
-      (dropAction)="dropFiles($event)"
-    ></app-template-button>
+        <div class="empty-button-list">
+          <app-template-button
+            buttonText="Upload logs*"
+            buttonIcon="upload"
+            [styleClass]="
+              partialOrderCount.count === 0 ? 'color_error' : 'color_success'
+            "
+            (buttonAction)="openFileSelector('log')"
+            (dropAction)="dropFiles($event, 'log')"
+          ></app-template-button>
 
-    <app-source-file-textarea
-      [resetEvent]="resetPositioningSubject.asObservable()"
-    ></app-source-file-textarea>
+          <app-template-button
+            buttonText="Upload petri net"
+            buttonIcon="upload"
+            [styleClass]="
+              (isCurrentRunEmpty$ | async) ? undefined : 'color_success'
+            "
+            (buttonAction)="openFileSelector('petri-net')"
+            (dropAction)="dropFiles($event, 'petri-net')"
+          ></app-template-button>
+        </div>
 
-    <app-download></app-download>
-  </div>
+        <div class="submit-button-row">
+          <button
+            [disabled]="partialOrderCount.count === 0"
+            mat-raised-button
+            color="primary"
+            (click)="startEditing(partialOrderCount.count)"
+          >
+            Start editing
+          </button>
+        </div>
+        <p
+          class="color_error text-center"
+          *ngIf="partialOrderCount.count === 0; else showCount"
+        >
+          <mat-icon class="color_error"> error_outline </mat-icon>
+          Logs are required to use the tool
+        </p>
+        <ng-template #showCount>
+          <p class="color_success text-center">
+            <mat-icon class="color_success"> check_circle </mat-icon>
+            Uploaded {{ partialOrderCount.count }}
+            {{ partialOrderCount.count === 1 ? 'log' : 'logs' }}
+          </p>
+        </ng-template>
+      </main>
+
+      <app-template-button
+        class="margin-spaces"
+        buttonText="Download example"
+        buttonIcon="star"
+        styleClass="color_primary"
+        (buttonAction)="downloadExample()"
+      ></app-template-button>
+    </ng-template>
+  </ng-container>
 
   <app-footer></app-footer>
 </div>

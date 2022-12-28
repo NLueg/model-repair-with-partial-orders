@@ -1,10 +1,18 @@
 import { Injectable } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
-import { Observable, ReplaySubject, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 
+import { DisplayService } from '../display.service';
+import { ParserService } from '../parser/parser.service';
+import { netTypeKey } from '../parser/parsing-constants';
 import { getRunTextFromPnml } from './pnml/pnml-to-run.fn';
 
-const allowedExtensions = ['txt', 'pn', 'pnml'];
+export type StructureType = 'petri-net' | 'log';
+
+const allowedExtensions: { [key in StructureType]: string[] } = {
+  'petri-net': ['pn', 'pnml'],
+  log: ['txt'],
+};
 
 @Injectable({
   providedIn: 'root',
@@ -12,8 +20,12 @@ const allowedExtensions = ['txt', 'pn', 'pnml'];
 export class UploadService {
   private currentUpload$: Subject<string>;
 
-  constructor(private toastr: ToastrService) {
-    this.currentUpload$ = new ReplaySubject<string>(1);
+  constructor(
+    private toastr: ToastrService,
+    private parserService: ParserService,
+    private displayService: DisplayService
+  ) {
+    this.currentUpload$ = new BehaviorSubject<string>('');
   }
 
   setUploadText(text: string): void {
@@ -24,29 +36,18 @@ export class UploadService {
     return this.currentUpload$.asObservable();
   }
 
-  checkFiles(files: FileList): boolean {
-    let check = true;
-
-    Array.from(files).forEach((file) => {
-      if (!fileExtensionIsValid(file.name)) {
-        check = false;
-        this.toastr.error(
-          `File '${file.name}' has to be a valid extension`,
-          `Unable to upload file`
-        );
-      }
-    });
-
-    return check;
-  }
-
-  openFileSelector(): void {
+  openFileSelector(type?: StructureType): void {
     const fileUpload = document.createElement('input');
     fileUpload.setAttribute('type', 'file');
     fileUpload.setAttribute('multiple', 'multiple');
+
+    const relevantExtensions = type
+      ? allowedExtensions[type]
+      : Object.values(allowedExtensions).flat();
+
     fileUpload.setAttribute(
       'accept',
-      allowedExtensions.map((e) => '.' + e).join(',')
+      relevantExtensions.map((e) => '.' + e).join(',')
     );
     fileUpload.onchange = (event) => {
       if (event.target instanceof HTMLInputElement && event.target?.files) {
@@ -57,12 +58,21 @@ export class UploadService {
     fileUpload.click();
   }
 
-  uploadFiles(files: FileList): void {
-    if (!this.checkFiles(files)) {
+  uploadFiles(files: FileList, type?: StructureType): void {
+    const filteredFiles = Array.from(files).filter((file) =>
+      fileExtensionIsValid(file.name, type)
+    );
+    if (filteredFiles.length === 0) {
+      this.toastr.error("Couldn't find any valid file");
       return;
     }
 
-    Array.from(files).forEach((file) => {
+    this.toastr.success(
+      `Processed ${filteredFiles.length} valid ${
+        filteredFiles.length === 1 ? 'file' : 'files'
+      }`
+    );
+    filteredFiles.forEach((file) => {
       const reader = new FileReader();
       const fileExtension = getExtensionForFileName(file.name);
 
@@ -72,20 +82,41 @@ export class UploadService {
         if (fileExtension?.toLowerCase() === 'pnml') {
           content = getRunTextFromPnml(content);
         }
-        this.currentUpload$.next(content);
+        this.processNewSource(content);
       };
 
       reader.readAsText(file);
     });
   }
+
+  private processNewSource(newSource: string): void {
+    const errors = new Set<string>();
+
+    if (newSource.trim().startsWith(netTypeKey)) {
+      const petriNet = this.parserService.parsePetriNet(newSource, errors);
+      if (!petriNet) return;
+
+      this.displayService.setNewNet(petriNet, errors);
+      this.currentUpload$.next(newSource);
+    } else {
+      const partialOrder = this.parserService.parsePartialOrder(newSource);
+      if (!partialOrder) return;
+
+      this.displayService.appendNewPartialOrder(partialOrder);
+    }
+  }
 }
 
-function fileExtensionIsValid(fileName: string): boolean {
+function fileExtensionIsValid(fileName: string, type?: StructureType): boolean {
   const fileExtension = getExtensionForFileName(fileName);
   if (!fileExtension) {
     return false;
   }
-  return allowedExtensions.includes(fileExtension.trim());
+
+  const relevantExtensions = type
+    ? allowedExtensions[type]
+    : Object.values(allowedExtensions).flat();
+  return relevantExtensions.includes(fileExtension.trim());
 }
 
 function getExtensionForFileName(fileName: string): string | undefined {

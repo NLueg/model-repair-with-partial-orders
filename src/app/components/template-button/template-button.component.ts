@@ -6,6 +6,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   styleUrls: ['./template-button.component.scss'],
 })
 export class TemplateButtonComponent {
+  @Input() styleClass?: string;
   @Input() buttonText: string | undefined;
   @Input() buttonIcon: string | undefined;
   @Output() buttonAction = new EventEmitter<void>();
