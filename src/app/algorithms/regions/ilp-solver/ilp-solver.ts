@@ -147,9 +147,11 @@ export class IlpSolver {
   protected solveILP(ilp: LP): Observable<ProblemSolution> {
     const result$ = new ReplaySubject<ProblemSolution>(1);
 
-    const res = this.glpk.solve(ilp, {
+    const result = this.glpk.solve(ilp, {
       msglev: MessageLevel.ERROR,
-    }) as unknown as Promise<Result>;
+    });
+
+    const res = result instanceof Promise ? result : Promise.resolve(result);
     res
       .then((solution: Result) => {
         result$.next({ ilp, solution });

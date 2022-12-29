@@ -560,7 +560,7 @@ export const parsedPartialOrder: PartialOrder = {
   initialEvents: ['e1', 'e2'],
 };
 
-export const parsedInvalidPartialorder: PartialOrder = {
+export const parsedInvalidPartialOrder: PartialOrder = {
   arcs: [
     {
       breakpoints: [],

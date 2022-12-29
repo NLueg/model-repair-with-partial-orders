@@ -16,8 +16,9 @@ import {
 } from './ilp-solver/ilp-solver';
 import { parseSolution } from './parse-solutions.fn';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const createGlpk: () => Promise<GLPK> = require('glpk.js').default;
+const createGlpk: Promise<() => Promise<GLPK>> = import('glpk.js').then(
+  (glpk) => (glpk as any).default
+);
 
 @Injectable({
   providedIn: 'root',
@@ -30,7 +31,7 @@ export class PetriNetRegionsService {
     petriNet: PetriNet,
     invalidPlaces: { [key: string]: number }
   ): Observable<PlaceSolution[]> {
-    return from(createGlpk()).pipe(
+    return from(createGlpk.then((create) => create())).pipe(
       switchMap((glpk) => {
         const invalidPlaceList = Object.keys(invalidPlaces).flat();
         if (invalidPlaceList.length === 0) {
