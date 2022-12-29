@@ -5,24 +5,29 @@ import { ToastrService } from 'ngx-toastr';
 import { Unsubscribable } from 'rxjs';
 
 import { RepairMenuComponent } from '../../components/repair-menu/repair-menu.component';
-import { PlaceSolutions } from './repair.model';
+import { PlaceSolution } from './repair.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class RepairService {
-  private solutions: PlaceSolutions[] = [];
+  private solutions: PlaceSolution[] = [];
+  private partialOrderCount = 0;
   private overlayRef?: OverlayRef;
   private outsideClickSubscription?: Unsubscribable;
 
   constructor(private toastr: ToastrService, private overlay: Overlay) {}
 
-  saveNewSolutions(solutions: PlaceSolutions[]): void {
+  saveNewSolutions(
+    solutions: PlaceSolution[],
+    partialOrderCount: number
+  ): void {
     this.solutions = solutions;
+    this.partialOrderCount = partialOrderCount;
   }
 
   showRepairPopover(ref: DOMRect, place: string): void {
-    const solutionsForPlace = this.solutions.filter((s) => s.place === place);
+    const solutionsForPlace = this.solutions.find((s) => s.place === place);
     if (!solutionsForPlace) {
       this.toastr.warning(`No solutions found for place ${place}`);
       return;
@@ -64,10 +69,8 @@ export class RepairService {
       });
 
     const componentRef = this.overlayRef.attach(componentPortal);
-    componentRef.instance.placeId = place;
     componentRef.instance.overlayRef = this.overlayRef;
-    componentRef.instance.solutions = solutionsForPlace
-      .filter((s) => s.solutions)
-      .map((s) => s.solutions!);
+    componentRef.instance.placeSolution = solutionsForPlace;
+    componentRef.instance.partialOrderCount = this.partialOrderCount;
   }
 }

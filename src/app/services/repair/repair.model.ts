@@ -16,4 +16,9 @@ export type ParsableSolution =
       marking: number;
     };
 
-export type PlaceSolutions = { place: string; solutions: AutoRepair | null };
+// TODO: Make it possible to have multiple solutions
+export type PlaceSolution = {
+  place: string;
+  solutions: AutoRepair | null;
+  invalidTraceCount: number;
+};

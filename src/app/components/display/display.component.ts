@@ -57,11 +57,24 @@ export class DisplayComponent {
               return of([]);
             }
 
-            const invalidPlaces = this.firePartialOrder(
-              net,
-              partialOrders[partialOrders.length - 1]
-            );
-            this.invalidPlaceCount$.next({ count: invalidPlaces.length });
+            const invalidPlaces: { [key: string]: number } = {};
+            for (let index = 0; index < partialOrders.length; index++) {
+              const currentInvalid = this.firePartialOrder(
+                net,
+                partialOrders[index]
+              );
+
+              currentInvalid.forEach((place) => {
+                if (invalidPlaces[place] === undefined) {
+                  invalidPlaces[place] = 0;
+                }
+                invalidPlaces[place]++;
+              });
+            }
+
+            this.invalidPlaceCount$.next({
+              count: Object.keys(invalidPlaces).length,
+            });
 
             return this.petriNetRegionsService.computeRegions(
               partialOrders,

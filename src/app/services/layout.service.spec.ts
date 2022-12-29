@@ -15,157 +15,285 @@ describe('LayoutService', () => {
     expect(service).toBeTruthy();
   });
 
-  // TODO: Fix me
   it('should layout example content correctly', () => {
     const { net, point } = service.layout(parsedPetriNet);
 
-    expect(point).toEqual('');
+    expect(point).toEqual({ x: 650, y: 140 });
     expect(net).toEqual({
       arcs: [
         {
           breakpoints: [],
-          source: 't1',
-          target: 't2',
+          source: 'p1',
+          target: 'a',
+          weight: 1,
         },
         {
           breakpoints: [],
-          source: 't2',
-          target: 't4',
+          source: 'a',
+          target: 'p2',
+          weight: 1,
         },
         {
           breakpoints: [],
-          source: 't4',
-          target: 't5',
+          source: 'p2',
+          target: 'b',
+          weight: 1,
         },
         {
           breakpoints: [],
-          source: 't5',
-          target: 't6',
+          source: 'p2',
+          target: 'c',
+          weight: 1,
         },
         {
           breakpoints: [],
-          source: 't6',
-          target: 't3',
+          source: 'b',
+          target: 'p3',
+          weight: 1,
+        },
+        {
+          breakpoints: [],
+          source: 'c',
+          target: 'p4',
+          weight: 1,
+        },
+        {
+          breakpoints: [],
+          source: 'p3',
+          target: 'd',
+          weight: 1,
+        },
+        {
+          breakpoints: [],
+          source: 'p4',
+          target: 'd',
+          weight: 1,
+        },
+        {
+          breakpoints: [],
+          source: 'd',
+          target: 'p5',
+          weight: 1,
         },
       ],
-      elements: [
+      places: [
         {
+          id: 'p1',
           incomingArcs: [],
-          id: 't1',
-          label: 't1',
           layerPos: 0,
+          marking: 1,
           outgoingArcs: [
             {
               breakpoints: [],
-              source: 't1',
-              target: 't2',
+              source: 'p1',
+              target: 'a',
+              weight: 1,
             },
           ],
-          x: 100,
-          y: 160,
+          type: 'place',
+          x: 25,
+          y: 70,
         },
         {
+          id: 'p2',
           incomingArcs: [
             {
               breakpoints: [],
-              source: 't1',
-              target: 't2',
+              source: 'a',
+              target: 'p2',
+              weight: 1,
             },
           ],
-          id: 't2',
-          label: 't2',
           layerPos: 0,
+          marking: 0,
           outgoingArcs: [
             {
               breakpoints: [],
-              source: 't2',
-              target: 't4',
+              source: 'p2',
+              target: 'b',
+              weight: 1,
+            },
+            {
+              breakpoints: [],
+              source: 'p2',
+              target: 'c',
+              weight: 1,
             },
           ],
-          x: 200,
-          y: 160,
+          type: 'place',
+          x: 225,
+          y: 70,
         },
         {
+          id: 'p3',
           incomingArcs: [
             {
               breakpoints: [],
-              source: 't6',
-              target: 't3',
+              source: 'b',
+              target: 'p3',
+              weight: 1,
             },
           ],
-          id: 't3',
-          label: 't3',
           layerPos: 0,
+          marking: 0,
+          outgoingArcs: [
+            {
+              breakpoints: [],
+              source: 'p3',
+              target: 'd',
+              weight: 1,
+            },
+          ],
+          type: 'place',
+          x: 425,
+          y: 25,
+        },
+        {
+          id: 'p4',
+          incomingArcs: [
+            {
+              breakpoints: [],
+              source: 'c',
+              target: 'p4',
+              weight: 1,
+            },
+          ],
+          layerPos: 1,
+          marking: 0,
+          outgoingArcs: [
+            {
+              breakpoints: [],
+              source: 'p4',
+              target: 'd',
+              weight: 1,
+            },
+          ],
+          type: 'place',
+          x: 425,
+          y: 115,
+        },
+        {
+          id: 'p5',
+          incomingArcs: [
+            {
+              breakpoints: [],
+              source: 'd',
+              target: 'p5',
+              weight: 1,
+            },
+          ],
+          layerPos: 0,
+          marking: 0,
           outgoingArcs: [],
-          x: 600,
-          y: 160,
-        },
-        {
-          incomingArcs: [
-            {
-              breakpoints: [],
-              source: 't2',
-              target: 't4',
-            },
-          ],
-          id: 't4',
-          label: 't4',
-          layerPos: 0,
-          outgoingArcs: [
-            {
-              breakpoints: [],
-              source: 't4',
-              target: 't5',
-            },
-          ],
-          x: 300,
-          y: 160,
-        },
-        {
-          incomingArcs: [
-            {
-              breakpoints: [],
-              source: 't4',
-              target: 't5',
-            },
-          ],
-          id: 't5',
-          label: 't5',
-          layerPos: 0,
-          outgoingArcs: [
-            {
-              breakpoints: [],
-              source: 't5',
-              target: 't6',
-            },
-          ],
-          x: 400,
-          y: 160,
-        },
-        {
-          incomingArcs: [
-            {
-              breakpoints: [],
-              source: 't5',
-              target: 't6',
-            },
-          ],
-          id: 't6',
-          label: 't6',
-          layerPos: 0,
-          outgoingArcs: [
-            {
-              breakpoints: [],
-              source: 't6',
-              target: 't3',
-            },
-          ],
-          x: 500,
-          y: 160,
+          type: 'place',
+          x: 625,
+          y: 70,
         },
       ],
-      text: '.type run\n.events\nt1\nt2\nt3\nt4\nt5\nt6\n.arcs\nt1 t2\nt2 t4\nt4 t5\nt5 t6\nt6 t3\n',
-      warnings: [],
+      transitions: [
+        {
+          id: 'a',
+          incomingArcs: [
+            {
+              breakpoints: [],
+              source: 'p1',
+              target: 'a',
+              weight: 1,
+            },
+          ],
+          label: 'a',
+          layerPos: 0,
+          outgoingArcs: [
+            {
+              breakpoints: [],
+              source: 'a',
+              target: 'p2',
+              weight: 1,
+            },
+          ],
+          type: 'transition',
+          x: 125,
+          y: 70,
+        },
+        {
+          id: 'b',
+          incomingArcs: [
+            {
+              breakpoints: [],
+              source: 'p2',
+              target: 'b',
+              weight: 1,
+            },
+          ],
+          label: 'b',
+          layerPos: 0,
+          outgoingArcs: [
+            {
+              breakpoints: [],
+              source: 'b',
+              target: 'p3',
+              weight: 1,
+            },
+          ],
+          type: 'transition',
+          x: 325,
+          y: 25,
+        },
+        {
+          id: 'c',
+          incomingArcs: [
+            {
+              breakpoints: [],
+              source: 'p2',
+              target: 'c',
+              weight: 1,
+            },
+          ],
+          label: 'c',
+          layerPos: 1,
+          outgoingArcs: [
+            {
+              breakpoints: [],
+              source: 'c',
+              target: 'p4',
+              weight: 1,
+            },
+          ],
+          type: 'transition',
+          x: 325,
+          y: 115,
+        },
+        {
+          id: 'd',
+          incomingArcs: [
+            {
+              breakpoints: [],
+              source: 'p3',
+              target: 'd',
+              weight: 1,
+            },
+            {
+              breakpoints: [],
+              source: 'p4',
+              target: 'd',
+              weight: 1,
+            },
+          ],
+          label: 'd',
+          layerPos: 0,
+          outgoingArcs: [
+            {
+              breakpoints: [],
+              source: 'd',
+              target: 'p5',
+              weight: 1,
+            },
+          ],
+          type: 'transition',
+          x: 525,
+          y: 70,
+        },
+      ],
     });
   });
 });

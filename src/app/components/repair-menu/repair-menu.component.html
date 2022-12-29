@@ -1,4 +1,12 @@
 <div *ngIf="shownTextsForSolutions.length > 0; else emptyText">
+  <div class="more-info-header">
+    <mat-icon
+      aria-hidden="false"
+      aria-label="More info icon"
+      fontIcon="info"
+    ></mat-icon>
+    {{ infoHeader }}
+  </div>
   <button
     mat-button
     *ngFor="let model of shownTextsForSolutions"

@@ -28,11 +28,11 @@ describe('SourceFileTextareaComponent', () => {
     isCurrentRunEmpty$: () => of(undefined),
     getCurrentRunIndex$: () => of(undefined),
     getRunCount$: () => of(undefined),
-    coordsInfoAdded: () => of(undefined),
-    offsetInfoAdded: () => of(undefined),
     setPreviousRun: () => petriNet,
     setNewNet: jest.fn(),
     registerRun: jest.fn(),
+    getPetriNet$: () => of(petriNet),
+    getCurrentErrors$: () => new Set(),
   };
 
   beforeEach(async () => {

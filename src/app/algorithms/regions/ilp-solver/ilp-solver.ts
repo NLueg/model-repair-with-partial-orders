@@ -1,5 +1,5 @@
 import { GLPK, LP, Result } from 'glpk.js';
-import { concatMap, from, Observable, ReplaySubject, toArray } from 'rxjs';
+import { concatMap, from, Observable, ReplaySubject, tap, toArray } from 'rxjs';
 
 import { PartialOrder } from '../../../classes/diagram/partial-order';
 import { PetriNet } from '../../../classes/diagram/petri-net';
@@ -107,7 +107,8 @@ export class IlpSolver {
           )
         );
       }),
-      toArray()
+      toArray(),
+      tap(() => console.log('Variable mapping:', this._labelVariableMapIngoing))
     );
   }
 

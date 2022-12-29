@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
-import { map, Observable, Subject } from 'rxjs';
+import { first, map, Observable, Subject } from 'rxjs';
 
 import { DisplayService } from './services/display.service';
 import { NetCommandService } from './services/repair/net-command.service';
@@ -17,7 +17,7 @@ import { StructureType, UploadService } from './services/upload/upload.service';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   hasPartialOrders = false;
   isCurrentRunEmpty$: Observable<boolean>;
   partialOrderCount$: Observable<{ count: number }>;
@@ -53,7 +53,6 @@ export class AppComponent {
     if (count > 0) {
       this.hasPartialOrders = true;
     }
-    // TODO: If no petri-net is given: Add empty content
   }
 
   downloadExample(): void {
@@ -64,5 +63,11 @@ export class AppComponent {
     zip.generateAsync({ type: 'blob' }).then((content) => {
       saveAs(content, 'simple-example.zip');
     });
+  }
+
+  ngOnInit(): void {
+    this.partialOrderCount$
+      .pipe(first())
+      .subscribe((count) => this.startEditing(count.count));
   }
 }

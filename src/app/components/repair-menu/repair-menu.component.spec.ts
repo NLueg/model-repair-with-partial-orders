@@ -14,7 +14,17 @@ describe('RepairMenuComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(RepairMenuComponent);
+
     component = fixture.componentInstance;
+    component.placeSolution = {
+      place: 'p1',
+      solutions: {
+        type: 'marking',
+        newMarking: 1,
+      },
+      invalidTraceCount: 0,
+    };
+
     fixture.detectChanges();
   });
 

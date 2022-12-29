@@ -1,3 +1,24 @@
 :host {
   max-width: 400px;
+
+  .more-info-header {
+    font-family: Roboto, serif;
+    font-size: 14px;
+
+    display: flex;
+    margin: var(--spaces-x2) var(--spaces-x2) 0;
+
+    mat-icon {
+      margin-right: 4px;
+      width: 30px;
+    }
+  }
+
+  button {
+    width: 100%;
+    text-align: left;
+    white-space: normal;
+    line-height: normal;
+    padding: var(--spaces-x2);
+  }
 }

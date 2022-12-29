@@ -558,7 +558,6 @@ export const parsedPartialOrder: PartialOrder = {
   ],
   finalEvents: ['e8'],
   initialEvents: ['e1', 'e2'],
-  text: '.type log\n.events\ne1 a\ne2 d\ne3 c\ne4 a\ne5 b\ne6 d\ne7 e\ne8 f\n.arcs\ne1 e3\ne2 e3\ne3 e4\ne4 e5\ne5 e6\ne6 e8\ne3 e7\ne7 e8\n',
 };
 
 export const parsedInvalidPartialorder: PartialOrder = {
@@ -682,5 +681,4 @@ export const parsedInvalidPartialorder: PartialOrder = {
   ],
   finalEvents: ['e8'],
   initialEvents: ['e1', 'e2', 'e4'],
-  text: '.type log\n.events\ne1 a\ne2 d\ne3 c\ne4 a\ne5 b\ne6 d\ne7 e\ne8 f\n.arcs\ne1 e3\ne2 e3\ne4 e5\ne5 e6\ne6 e8\ne3 e7\ne7 e8\n',
 };

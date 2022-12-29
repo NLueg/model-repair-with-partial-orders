@@ -6,7 +6,7 @@ import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
 import {
   ParsableSolution,
-  PlaceSolutions,
+  PlaceSolution,
 } from '../../services/repair/repair.model';
 import { RepairService } from '../../services/repair/repair.service';
 import {
@@ -28,31 +28,40 @@ export class PetriNetRegionsService {
   computeRegions(
     partialOrders: PartialOrder[],
     petriNet: PetriNet,
-    invalidPlaces: string[]
-  ): Observable<PlaceSolutions[]> {
+    invalidPlaces: { [key: string]: number }
+  ): Observable<PlaceSolution[]> {
     return from(createGlpk()).pipe(
       switchMap((glpk) => {
-        if (invalidPlaces.length === 0) {
+        const invalidPlaceList = Object.keys(invalidPlaces).flat();
+        if (invalidPlaceList.length === 0) {
           return of([]);
         }
 
         const solver = new IlpSolver(glpk, partialOrders, petriNet);
 
         return combineLatest(
-          invalidPlaces.map((place) =>
+          invalidPlaceList.map((place) =>
             solver.computeSolutions(place).pipe(
-              map((solutions) => ({
-                place,
-                solutions: parseSolution(
-                  this.handleSolutions(solutions, solver)
-                ),
-              }))
+              map((solutions) => {
+                const placeSolution: PlaceSolution = {
+                  place,
+                  // TODO: Generate multiple solutions
+                  solutions: parseSolution(
+                    this.handleSolutions(solutions, solver)
+                  ),
+                  invalidTraceCount: invalidPlaces[place],
+                };
+                return placeSolution;
+              })
             )
           )
         ).pipe(
           tap((solutions) => {
             console.log('Generated solutions', solutions);
-            this.repairService.saveNewSolutions(solutions);
+            this.repairService.saveNewSolutions(
+              solutions,
+              partialOrders.length
+            );
           })
         );
       })

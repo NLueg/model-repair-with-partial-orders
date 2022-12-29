@@ -257,7 +257,6 @@ export const parsedSimpleExampleLogInvalid: PartialOrder = {
   ],
   finalEvents: ['e4'],
   initialEvents: ['e1'],
-  text: '.type log\n.events\ne1 a\ne2 b\ne3 c\ne4 d\n.arcs\ne1 e2\ne2 e3\ne3 e4\n',
 };
 
 export const parsedSimpleExampleLogInvalidSecond: PartialOrder = {
@@ -304,7 +303,6 @@ export const parsedSimpleExampleLogInvalidSecond: PartialOrder = {
       type: 'event',
     },
   ],
-  finalEvents: ['e3'],
-  initialEvents: ['e1'],
-  text: '.type log\n.events\ne1 a\ne2 b\ne3 c\n.arcs\ne1 e2\ne2 e3\n',
+  finalEvents: ['E3'],
+  initialEvents: ['E1'],
 };
