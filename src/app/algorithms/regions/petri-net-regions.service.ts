@@ -48,7 +48,8 @@ export class PetriNetRegionsService {
                   place,
                   // TODO: Generate multiple solutions
                   solutions: parseSolution(
-                    this.handleSolutions(solutions, solver)
+                    this.handleSolutions(solutions, solver),
+                    petriNet.places.find((p) => p.id === place)
                   ),
                   invalidTraceCount: invalidPlaces[place],
                 };

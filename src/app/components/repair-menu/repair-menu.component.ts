@@ -64,7 +64,8 @@ function generateTextForAutoRepair(solution: AutoRepair): LabelWithTooltip {
       tooltip: solution.places
         .map(
           (place, index) => `
-        ${index + 1}. ${tooltipForSinglePlaceParameter(place)}`
+        ${index + 1}.
+        ${tooltipForSinglePlaceParameter(place)}`
         )
         .join(''),
     };
@@ -100,17 +101,30 @@ function handleModifyPlace(
 function tooltipForSinglePlaceParameter(
   solution: SinglePlaceParameter
 ): string {
+  const incomingString =
+    solution.incoming.length > 0
+      ? `• incoming: ${solution.incoming
+          .map((arc) =>
+            arc.weight > 1
+              ? `${arc.transitionId} (${arc.weight})`
+              : arc.transitionId
+          )
+          .join(', ')}`
+      : '';
+  const outgoingString =
+    solution.outgoing.length > 0
+      ? `• outgoing: ${solution.outgoing
+          .map((arc) =>
+            arc.weight > 1
+              ? `${arc.transitionId} (${arc.weight})`
+              : arc.transitionId
+          )
+          .join(', ')}`
+      : '';
+
   return `
-  • incoming: ${solution.incoming
-    .map((arc) =>
-      arc.weight > 1 ? `${arc.transitionId} (${arc.weight})` : arc.transitionId
-    )
-    .join(', ')}
-  • outgoing: ${solution.outgoing
-    .map((arc) =>
-      arc.weight > 1 ? `${arc.transitionId} (${arc.weight})` : arc.transitionId
-    )
-    .join(', ')}
+  ${incomingString}
+  ${outgoingString}
   • marking: ${solution.newMarking ? solution.newMarking : '0'}
-  `;
+  `.trim();
 }

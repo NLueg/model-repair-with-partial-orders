@@ -1,3 +1,4 @@
+import { Place } from '../../classes/diagram/place';
 import { ParsableSolution } from '../../services/repair/repair.model';
 
 export type AutoRepairForSinglePlace =
@@ -5,9 +6,11 @@ export type AutoRepairForSinglePlace =
       type: 'marking';
       newMarking: number;
     }
-  | ({
-      type: 'modify-place';
-    } & SinglePlaceParameter);
+  | ModifyPlaceType;
+
+type ModifyPlaceType = {
+  type: 'modify-place';
+} & SinglePlaceParameter;
 
 export type AutoRepair =
   | AutoRepairForSinglePlace
@@ -25,9 +28,11 @@ export type SinglePlaceParameter = {
 type ArcDefinition = { transitionId: string; weight: number };
 
 export function parseSolution(
-  placeSolutions: ParsableSolution[]
+  placeSolutions: ParsableSolution[],
+  existingPlace: Place | undefined
 ): AutoRepair | null {
   const singlePlaceSolution = getSinglePlaceSolution(placeSolutions);
+
   if (!singlePlaceSolution || singlePlaceSolution.type === 'marking') {
     return singlePlaceSolution;
   }
@@ -36,7 +41,10 @@ export function parseSolution(
     console.warn(
       'Unable to split the place into multiple places, because it has a defined marking.'
     );
-    return mergeAllDuplicatePlaces(singlePlaceSolution);
+    return checkPlaceAndReturnMarkingIfEquals(
+      mergeAllDuplicatePlaces(singlePlaceSolution),
+      existingPlace
+    );
   }
 
   const newPlaces: SinglePlaceParameter[] = [];
@@ -107,12 +115,53 @@ export function parseSolution(
       type: 'modify-place',
       ...newPlaces[0],
     };
-    return mergeAllDuplicatePlaces(repair);
+    return checkPlaceAndReturnMarkingIfEquals(
+      mergeAllDuplicatePlaces(repair),
+      existingPlace
+    );
   }
 
   return {
     type: 'replace-place',
     places: newPlaces.map((newPlace) => mergeAllDuplicatePlaces(newPlace)),
+  };
+}
+
+function checkPlaceAndReturnMarkingIfEquals(
+  solution: AutoRepair,
+  existingPlace: Place | undefined
+): AutoRepair {
+  if (
+    solution.type === 'marking' ||
+    solution.type === 'replace-place' ||
+    !existingPlace
+  ) {
+    return solution;
+  }
+
+  const incomingEquals = existingPlace.incomingArcs.every((arc) =>
+    solution.incoming.some(
+      (incoming) =>
+        incoming.transitionId === arc.source && incoming.weight === arc.weight
+    )
+  );
+  if (!incomingEquals) {
+    return solution;
+  }
+
+  const outgoingEquals = existingPlace.outgoingArcs.every((arc) =>
+    solution.outgoing.some(
+      (incoming) =>
+        incoming.transitionId === arc.target && incoming.weight === arc.weight
+    )
+  );
+  if (!outgoingEquals) {
+    return solution;
+  }
+
+  return {
+    type: 'marking',
+    newMarking: existingPlace.marking,
   };
 }
 

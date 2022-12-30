@@ -56,7 +56,7 @@ export class IlpSolver {
 
   private baseIlp: LP;
   private baseConstraints: Array<SubjectTo>;
-  private pairs: Array<[first: string, second: string]>;
+  private pairs: Array<[first: string | undefined, second: string]>;
 
   constructor(
     private glpk: GLPK,
@@ -78,9 +78,9 @@ export class IlpSolver {
     this.pairs = this._directlyFollowsExtractor.oneWayDirectlyFollows();
   }
 
-  computeSolutions(invalidPlace: string): Observable<ProblemSolution[]> {
+  computeSolutions(invalidPlaceId: string): Observable<ProblemSolution[]> {
     const validPlaces = this.petriNet.places.filter(
-      (p) => p.id !== invalidPlace
+      (p) => p.id !== invalidPlaceId
     );
     const pairsThatArentHandled = this.pairs.filter(
       ([source, target]) =>
@@ -90,6 +90,20 @@ export class IlpSolver {
             p.outgoingArcs.some((outgoing) => outgoing.target === target)
         )
     );
+
+    // Handle initial place(s)
+    const invalidPlace = this.petriNet.places.find(
+      (p) => p.id === invalidPlaceId
+    );
+    if (
+      pairsThatArentHandled.length === 0 &&
+      invalidPlace &&
+      invalidPlace.incomingArcs.length === 0
+    ) {
+      invalidPlace.outgoingArcs.forEach((outgoing) => {
+        pairsThatArentHandled.push([undefined, outgoing.target]);
+      });
+    }
 
     const problems = pairsThatArentHandled.map((pair) => ({
       baseConstraints: this.baseConstraints,
@@ -108,28 +122,40 @@ export class IlpSolver {
         );
       }),
       toArray(),
-      tap(() => console.log('Variable mapping:', this._labelVariableMapIngoing))
+      tap(() => {
+        console.log('Variable ingoing mapping:', this._labelVariableMapIngoing);
+        console.log(
+          'Variable outgoing mapping:',
+          this._labelVariableMapOutgoing
+        );
+        console.log('PO Variable names:', this._poVariableNames);
+      })
     );
   }
 
   private populateIlp(
     baseIlp: LP,
     baseConstraints: Array<SubjectTo>,
-    causalPair: [string, string]
+    causalPair: [string | undefined, string]
   ): LP {
     const result = Object.assign({}, baseIlp);
     result.subjectTo = [...baseConstraints];
-    result.subjectTo = result.subjectTo.concat(
-      this.greaterEqualThan(
-        this.variable(
-          this.transitionVariableName(
-            causalPair[0],
-            VariableName.OUTGOING_ARC_WEIGHT_PREFIX
-          )
-        ),
-        1
-      ).constraints
-    );
+
+    // TODO: Arc weights!
+    if (causalPair[0]) {
+      result.subjectTo = result.subjectTo.concat(
+        this.greaterEqualThan(
+          this.variable(
+            this.transitionVariableName(
+              causalPair[0],
+              VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+            )
+          ),
+          1
+        ).constraints
+      );
+    }
+
     result.subjectTo = result.subjectTo.concat(
       this.greaterEqualThan(
         this.variable(
@@ -183,17 +209,20 @@ export class IlpSolver {
     const goalVariables = Array.from(this._allVariables).concat(
       VariableName.INITIAL_MARKING
     );
+
+    const vars = Array.from(this._poVariableNames);
+    vars.push(VariableName.INITIAL_MARKING);
+
     return {
       name: 'ilp',
       objective: {
         name: 'goal',
         direction: Goal.MINIMUM,
-        vars: Array.from(this._poVariableNames).map((v) => {
+        vars: vars.map((v) => {
           return this.variable(v, 1);
         }),
       },
       subjectTo: [],
-      // TODO enable arc weights with a config setting?
       binaries: goalVariables,
       generals: Array.from(this._poVariableNames),
     };
