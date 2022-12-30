@@ -16,7 +16,6 @@ const transitionDimension = 40;
 export class RunToPnmlService {
   constructor(private layoutService: LayoutService) {}
 
-  // TODO: Fix me!
   convertPetriNetToPnml(name: string, petriNet: PetriNet): string {
     const { net } = this.layoutService.layout(petriNet);
 

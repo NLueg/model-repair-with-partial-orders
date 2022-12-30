@@ -68,6 +68,10 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
   }
 
   ngOnInit(): void {
+    this._resetEventSubscription = this.resetEvent?.subscribe(() =>
+      this.processSourceChange(this.textareaFc.value)
+    );
+
     this.uploadService
       .getUpload$()
       .pipe(first())
