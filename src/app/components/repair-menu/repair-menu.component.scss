@@ -10,7 +10,7 @@
 
     mat-icon {
       margin-right: 4px;
-      width: 30px;
+      min-width: 24px;
     }
   }
 
@@ -20,5 +20,14 @@
     white-space: normal;
     line-height: normal;
     padding: var(--spaces-x2);
+  }
+
+  .no-solution-text {
+    font-family: Roboto, serif;
+    font-size: 14px;
+    color: var(--error-color);
+    font-weight: bold;
+
+    margin: 0 var(--spaces-x2);
   }
 }

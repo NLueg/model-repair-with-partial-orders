@@ -16,7 +16,7 @@ export type AutoRepair =
       places: SinglePlaceParameter[];
     };
 
-type SinglePlaceParameter = {
+export type SinglePlaceParameter = {
   newMarking?: number;
   incoming: ArcDefinition[];
   outgoing: ArcDefinition[];

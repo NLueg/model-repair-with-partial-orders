@@ -1,9 +1,17 @@
 import { OverlayRef } from '@angular/cdk/overlay';
 import { Component, OnInit } from '@angular/core';
 
-import { AutoRepair } from '../../algorithms/regions/parse-solutions.fn';
+import {
+  AutoRepair,
+  SinglePlaceParameter,
+} from '../../algorithms/regions/parse-solutions.fn';
 import { NetCommandService } from '../../services/repair/net-command.service';
 import { PlaceSolution } from '../../services/repair/repair.model';
+
+type LabelWithTooltip = {
+  label: string;
+  tooltip: string;
+};
 
 @Component({
   selector: 'app-repair-menu',
@@ -13,7 +21,8 @@ import { PlaceSolution } from '../../services/repair/repair.model';
 export class RepairMenuComponent implements OnInit {
   placeSolution!: PlaceSolution;
   partialOrderCount!: number;
-  shownTextsForSolutions: { text: string; solution: AutoRepair }[] = [];
+  shownTextsForSolutions: { text: LabelWithTooltip; solution: AutoRepair }[] =
+    [];
   overlayRef?: OverlayRef;
 
   infoHeader = '';
@@ -21,24 +30,24 @@ export class RepairMenuComponent implements OnInit {
   constructor(private netCommandService: NetCommandService) {}
 
   ngOnInit(): void {
-    const solution = this.placeSolution.solutions;
-    if (!solution) {
-      throw Error('No solution found!');
-    }
-
-    this.shownTextsForSolutions = [
-      {
-        text: generateTextForAutoRepair(solution),
-        solution,
-      },
-    ];
-
     const percentage = Intl.NumberFormat('default', {
       style: 'percent',
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(this.placeSolution.invalidTraceCount / this.partialOrderCount);
     this.infoHeader = `The place cannot fire for ${this.placeSolution.invalidTraceCount} (${percentage}) traces. Choose a solution to repair the place:`;
+
+    const solution = this.placeSolution.solutions;
+    if (!solution) {
+      console.error('No solution found!');
+    } else {
+      this.shownTextsForSolutions = [
+        {
+          text: generateTextForAutoRepair(solution),
+          solution,
+        },
+      ];
+    }
   }
 
   useSolution(solution: AutoRepair): void {
@@ -48,13 +57,60 @@ export class RepairMenuComponent implements OnInit {
   }
 }
 
-// TODO: Better texts!
-function generateTextForAutoRepair(solution: AutoRepair): string {
+function generateTextForAutoRepair(solution: AutoRepair): LabelWithTooltip {
   if (solution.type === 'replace-place') {
-    return `Replace with ${solution.places.length} new places`;
+    return {
+      label: `Replace place with ${solution.places.length}`,
+      tooltip: solution.places
+        .map(
+          (place, index) => `
+        ${index + 1}. ${tooltipForSinglePlaceParameter(place)}`
+        )
+        .join(''),
+    };
   }
   if (solution.type === 'marking') {
-    return `Increase marking to ${solution.newMarking}`;
+    return {
+      label: `Change marking to ${solution.newMarking}`,
+      tooltip: `Change marking to ${solution.newMarking}`,
+    };
   }
-  return `Update existing place to have ${solution.incoming.length} incoming and ${solution.outgoing.length} outgoing arcs`;
+
+  return handleModifyPlace(solution);
+}
+
+function handleModifyPlace(
+  solution: { type: 'modify-place' } & SinglePlaceParameter
+): LabelWithTooltip {
+  const incomingText =
+    solution.incoming.length > 0 ? `${solution.incoming.length} incoming` : '';
+  const outgoingText =
+    solution.outgoing.length > 0 ? `${solution.outgoing.length} outgoing` : '';
+  const andText = incomingText && outgoingText ? ' and ' : '';
+  const markingText = solution.newMarking
+    ? ` with marking ${solution.newMarking}`
+    : '';
+
+  return {
+    label: `Update place to have ${incomingText}${andText}${outgoingText} arcs${markingText}`,
+    tooltip: tooltipForSinglePlaceParameter(solution),
+  };
+}
+
+function tooltipForSinglePlaceParameter(
+  solution: SinglePlaceParameter
+): string {
+  return `
+  • incoming: ${solution.incoming
+    .map((arc) =>
+      arc.weight > 1 ? `${arc.transitionId} (${arc.weight})` : arc.transitionId
+    )
+    .join(', ')}
+  • outgoing: ${solution.outgoing
+    .map((arc) =>
+      arc.weight > 1 ? `${arc.transitionId} (${arc.weight})` : arc.transitionId
+    )
+    .join(', ')}
+  • marking: ${solution.newMarking ? solution.newMarking : '0'}
+  `;
 }

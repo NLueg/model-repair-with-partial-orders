@@ -1,4 +1,4 @@
-<div *ngIf="shownTextsForSolutions.length > 0; else emptyText">
+<div>
   <div class="more-info-header">
     <mat-icon
       aria-hidden="false"
@@ -7,16 +7,21 @@
     ></mat-icon>
     {{ infoHeader }}
   </div>
-  <button
-    mat-button
-    *ngFor="let model of shownTextsForSolutions"
-    (click)="useSolution(model.solution)"
-  >
-    {{ model.text }}
-  </button>
+  <ng-container *ngIf="shownTextsForSolutions.length > 0; else emptyText">
+    <button
+      mat-button
+      *ngFor="let model of shownTextsForSolutions"
+      (click)="useSolution(model.solution)"
+      [matTooltip]="model.text.tooltip"
+      matTooltipClass="repair-menu-tooltip"
+    >
+      {{ model.text.label }}
+    </button>
+  </ng-container>
+
+  <ng-template #emptyText>
+    <div class="no-solution-text">
+      <p>I don't found any solution 😢</p>
+    </div>
+  </ng-template>
 </div>
-<ng-template #emptyText>
-  <div>
-    <p>I don't found any solution 😢</p>
-  </div>
-</ng-template>

@@ -13,10 +13,12 @@ import {
 } from '../upload/example-file-parsed';
 import {
   parsedSimpleExampleLogInvalid,
+  parsedSimpleExampleLogInvalidSecond,
   parsedSimpleExamplePetriNet,
 } from '../upload/simple-example/simple-example-parsed';
 import {
   simpleExampleLogInvalid,
+  simpleExampleLogInvalidSecond,
   simpleExamplePetriNet,
 } from '../upload/simple-example/simple-example-texts';
 import { ParserService } from './parser.service';
@@ -73,5 +75,15 @@ describe('ParserService', () => {
     const result = service.parsePartialOrder(simpleExampleLogInvalid, errors);
 
     expect(result).toEqual(parsedSimpleExampleLogInvalid);
+  });
+
+  it('parseLog should parse second simple invalid example log', () => {
+    const errors = new Set<string>();
+    const result = service.parsePartialOrder(
+      simpleExampleLogInvalidSecond,
+      errors
+    );
+
+    expect(result).toEqual(parsedSimpleExampleLogInvalidSecond);
   });
 });

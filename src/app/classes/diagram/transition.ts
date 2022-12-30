@@ -20,7 +20,7 @@ export function createEventItem(id: string): EventItem {
   return {
     id,
     type: 'event',
-    label: '',
+    label: id,
     nextEvents: [],
     previousEvents: [],
     incomingArcs: [],

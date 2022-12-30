@@ -88,7 +88,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
   private registerCanvasMouseHandler(drawingArea: SVGElement) {
     drawingArea.onmousedown = (e) => {
-      console.log(e);
       this.stateHandler.initMouseDownForRun(e);
     };
 
