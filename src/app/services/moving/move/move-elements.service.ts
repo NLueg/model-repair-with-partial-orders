@@ -2,11 +2,10 @@ import { Coordinates } from '../../../classes/diagram/coordinates';
 import { Draggable } from '../../../classes/diagram/draggable';
 import { getIntersection } from '../../../classes/diagram/functions/display.fn';
 import {
-  eventIdAttribute,
   eventSize,
   fromTransitionAttribute,
+  idAttribute,
   originalYAttribute,
-  textOffset,
   toTransitionAttribute,
 } from '../../svg/svg-constants';
 import { asInt, getYAttribute } from '../dragging-helper.fn';
@@ -14,10 +13,21 @@ import { FindElementsService } from '../find/find-elements.service';
 
 export class MoveElementsService {
   public static moveElement(draggable: Draggable, newY: number): void {
-    const event = draggable.event;
+    const event = draggable.htmlElement;
     event.setAttribute(getYAttribute(event), `${newY}`);
-    const newYInfo = newY + eventSize + textOffset;
-    draggable.infoElement?.setAttribute('y', `${newYInfo}`);
+
+    if (draggable.infoElement) {
+      const newYInfo =
+        newY +
+        eventSize +
+        (draggable.htmlElement.nodeName === 'rect' ? 20 : -5);
+      draggable.infoElement.setAttribute('y', `${newYInfo}`);
+    }
+
+    if (draggable.contentElement) {
+      draggable.contentElement.setAttribute('y', `${newY}`);
+    }
+
     const coords = FindElementsService.createCoordsFromElement(event);
     if (event.nodeName === 'rect') {
       for (let i = 0; i < draggable.incomingArcs.length; i++) {
@@ -77,7 +87,7 @@ export class MoveElementsService {
       for (let j = 0; j < draggable.outgoingArcs.length; j++) {
         draggable.outgoingArcs[j].setAttribute('y1', `${newY}`);
         MoveElementsService.rearrangeArcsForSuccessor(
-          draggable.incomingArcs[j]
+          draggable.outgoingArcs[j]
         );
       }
     }
@@ -87,7 +97,7 @@ export class MoveElementsService {
     if (arc.getAttribute(fromTransitionAttribute)) {
       const selector =
         '[' +
-        eventIdAttribute +
+        idAttribute +
         '="' +
         arc.getAttribute(fromTransitionAttribute) +
         '"]';
@@ -110,7 +120,7 @@ export class MoveElementsService {
     if (arc.getAttribute(toTransitionAttribute)) {
       const selector =
         '[' +
-        eventIdAttribute +
+        idAttribute +
         '="' +
         arc.getAttribute(toTransitionAttribute) +
         '"]';
@@ -130,7 +140,7 @@ export class MoveElementsService {
   }
 
   static resetPositionForDraggable(e: Draggable): void {
-    const transition = e.event;
+    const transition = e.htmlElement;
     const newY = asInt(transition, originalYAttribute);
     if (newY > 0) {
       MoveElementsService.moveElement(e, newY);
@@ -153,7 +163,7 @@ export class MoveElementsService {
     direction: string
   ): number {
     const movingNode = movingElement.nodeName;
-    const passedNode = activeNeighbour.event.nodeName;
+    const passedNode = activeNeighbour.htmlElement.nodeName;
     if (passedNode === 'circle') {
       if (movingNode === 'circle') {
         return 0;
@@ -218,8 +228,8 @@ export class MoveElementsService {
     movingElement: Draggable,
     passedElement: Draggable
   ): void {
-    const movingElementNode = movingElement.event;
-    const passedElementNode = passedElement.event;
+    const movingElementNode = movingElement.htmlElement;
+    const passedElementNode = passedElement.htmlElement;
     const nodeTypeOfMovingElement = movingElementNode.nodeName;
     const nodeTypeOfPassedElement = passedElementNode.nodeName;
     let newYMoving;

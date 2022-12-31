@@ -22,8 +22,8 @@ import { SvgService } from '../../services/svg/svg.service';
 import {
   breakpointPositionAttribute,
   breakpointTrail,
-  eventIdAttribute,
   fromTransitionAttribute,
+  idAttribute,
   layerPosYAttibute,
   originalYAttribute,
   toTransitionAttribute,
@@ -128,23 +128,23 @@ export class CanvasComponent implements OnInit, OnDestroy {
     if (element === null) {
       return;
     }
-    element.event.onmouseenter = () => {
+    element.htmlElement.onmouseenter = () => {
       this.stateHandler.disableMouseMoveForRun();
     };
 
-    element.event.onmousedown = (e) => {
+    element.htmlElement.onmousedown = (e) => {
       this.stateHandler.initMouseDownForDraggable(e);
     };
 
-    element.event.onmousemove = (e) => {
+    element.htmlElement.onmousemove = (e) => {
       if (this.stateHandler.draggableCanBeMoved(element, e)) {
         this.moveDraggable(this.stateHandler.getMovedDraggable() as Draggable);
       }
     };
-    element.event.onmouseleave = () => {
+    element.htmlElement.onmouseleave = () => {
       this.stateHandler.disableFocusForChildElement();
     };
-    element.event.onmouseup = () => {
+    element.htmlElement.onmouseup = () => {
       this.resetChildElementIfExisting();
       this.stateHandler.resetGlobalHandlers();
     };
@@ -167,7 +167,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
   private moveDraggable(draggable: Draggable) {
     this.determineActiveNeighbourElement(draggable);
     const y = this.stateHandler.getVerticalChanges();
-    const transition = draggable.event;
+    const transition = draggable.htmlElement;
     const currentCoords =
       FindElementsService.createCoordsFromElement(transition);
     const currentY = currentCoords.y;
@@ -185,20 +185,23 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
   private handlePassedElement(draggable: Draggable) {
     const passedElement = this.stateHandler.getActiveNeighbourElement();
-    const movingElement = draggable.event;
+    const movingElement = draggable.htmlElement;
     if (passedElement === undefined) {
       return;
     }
     MoveElementsService.switchElements(draggable, passedElement);
 
     const movedLayerPos = asInt(movingElement, layerPosYAttibute);
-    const passedLayerPos = asInt(passedElement.event, layerPosYAttibute);
+    const passedLayerPos = asInt(passedElement.htmlElement, layerPosYAttibute);
     movingElement.setAttribute(layerPosYAttibute, `${passedLayerPos}`);
-    passedElement.event.setAttribute(layerPosYAttibute, `${movedLayerPos}`);
-    this.persistLayerPosition([passedElement.event, movingElement]);
+    passedElement.htmlElement.setAttribute(
+      layerPosYAttibute,
+      `${movedLayerPos}`
+    );
+    this.persistLayerPosition([passedElement.htmlElement, movingElement]);
 
     movingElement.removeAttribute(originalYAttribute);
-    passedElement.event.removeAttribute(originalYAttribute);
+    passedElement.htmlElement.removeAttribute(originalYAttribute);
 
     this.stateHandler.resetCanvasHandlers();
   }
@@ -211,8 +214,8 @@ export class CanvasComponent implements OnInit, OnDestroy {
     const yMoving = asInt(movingElement, getYAttribute(movingElement));
     const yOriginal = asInt(movingElement, originalYAttribute);
     const yPassed = asInt(
-      activeNeighbour.event,
-      getYAttribute(activeNeighbour.event)
+      activeNeighbour.htmlElement,
+      getYAttribute(activeNeighbour.htmlElement)
     );
     const direction = MoveElementsService.getMoveDirection(movingElement);
     if (!direction) {
@@ -234,7 +237,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const transition = movedElement.event;
+    const transition = movedElement.htmlElement;
     const yAttribute = getYAttribute(transition);
     const direction = MoveElementsService.getMoveDirection(transition);
     if (!direction) {
@@ -292,7 +295,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
     elements.forEach((element) => {
       const y = asInt(element, layerPosYAttibute);
       let x = -1;
-      let infoText = element.getAttribute(eventIdAttribute) ?? '';
+      let infoText = element.getAttribute(idAttribute) ?? '';
       if (element.nodeName === 'circle') {
         x = asInt(element, breakpointPositionAttribute);
         infoText =

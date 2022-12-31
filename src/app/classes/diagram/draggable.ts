@@ -1,8 +1,9 @@
 import { Arc } from './arc';
 
 export type Draggable = {
-  event: HTMLElement;
+  htmlElement: HTMLElement;
   infoElement?: HTMLElement;
+  contentElement?: HTMLElement;
   incomingArcs: Array<HTMLElement>;
   outgoingArcs: Array<HTMLElement>;
 };

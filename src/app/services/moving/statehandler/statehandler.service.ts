@@ -76,11 +76,11 @@ export class StatehandlerService {
       this._activeNeighbourElement = draggable;
     }
     const movingCoords = FindElementsService.createCoordsFromElement(
-      draggable.event
+      draggable.htmlElement
     );
     if (this._activeNeighbourElement) {
       const neighbourCoords = FindElementsService.createCoordsFromElement(
-        this._activeNeighbourElement.event
+        this._activeNeighbourElement.htmlElement
       );
       if (direction === 'up' && movingCoords.y > neighbourCoords.y) {
         this._activeNeighbourElement = draggable;

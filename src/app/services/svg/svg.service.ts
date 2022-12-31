@@ -16,6 +16,7 @@ import {
   TRANSITION_STYLE,
 } from '../element-style';
 import { RepairService } from '../repair/repair.service';
+import { idAttribute } from './svg-constants';
 
 @Injectable({
   providedIn: 'root',
@@ -48,6 +49,7 @@ export class SvgService {
     offset: Point
   ): Array<SVGElement> {
     const transEl = this.createSvgElement('rect');
+    transEl.setAttribute(idAttribute, transition.id);
     const style = TRANSITION_STYLE;
     transEl.setAttribute(
       'x',
@@ -59,7 +61,10 @@ export class SvgService {
     );
     this.applyStyle(transEl, style);
 
-    const textEl = this.createTextElement(transition.label as string);
+    const textEl = this.createTextElement(
+      transition.id,
+      transition.label as string
+    );
     textEl.setAttribute('x', '' + (getNumber(transition.x) + offset.x));
     textEl.setAttribute(
       'y',
@@ -75,6 +80,7 @@ export class SvgService {
   private createPlaceElement(place: Place, offset: Point): Array<SVGElement> {
     const placeEl = this.createSvgElement('circle');
     placeEl.classList.add('place');
+    placeEl.setAttribute(idAttribute, place.id);
     placeEl.setAttribute('cx', '' + (getNumber(place.x) + offset.x));
     placeEl.setAttribute('cy', '' + (getNumber(place.y) + offset.y));
     this.applyStyle(placeEl, PLACE_STYLE);
@@ -99,7 +105,7 @@ export class SvgService {
         'Invalid place. Click to see possibilities to solve the issues!';
       placeEl.appendChild(titleEl);
 
-      const markingEl = this.createTextElement('!');
+      const markingEl = this.createTextElementForPlaceContent(place.id, '!');
       markingEl.setAttribute('x', '' + (getNumber(place.x) + offset.x));
       markingEl.setAttribute('y', '' + (getNumber(place.y) + offset.y));
       markingEl.setAttribute('width', '48');
@@ -115,7 +121,10 @@ export class SvgService {
         )
       );
     } else if (place.marking > 0) {
-      const markingEl = this.createTextElement('' + place.marking);
+      const markingEl = this.createTextElementForPlaceContent(
+        place.id,
+        '' + place.marking
+      );
       markingEl.setAttribute('x', '' + (getNumber(place.x) + offset.x));
       markingEl.setAttribute('y', '' + (getNumber(place.y) + offset.y));
       markingEl.setAttribute('font-size', '1.5em');
@@ -183,7 +192,8 @@ export class SvgService {
         destinationPoint,
         arc
       );
-      const weightEl = this.createTextElement('' + arc.weight);
+      const arcId = `${arc.source}-${arc.target}`;
+      const weightEl = this.createTextElement(arcId, '' + arc.weight);
       weightEl.setAttribute('x', '' + (location.x + offset.x));
       weightEl.setAttribute('y', '' + (location.y + offset.y));
       result.push(weightEl);
@@ -333,10 +343,22 @@ export class SvgService {
     }
   }
 
-  private createTextElement(content: string): SVGElement {
+  private createTextElement(id: string, content?: string): SVGElement {
     const result = this.createSvgElement('text');
+    result.setAttribute('describes', id);
     this.applyStyle(result, TEXT_STYLE);
-    result.textContent = content;
+    result.textContent = content ?? id;
+    return result;
+  }
+
+  private createTextElementForPlaceContent(
+    id: string,
+    content?: string
+  ): SVGElement {
+    const result = this.createSvgElement('text');
+    result.setAttribute('content-of', id);
+    this.applyStyle(result, TEXT_STYLE);
+    result.textContent = content ?? id;
     return result;
   }
 
