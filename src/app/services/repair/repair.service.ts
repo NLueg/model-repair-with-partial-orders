@@ -11,6 +11,8 @@ import { PlaceSolution } from './repair.model';
   providedIn: 'root',
 })
 export class RepairService {
+  private currentPlace?: string;
+
   private solutions: PlaceSolution[] = [];
   private partialOrderCount = 0;
   private overlayRef?: OverlayRef;
@@ -27,6 +29,12 @@ export class RepairService {
   }
 
   showRepairPopover(ref: DOMRect, place: string): void {
+    if (this.currentPlace === place) {
+      this.currentPlace = undefined;
+      this.overlayRef?.dispose();
+      return;
+    }
+
     const solutionsForPlace = this.solutions.find((s) => s.place === place);
     if (!solutionsForPlace) {
       this.toastr.warning(`No solutions found for place ${place}`);
@@ -36,6 +44,8 @@ export class RepairService {
     if (this.overlayRef) {
       this.overlayRef.dispose();
     }
+
+    this.currentPlace = place;
     if (this.outsideClickSubscription) {
       this.outsideClickSubscription.unsubscribe();
     }
@@ -59,9 +69,7 @@ export class RepairService {
 
     this.overlayRef.addPanelClass('current-overlay');
     this.overlayRef.updatePositionStrategy(position);
-    this.overlayRef.updateScrollStrategy(
-      this.overlay.scrollStrategies.reposition() // TODO: Should be "reposition"
-    );
+    this.overlayRef.updateScrollStrategy(this.overlay.scrollStrategies.noop());
     this.outsideClickSubscription = this.overlayRef
       .outsidePointerEvents()
       .subscribe(() => {
