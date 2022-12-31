@@ -134,7 +134,8 @@ function checkPlaceAndReturnMarkingIfEquals(
   if (
     solution.type === 'marking' ||
     solution.type === 'replace-place' ||
-    !existingPlace
+    !existingPlace ||
+    (solution.type === 'modify-place' && !solution.newMarking)
   ) {
     return solution;
   }
@@ -161,7 +162,7 @@ function checkPlaceAndReturnMarkingIfEquals(
 
   return {
     type: 'marking',
-    newMarking: existingPlace.marking,
+    newMarking: solution.newMarking!,
   };
 }
 

@@ -39,7 +39,7 @@ export class IlpSolver {
   private readonly k = (1 << 10) - 1; // 2^10 - 1
   private readonly K = 2 * this.k + 1;
 
-  private readonly PO_ARC_SEPARATOR = '#';
+  private readonly PO_ARC_SEPARATOR = '_';
   private readonly FINAL_MARKING = 'mf';
 
   private variableCount = 0;
@@ -122,7 +122,8 @@ export class IlpSolver {
         );
       }),
       toArray(),
-      tap(() => {
+      tap((solution) => {
+        console.log('Solutions', solution[0].solution.result);
         console.log('Variable ingoing mapping:', this._labelVariableMapIngoing);
         console.log(
           'Variable outgoing mapping:',
@@ -196,8 +197,10 @@ export class IlpSolver {
     for (let i = 0; i < partialOrders.length; i++) {
       const events = partialOrders[i].events;
       for (const e of events) {
+        console.warn(`___ Start Event ${e.id} ___`);
         baseIlpConstraints.push(...this.firingRule(e, i, partialOrders[i]));
         baseIlpConstraints.push(...this.tokenFlow(e, i));
+        console.warn(`________________________`);
       }
       baseIlpConstraints.push(...this.initialMarking(events, i));
     }
@@ -342,7 +345,7 @@ export class IlpSolver {
     destinationId: string,
     i: number
   ): string {
-    const id = `${i}${this.PO_ARC_SEPARATOR}${sourceId}${this.PO_ARC_SEPARATOR}${destinationId}`;
+    const id = `${i}${this.PO_ARC_SEPARATOR}Arc${this.PO_ARC_SEPARATOR}${sourceId}${this.PO_ARC_SEPARATOR}to${this.PO_ARC_SEPARATOR}${destinationId}`;
     this._poVariableNames.add(id);
     return id;
   }
@@ -373,16 +376,18 @@ export class IlpSolver {
       return saved;
     }
 
-    const name = this.helperVariableName(prefix);
+    const name = this.helperVariableName(label, prefix);
     map.set(label, name);
     inverseMap.set(name, label);
     return name;
   }
 
-  protected helperVariableName(prefix = 'y'): string {
+  protected helperVariableName(label: string, prefix: string): string {
     let helpVariableName;
     do {
-      helpVariableName = `${prefix}${this.variableCount++}`;
+      helpVariableName = `${prefix}${this.PO_ARC_SEPARATOR}${label}${
+        this.PO_ARC_SEPARATOR
+      }${this.variableCount++}`;
     } while (this._allVariables.has(helpVariableName));
     this._allVariables.add(helpVariableName);
     return helpVariableName;
