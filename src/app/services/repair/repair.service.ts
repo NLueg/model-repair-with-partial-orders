@@ -60,7 +60,7 @@ export class RepairService {
     this.overlayRef.addPanelClass('current-overlay');
     this.overlayRef.updatePositionStrategy(position);
     this.overlayRef.updateScrollStrategy(
-      this.overlay.scrollStrategies.block() // TODO: Should be "reposition"
+      this.overlay.scrollStrategies.reposition() // TODO: Should be "reposition"
     );
     this.outsideClickSubscription = this.overlayRef
       .outsidePointerEvents()

@@ -5,7 +5,7 @@ describe('parseSolution', () => {
   it('should return an empty array if no solutions are provided', () => {
     const parameter: ParsableSolution[] = [];
 
-    const actual = parseSolution(parameter);
+    const actual = parseSolution(parameter, undefined);
 
     const expected: AutoRepair | null = null;
     expect(actual).toEqual(expected);
@@ -19,7 +19,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter);
+    const actual = parseSolution(parameter, undefined);
 
     const expected: AutoRepair = {
       type: 'marking',
@@ -37,7 +37,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter);
+    const actual = parseSolution(parameter, undefined);
 
     const expected: AutoRepair = {
       type: 'modify-place',
@@ -56,7 +56,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter);
+    const actual = parseSolution(parameter, undefined);
 
     const expected: AutoRepair = {
       type: 'modify-place',
@@ -80,7 +80,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter);
+    const actual = parseSolution(parameter, undefined);
 
     const expected: AutoRepair = {
       type: 'modify-place',
@@ -109,7 +109,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter);
+    const actual = parseSolution(parameter, undefined);
 
     const expected: AutoRepair = {
       type: 'modify-place',
@@ -142,7 +142,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter);
+    const actual = parseSolution(parameter, undefined);
 
     const expected: AutoRepair = {
       type: 'modify-place',
@@ -177,7 +177,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter);
+    const actual = parseSolution(parameter, undefined);
 
     const expected: AutoRepair = {
       type: 'replace-place',
@@ -219,7 +219,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter);
+    const actual = parseSolution(parameter, undefined);
 
     const expected: AutoRepair = {
       type: 'replace-place',
@@ -266,7 +266,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter);
+    const actual = parseSolution(parameter, undefined);
 
     const expected: AutoRepair = {
       type: 'modify-place',
@@ -308,7 +308,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter);
+    const actual = parseSolution(parameter, undefined);
 
     const expected: AutoRepair = {
       incoming: [

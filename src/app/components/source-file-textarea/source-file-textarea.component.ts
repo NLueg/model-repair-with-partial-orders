@@ -76,7 +76,37 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
       .getUpload$()
       .pipe(first())
       .subscribe((content) => {
-        this.textareaFc.setValue(content || emptyContent);
+        this.textareaFc.setValue(
+          content ||
+            '.type pn\n' +
+              '.transitions\n' +
+              't1 t1\n' +
+              't2\n' +
+              't3 t3\n' +
+              't4\n' +
+              't5\n' +
+              't6 t6\n' +
+              '.places\n' +
+              'p1 1\n' +
+              'p2 0\n' +
+              'p3 0\n' +
+              'p4 0\n' +
+              'p5 0\n' +
+              '.arcs\n' +
+              'p1 t1\n' +
+              't1 p2\n' +
+              't1 p3\n' +
+              'p2 t2\n' +
+              't2 p4\n' +
+              'p4 t3\n' +
+              't3 p3\n' +
+              'p3 t4\n' +
+              't4 p5\n' +
+              'p4 t5\n' +
+              't5 p3\n' +
+              'p5 t6\n' +
+              't6 p3'
+        );
       });
   }
 

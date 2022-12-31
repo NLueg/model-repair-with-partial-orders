@@ -123,7 +123,6 @@ export class IlpSolver {
       }),
       toArray(),
       tap((solution) => {
-        console.log('Solutions', solution[0].solution.result);
         console.log('Variable ingoing mapping:', this._labelVariableMapIngoing);
         console.log(
           'Variable outgoing mapping:',
@@ -142,7 +141,7 @@ export class IlpSolver {
     const result = Object.assign({}, baseIlp);
     result.subjectTo = [...baseConstraints];
 
-    // TODO: Arc weights!
+    // TODO: Include arc weights!
     if (causalPair[0]) {
       result.subjectTo = result.subjectTo.concat(
         this.greaterEqualThan(
