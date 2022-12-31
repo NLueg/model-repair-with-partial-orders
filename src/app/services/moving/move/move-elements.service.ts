@@ -9,6 +9,7 @@ import {
   toTransitionAttribute,
 } from '../../svg/svg-constants';
 import { asInt, getYAttribute } from '../dragging-helper.fn';
+import { DraggingCreationService } from '../factory/draggable-creation.service';
 import { FindElementsService } from '../find/find-elements.service';
 
 export class MoveElementsService {
@@ -28,8 +29,12 @@ export class MoveElementsService {
       draggable.contentElement.setAttribute('y', `${newY}`);
     }
 
-    const coords = FindElementsService.createCoordsFromElement(event);
-    if (event.nodeName === 'rect') {
+    const isPlace =
+      event.nodeName === 'circle' && event.classList.contains('place');
+    const coords = isPlace
+      ? DraggingCreationService.createCoordsFromElement(event)
+      : FindElementsService.createCoordsFromElement(event);
+    if (event.nodeName === 'rect' || isPlace) {
       for (let i = 0; i < draggable.incomingArcs.length; i++) {
         const arc = draggable.incomingArcs[i];
         let c = getIntersection(

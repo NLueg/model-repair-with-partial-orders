@@ -61,7 +61,7 @@ export class DraggingCreationService {
     return FindElementsService.getElementFromCanvas(selector, drawingArea);
   }
 
-  private static createCoordsFromElement(element: HTMLElement): Coordinates {
+  public static createCoordsFromElement(element: HTMLElement): Coordinates {
     const additonalOffset = element.nodeName === 'circle' ? eventSize / 2 : 0;
     return {
       x: asInt(element, getXAttribute(element)) - additonalOffset,
@@ -105,7 +105,7 @@ export class DraggingCreationService {
     transition: HTMLElement,
     drawingArea?: ElementRef<SVGElement>
   ): Array<HTMLElement> {
-    const coords = FindElementsService.createCoordsFromElement(transition);
+    const coords = DraggingCreationService.createCoordsFromElement(transition);
     const nodes = FindElementsService.getAllElementsFromCanvas(
       '*',
       drawingArea

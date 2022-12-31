@@ -9,8 +9,6 @@ import { MoveElementsService } from '../move/move-elements.service';
   providedIn: 'root',
 })
 export class StatehandlerService {
-  persistCoordinates = true;
-
   private _mouseMoveRun: boolean;
   private _childElementInFocus: boolean;
   private _globalChanges: Coordinates = { x: 0, y: 0 };

@@ -370,7 +370,7 @@ export class ParserService {
   private parseTransition(trimmedLine: string): Transition {
     const match = this.transitionRegex.exec(trimmedLine);
     const id = match ? match[1] : trimmedLine;
-    const label = match ? match[2] : trimmedLine;
+    const label = match ? match[2] || match[1] : trimmedLine;
 
     return {
       id,

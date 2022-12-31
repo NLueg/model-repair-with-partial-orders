@@ -247,6 +247,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
       transition,
       this.drawingArea
     );
+
     potentialNeighbours.forEach((e) => {
       const eLocal = e as HTMLElement;
       if (
