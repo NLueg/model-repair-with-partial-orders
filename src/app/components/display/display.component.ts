@@ -105,8 +105,8 @@ export class DisplayComponent {
             this.canvas.drawingArea.nativeElement.clientHeight;
 
           offset = {
-            x: (canvasWidth - point.x) / 2,
-            y: (canvasHeight - point.y) / 2,
+            x: Math.floor((canvasWidth - point.x) / 2),
+            y: Math.floor((canvasHeight - point.y) / 2),
           };
         } else {
           offset = { x: 0, y: 0 };

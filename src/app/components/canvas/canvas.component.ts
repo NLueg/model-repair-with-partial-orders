@@ -1,11 +1,9 @@
 import {
   Component,
   ElementRef,
-  EventEmitter,
   Input,
   OnDestroy,
   OnInit,
-  Output,
   ViewChild,
 } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
@@ -42,9 +40,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
   @Input()
   canvasHeight = 400;
-
-  @Output()
-  coordinateChanged = new EventEmitter<CoordinatesInfo[]>();
 
   private _sub: Subscription | undefined;
 
@@ -105,9 +100,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
       }
     };
     drawingArea.onmouseup = () => {
-      this.stateHandler.resetCanvasHandlers();
-    };
-    drawingArea.onmouseenter = () => {
       this.stateHandler.resetCanvasHandlers();
     };
     drawingArea.onmouseleave = () => {
@@ -198,12 +190,9 @@ export class CanvasComponent implements OnInit, OnDestroy {
       layerPosYAttibute,
       `${movedLayerPos}`
     );
-    this.persistLayerPosition([passedElement.htmlElement, movingElement]);
 
     movingElement.removeAttribute(originalYAttribute);
     passedElement.htmlElement.removeAttribute(originalYAttribute);
-
-    this.stateHandler.resetCanvasHandlers();
   }
 
   private checkForPassedElement(movingElement: HTMLElement): boolean {
@@ -218,6 +207,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
       getYAttribute(activeNeighbour.htmlElement)
     );
     const direction = MoveElementsService.getMoveDirection(movingElement);
+
     if (!direction) {
       return false;
     }
@@ -277,11 +267,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
         }
       }
     });
-  }
-
-  persistLayerPosition(elements: Array<HTMLElement>): void {
-    const coordinates = this.getCoordinates(elements);
-    this.coordinateChanged.next(coordinates);
   }
 
   public createDraggable(element: HTMLElement): Draggable | null {

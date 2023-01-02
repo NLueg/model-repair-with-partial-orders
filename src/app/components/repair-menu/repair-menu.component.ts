@@ -74,7 +74,7 @@ function generateTextForAutoRepair(
       tooltip: solution.places
         .map(
           (place, index) => `
-        ${index + 1}.
+        ${index + 1}. Place:
         ${tooltipForSinglePlaceParameter(place)}`
         )
         .join(''),
