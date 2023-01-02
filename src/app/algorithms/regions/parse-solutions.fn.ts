@@ -52,9 +52,6 @@ export function parseSolution(
       }
 
       if (singlePlaceSolution.newMarking) {
-        console.warn(
-          'Unable to split the place into multiple places, because it has a defined marking.'
-        );
         return {
           ...checkPlaceAndReturnMarkingIfEquals(
             mergeAllDuplicatePlaces(singlePlaceSolution),
