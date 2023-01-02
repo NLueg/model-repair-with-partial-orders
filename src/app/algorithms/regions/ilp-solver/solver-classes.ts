@@ -32,7 +32,7 @@ export interface SolutionVariable {
 
 export type SolutionType =
   | 'unbounded'
-  | 'sameIncming'
+  | 'sameIncoming'
   | 'sameOutgoing'
   | 'arcsSame';
 

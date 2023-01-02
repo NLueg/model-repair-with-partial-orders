@@ -5,7 +5,7 @@
       aria-label="More info icon"
       fontIcon="info"
     ></mat-icon>
-    {{ infoHeader }}
+    <span [innerHTML]="infoHeader"> </span>
   </div>
   <ng-container *ngIf="shownTextsForSolutions.length > 0; else emptyText">
     <button
@@ -14,9 +14,8 @@
       (click)="useSolution(model.solution)"
       [matTooltip]="model.text.tooltip"
       matTooltipClass="repair-menu-tooltip"
-    >
-      {{ model.text.label }}
-    </button>
+      [innerHTML]="model.text.label"
+    ></button>
   </ng-container>
 
   <ng-template #emptyText>

@@ -19,7 +19,11 @@
     text-align: left;
     white-space: normal;
     line-height: normal;
-    padding: var(--spaces-x2);
+    padding: var(--spaces) var(--spaces-x2);
+  }
+
+  button[mat-button] {
+    font-weight: normal;
   }
 
   .no-solution-text {

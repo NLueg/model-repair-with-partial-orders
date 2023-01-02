@@ -1,8 +1,10 @@
 import { OverlayRef } from '@angular/cdk/overlay';
 import { Component, OnInit } from '@angular/core';
 
+import { SolutionType } from '../../algorithms/regions/ilp-solver/solver-classes';
 import {
   AutoRepair,
+  AutoRepairWithSolutionType,
   SinglePlaceParameter,
 } from '../../algorithms/regions/parse-solutions.fn';
 import { NetCommandService } from '../../services/repair/net-command.service';
@@ -35,7 +37,11 @@ export class RepairMenuComponent implements OnInit {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(this.placeSolution.invalidTraceCount / this.partialOrderCount);
-    this.infoHeader = `The place cannot fire for ${this.placeSolution.invalidTraceCount} (${percentage}) traces. Choose a solution to repair the place:`;
+    this.infoHeader = `The place cannot fire for ${this.placeSolution.invalidTraceCount} (${percentage}) traces.<br/>`;
+
+    if (this.placeSolution.missingTokens) {
+      this.infoHeader += `The place has ${this.placeSolution.missingTokens} missing tokens.<br/>`;
+    }
 
     const solutions = this.placeSolution.solutions;
     if (!solutions) {
@@ -46,6 +52,8 @@ export class RepairMenuComponent implements OnInit {
         solution,
       }));
     }
+
+    this.infoHeader += 'Choose a solution to repair the place:';
   }
 
   useSolution(solution: AutoRepair): void {
@@ -55,10 +63,14 @@ export class RepairMenuComponent implements OnInit {
   }
 }
 
-function generateTextForAutoRepair(solution: AutoRepair): LabelWithTooltip {
+function generateTextForAutoRepair(
+  solution: AutoRepairWithSolutionType
+): LabelWithTooltip {
+  const baseText = generateBaseText(solution.repairType);
+
   if (solution.type === 'replace-place') {
     return {
-      label: `Replace place with ${solution.places.length}`,
+      label: `${baseText}Replace place with ${solution.places.length}`,
       tooltip: solution.places
         .map(
           (place, index) => `
@@ -70,7 +82,7 @@ function generateTextForAutoRepair(solution: AutoRepair): LabelWithTooltip {
   }
   if (solution.type === 'marking') {
     return {
-      label: `Change marking to ${solution.newMarking}`,
+      label: `${baseText}Change marking to ${solution.newMarking}`,
       tooltip: `Change marking to ${solution.newMarking}`,
     };
   }
@@ -79,7 +91,9 @@ function generateTextForAutoRepair(solution: AutoRepair): LabelWithTooltip {
 }
 
 function handleModifyPlace(
-  solution: { type: 'modify-place' } & SinglePlaceParameter
+  solution: { type: 'modify-place' } & SinglePlaceParameter & {
+      repairType: SolutionType;
+    }
 ): LabelWithTooltip {
   const incomingText =
     solution.incoming.length > 0 ? `${solution.incoming.length} incoming` : '';
@@ -91,9 +105,23 @@ function handleModifyPlace(
     : '';
 
   return {
-    label: `Update place to have ${incomingText}${andText}${outgoingText} arcs${markingText}`,
+    label: `${generateBaseText(
+      solution.repairType
+    )}Update place to have ${incomingText}${andText}${outgoingText} arcs${markingText}`,
     tooltip: tooltipForSinglePlaceParameter(solution),
   };
+}
+
+const solutionTypeToText: { [key in SolutionType]: string } = {
+  arcsSame: 'Same arcs',
+  sameIncoming: 'Same incoming weights',
+  sameOutgoing: 'Same outgoing weights',
+  unbounded: 'New place',
+};
+
+function generateBaseText(type: SolutionType): string {
+  const text = solutionTypeToText[type];
+  return `<b>${text}</b>:<br/>`;
 }
 
 function tooltipForSinglePlaceParameter(

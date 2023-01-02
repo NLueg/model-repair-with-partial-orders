@@ -12,7 +12,7 @@ import {
 import { RepairService } from '../../services/repair/repair.service';
 import { IlpSolver } from './ilp-solver/ilp-solver';
 import { ProblemSolution, VariableType } from './ilp-solver/solver-classes';
-import { parseSolution } from './parse-solutions.fn';
+import { AutoRepairForSinglePlace, parseSolution } from './parse-solutions.fn';
 
 const createGlpk: Promise<() => Promise<GLPK>> = import('glpk.js').then(
   (glpk) => (glpk as any).default
@@ -42,13 +42,27 @@ export class PetriNetRegionsService {
           invalidPlaceList.map((place) =>
             solver.computeSolutions(place).pipe(
               map((solutions) => {
+                const existingPlace = petriNet.places.find(
+                  (p) => p.id === place
+                );
+
+                const parsedSolutions = parseSolution(
+                  this.handleSolutions(solutions, solver),
+                  existingPlace
+                );
+
+                const newTokens = parsedSolutions.find(
+                  (solution) => solution.type === 'marking'
+                ) as AutoRepairForSinglePlace;
+                const missingTokens =
+                  existingPlace && newTokens?.newMarking
+                    ? newTokens.newMarking - existingPlace.marking
+                    : undefined;
+
                 const placeSolution: PlaceSolution = {
                   place,
-                  // TODO: Generate multiple solutions
-                  solutions: parseSolution(
-                    this.handleSolutions(solutions, solver),
-                    petriNet.places.find((p) => p.id === place)
-                  ),
+                  solutions: parsedSolutions,
+                  missingTokens: missingTokens,
                   invalidTraceCount: invalidPlaces[place],
                 };
                 return placeSolution;

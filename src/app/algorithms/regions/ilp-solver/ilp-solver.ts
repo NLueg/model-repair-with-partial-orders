@@ -8,11 +8,11 @@ import {
   of,
   ReplaySubject,
   switchMap,
-  tap,
 } from 'rxjs';
 
 import { PartialOrder } from '../../../classes/diagram/partial-order';
 import { PetriNet } from '../../../classes/diagram/petri-net';
+import { Place } from '../../../classes/diagram/place';
 import { EventItem } from '../../../classes/diagram/transition';
 import { arraify } from '../arraify';
 import { ConstraintsWithNewVariables } from './constraints-with-new-variables';
@@ -76,6 +76,10 @@ export class IlpSolver {
     this.pairs = this._directlyFollowsExtractor.oneWayDirectlyFollows();
   }
 
+  /**
+   * Generates a place for every invalid place in the net.
+   * @param invalidPlaceId
+   */
   computeSolutions(invalidPlaceId: string): Observable<ProblemSolution[]> {
     const validPlaces = this.petriNet.places.filter(
       (p) => p.id !== invalidPlaceId
@@ -125,85 +129,75 @@ export class IlpSolver {
               solution: solution.solution,
             };
 
-            if (solution.solution.result.status === Solution.NO_SOLUTION) {
+            if (
+              !invalidPlace ||
+              solution.solution.result.status === Solution.NO_SOLUTION
+            ) {
               return of([unboundSolution]);
             }
 
-            return combineLatest([
-              this.solveILP(
-                this.populateIlpBySameIncomingWeights(
+            const ilpsToSolve = [
+              {
+                type: 'sameIncoming' as SolutionType,
+                ilp: this.populateIlpBySameIncomingWeights(
                   problem.baseIlp,
                   problem.baseConstraints,
-                  problem.pair
-                )
-              ).pipe(
-                map((solution) => ({
-                  ...solution,
-                  type: 'sameIncming' as SolutionType,
-                }))
-              ),
-              this.solveILP(
-                this.populateIlpBySameOutgoingWeights(
+                  problem.pair,
+                  invalidPlace
+                ),
+              },
+              {
+                type: 'sameOutgoing' as SolutionType,
+                ilp: this.populateIlpBySameOutgoingWeights(
                   problem.baseIlp,
                   problem.baseConstraints,
-                  problem.pair
-                )
-              ).pipe(
-                map((solution) => ({
-                  ...solution,
-                  type: 'sameOutgoing' as SolutionType,
-                }))
-              ),
-              this.solveILP(
-                this.populateIlpBySameWeights(
+                  problem.pair,
+                  invalidPlace
+                ),
+              },
+              {
+                type: 'arcsSame' as SolutionType,
+                ilp: this.populateIlpBySameWeights(
                   problem.baseIlp,
                   problem.baseConstraints,
-                  problem.pair
-                )
-              ).pipe(
-                map((solution) => ({
-                  ...solution,
-                  type: 'arcsSame' as SolutionType,
-                }))
-              ),
-            ]).pipe(
-              map((solutions) => {
-                const foundSolutions = [unboundSolution, ...solutions];
+                  problem.pair,
+                  invalidPlace
+                ),
+              },
+            ].filter((ilp) => !!ilp.ilp) as {
+              type: SolutionType;
+              ilp: LP;
+            }[];
 
-                // Removes duplicate solutions
-                return foundSolutions.filter((value, index) => {
-                  const _value = JSON.stringify(value.solution.result.vars);
-                  return (
-                    index ===
-                    foundSolutions.findIndex((obj) => {
-                      return (
-                        JSON.stringify(obj.solution.result.vars) === _value
-                      );
-                    })
-                  );
-                });
-              })
-            );
+            if (!ilpsToSolve.length) {
+              return of([unboundSolution]);
+            }
+
+            return combineLatest(
+              ilpsToSolve.map((ilp) =>
+                this.solveILP(ilp.ilp).pipe(
+                  map((solution) => ({
+                    ...solution,
+                    type: ilp.type,
+                  }))
+                )
+              )
+            ).pipe(map((solutions) => [unboundSolution, ...solutions]));
+          }),
+          map((foundSolutions) => {
+            // Removes duplicate solutions
+            return foundSolutions.filter((value, index) => {
+              const _value = JSON.stringify(value.solution.result.vars);
+              return (
+                index ===
+                foundSolutions.findIndex((obj) => {
+                  return JSON.stringify(obj.solution.result.vars) === _value;
+                })
+              );
+            });
           })
         )
-      ),
-      tap((solution) => {
-        console.log(
-          'Solutions',
-          JSON.stringify(
-            solution.map((solution) => solution),
-            null,
-            2
-          )
-        );
-        console.log('Variable ingoing mapping:', this._labelVariableMapIngoing);
-        console.log(
-          'Variable outgoing mapping:',
-          this._labelVariableMapOutgoing
-        );
-        console.log('PO Variable names:', this._poVariableNames);
-        console.log('All variables:', this._allVariables);
-      })
+      )
     );
   }
 
@@ -244,37 +238,7 @@ export class IlpSolver {
     return result;
   }
 
-  // TODO: Implement me
-  private populateIlpBySameIncomingWeights(
-    baseIlp: LP,
-    baseConstraints: Array<SubjectTo>,
-    causalPair: [string | undefined, string]
-  ): LP {
-    const result = clonedeep(baseIlp);
-    return this.populateIlpByCausalPairs(result, baseConstraints, causalPair);
-  }
-
-  // TODO: Implement me
-  private populateIlpBySameOutgoingWeights(
-    baseIlp: LP,
-    baseConstraints: Array<SubjectTo>,
-    causalPair: [string | undefined, string]
-  ): LP {
-    const result = clonedeep(baseIlp);
-    return this.populateIlpByCausalPairs(result, baseConstraints, causalPair);
-  }
-
-  // TODO: Implement me
-  private populateIlpBySameWeights(
-    baseIlp: LP,
-    baseConstraints: Array<SubjectTo>,
-    causalPair: [string | undefined, string]
-  ): LP {
-    const result = clonedeep(baseIlp);
-    return this.populateIlpByCausalPairs(result, baseConstraints, causalPair);
-  }
-
-  protected solveILP(ilp: LP): Observable<ProblemSolutionWithoutType> {
+  private solveILP(ilp: LP): Observable<ProblemSolutionWithoutType> {
     const result$ = new ReplaySubject<ProblemSolutionWithoutType>(1);
 
     const result = this.glpk.solve(ilp, {
@@ -404,7 +368,152 @@ export class IlpSolver {
     return this.equal(variables, 0).constraints;
   }
 
-  public getInverseVariableMapping(variable: string): SolutionVariable | null {
+  /**
+   * Generates ILP with the same incoming weights constraint.
+   * @private
+   */
+  private populateIlpBySameIncomingWeights(
+    baseIlp: LP,
+    baseConstraints: Array<SubjectTo>,
+    causalPair: [string | undefined, string],
+    existingPlace: Place
+  ): LP | null {
+    const result = clonedeep(baseIlp);
+    result.subjectTo = [...baseConstraints];
+
+    if (!causalPair[0]) {
+      return null;
+    }
+
+    const weight = existingPlace.incomingArcs.find(
+      (arc) => arc.source === causalPair[0]
+    )?.weight;
+    if (!weight) {
+      return null;
+    }
+    result.subjectTo = result.subjectTo.concat(
+      this.equal(
+        this.variable(
+          this.transitionVariableName(
+            causalPair[0],
+            VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+          )
+        ),
+        weight
+      ).constraints
+    );
+    result.subjectTo = result.subjectTo.concat(
+      this.greaterEqualThan(
+        this.variable(
+          this.transitionVariableName(
+            causalPair[1],
+            VariableName.INGOING_ARC_WEIGHT_PREFIX
+          )
+        ),
+        1
+      ).constraints
+    );
+
+    return result;
+  }
+
+  private populateIlpBySameOutgoingWeights(
+    baseIlp: LP,
+    baseConstraints: Array<SubjectTo>,
+    causalPair: [string | undefined, string],
+    existingPlace: Place
+  ): LP | null {
+    const result = clonedeep(baseIlp);
+    result.subjectTo = [...baseConstraints];
+
+    const weight = existingPlace.outgoingArcs.find(
+      (arc) => arc.target === causalPair[1]
+    )?.weight;
+    if (!weight) {
+      return null;
+    }
+
+    if (causalPair[0]) {
+      result.subjectTo = result.subjectTo.concat(
+        this.greaterEqualThan(
+          this.variable(
+            this.transitionVariableName(
+              causalPair[0],
+              VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+            )
+          ),
+          1
+        ).constraints
+      );
+    }
+
+    result.subjectTo = result.subjectTo.concat(
+      this.greaterEqualThan(
+        this.variable(
+          this.transitionVariableName(
+            causalPair[1],
+            VariableName.INGOING_ARC_WEIGHT_PREFIX
+          )
+        ),
+        weight
+      ).constraints
+    );
+
+    return result;
+  }
+
+  private populateIlpBySameWeights(
+    baseIlp: LP,
+    baseConstraints: Array<SubjectTo>,
+    causalPair: [string | undefined, string],
+    existingPlace: Place
+  ): LP | null {
+    const result = clonedeep(baseIlp);
+    result.subjectTo = [...baseConstraints];
+
+    if (!causalPair[0]) {
+      return null;
+    }
+
+    const incomingWeight = existingPlace.incomingArcs.find(
+      (arc) => arc.source === causalPair[0]
+    )?.weight;
+
+    const outgoingWeight = existingPlace.outgoingArcs.find(
+      (arc) => arc.target === causalPair[1]
+    )?.weight;
+    if (!incomingWeight || !outgoingWeight) {
+      return null;
+    }
+
+    result.subjectTo = result.subjectTo.concat(
+      this.greaterEqualThan(
+        this.variable(
+          this.transitionVariableName(
+            causalPair[0],
+            VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+          )
+        ),
+        incomingWeight
+      ).constraints
+    );
+
+    result.subjectTo = result.subjectTo.concat(
+      this.greaterEqualThan(
+        this.variable(
+          this.transitionVariableName(
+            causalPair[1],
+            VariableName.INGOING_ARC_WEIGHT_PREFIX
+          )
+        ),
+        outgoingWeight
+      ).constraints
+    );
+
+    return result;
+  }
+
+  getInverseVariableMapping(variable: string): SolutionVariable | null {
     if (variable === VariableName.INITIAL_MARKING) {
       return {
         label: VariableName.INITIAL_MARKING,
