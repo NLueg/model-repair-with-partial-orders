@@ -5,7 +5,7 @@ b b
 c c
 d d
 .places
-p1 1
+p1 0
 p2 0
 p3 0
 .arcs

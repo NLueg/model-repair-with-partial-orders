@@ -213,15 +213,24 @@ export class IlpSolver {
           }));
       }),
       map((foundSolutions) => {
-        return foundSolutions.filter((value, index) => {
-          const _value = JSON.stringify(value.solutions);
-          return (
-            index ===
-            foundSolutions.findIndex((obj) => {
-              return JSON.stringify(obj.solutions) === _value;
-            })
-          );
-        });
+        const typeOrder: SolutionType[] = [
+          'arcsSame',
+          'sameIncoming',
+          'sameOutgoing',
+          'unbounded',
+        ];
+
+        return foundSolutions
+          .sort((a, b) => typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type))
+          .filter((value, index) => {
+            const _value = JSON.stringify(value.solutions);
+            return (
+              index ===
+              foundSolutions.findIndex((obj) => {
+                return JSON.stringify(obj.solutions) === _value;
+              })
+            );
+          });
       })
     );
   }
