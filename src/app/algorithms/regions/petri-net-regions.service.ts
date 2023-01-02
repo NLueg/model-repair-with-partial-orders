@@ -88,34 +88,36 @@ export class PetriNetRegionsService {
   ): ParsableSolutionsPerType[] {
     return solutions.map((solution) => ({
       type: solution.type,
-      solutionParts: Object.entries(solution.solution.result.vars)
-        .filter(
-          ([variable, value]) =>
-            value !== 0 && solver.getInverseVariableMapping(variable) !== null
-        )
-        .map(([variable, value]) => {
-          const decoded = solver.getInverseVariableMapping(variable)!;
+      solutionParts: solution.solutions.flatMap((singleSolution) =>
+        Object.entries(singleSolution)
+          .filter(
+            ([variable, value]) =>
+              value != 0 && solver.getInverseVariableMapping(variable) !== null
+          )
+          .map(([variable, value]) => {
+            const decoded = solver.getInverseVariableMapping(variable)!;
 
-          switch (decoded.type) {
-            case VariableType.INITIAL_MARKING:
-              return {
-                type: 'increase-marking',
-                newMarking: value,
-              } as ParsableSolution;
-            case VariableType.INCOMING_TRANSITION_WEIGHT:
-              return {
-                type: 'incoming-arc',
-                incoming: decoded.label,
-                marking: value,
-              } as ParsableSolution;
-            case VariableType.OUTGOING_TRANSITION_WEIGHT:
-              return {
-                type: 'outgoing-arc',
-                outgoing: decoded.label,
-                marking: value,
-              } as ParsableSolution;
-          }
-        }),
+            switch (decoded.type) {
+              case VariableType.INITIAL_MARKING:
+                return {
+                  type: 'increase-marking',
+                  newMarking: value,
+                } as ParsableSolution;
+              case VariableType.INCOMING_TRANSITION_WEIGHT:
+                return {
+                  type: 'incoming-arc',
+                  incoming: decoded.label,
+                  marking: value,
+                } as ParsableSolution;
+              case VariableType.OUTGOING_TRANSITION_WEIGHT:
+                return {
+                  type: 'outgoing-arc',
+                  outgoing: decoded.label,
+                  marking: value,
+                } as ParsableSolution;
+            }
+          })
+      ),
     }));
   }
 }

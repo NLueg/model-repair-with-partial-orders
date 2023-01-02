@@ -2,12 +2,14 @@ import { GLPK, LP, Result } from 'glpk.js';
 import clonedeep from 'lodash.clonedeep';
 import {
   combineLatest,
+  concatMap,
   from,
   map,
   Observable,
   of,
   ReplaySubject,
   switchMap,
+  toArray,
 } from 'rxjs';
 
 import { PartialOrder } from '../../../classes/diagram/partial-order';
@@ -27,6 +29,7 @@ import {
   Variable,
   VariableName,
   VariableType,
+  Vars,
 } from './solver-classes';
 import { Constraint, Goal, MessageLevel, Solution } from './solver-constants';
 
@@ -114,7 +117,7 @@ export class IlpSolver {
     }));
 
     return from(problems).pipe(
-      switchMap((problem) =>
+      concatMap((problem) =>
         this.solveILP(
           this.populateIlpByCausalPairs(
             problem.baseIlp,
@@ -183,21 +186,43 @@ export class IlpSolver {
                 )
               )
             ).pipe(map((solutions) => [unboundSolution, ...solutions]));
-          }),
-          map((foundSolutions) => {
-            // Removes duplicate solutions
-            return foundSolutions.filter((value, index) => {
-              const _value = JSON.stringify(value.solution.result.vars);
-              return (
-                index ===
-                foundSolutions.findIndex((obj) => {
-                  return JSON.stringify(obj.solution.result.vars) === _value;
-                })
-              );
-            });
           })
         )
-      )
+      ),
+      toArray(),
+      map((placeSolutions) => {
+        const typeToSolution: { [key in SolutionType]: Vars[] } = {
+          unbounded: [],
+          sameOutgoing: [],
+          sameIncoming: [],
+          arcsSame: [],
+        };
+        placeSolutions.forEach((placeSolution) => {
+          placeSolution.forEach((solution) => {
+            if (solution.solution.result.status !== Solution.NO_SOLUTION) {
+              typeToSolution[solution.type].push(solution.solution.result.vars);
+            }
+          });
+        });
+
+        return Object.entries(typeToSolution)
+          .filter(([_, solutions]) => solutions.length > 0)
+          .map(([type, solutions]) => ({
+            type: type as SolutionType,
+            solutions,
+          }));
+      }),
+      map((foundSolutions) => {
+        return foundSolutions.filter((value, index) => {
+          const _value = JSON.stringify(value.solutions);
+          return (
+            index ===
+            foundSolutions.findIndex((obj) => {
+              return JSON.stringify(obj.solutions) === _value;
+            })
+          );
+        });
+      })
     );
   }
 

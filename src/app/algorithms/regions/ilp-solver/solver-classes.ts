@@ -41,8 +41,11 @@ export interface ProblemSolutionWithoutType {
   solution: Result;
 }
 
-export interface ProblemSolution extends ProblemSolutionWithoutType {
+export type Vars = { [key: string]: number };
+
+export interface ProblemSolution {
   type: SolutionType;
+  solutions: Vars[];
 }
 
 export enum VariableName {
