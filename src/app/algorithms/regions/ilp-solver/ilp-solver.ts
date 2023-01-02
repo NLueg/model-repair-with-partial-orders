@@ -1,5 +1,17 @@
 import { GLPK, LP, Result } from 'glpk.js';
-import { concatMap, from, Observable, ReplaySubject, tap, toArray } from 'rxjs';
+import clonedeep from 'lodash.clonedeep';
+import {
+  combineLatest,
+  concatMap,
+  from,
+  map,
+  Observable,
+  of,
+  ReplaySubject,
+  switchMap,
+  tap,
+  toArray,
+} from 'rxjs';
 
 import { PartialOrder } from '../../../classes/diagram/partial-order';
 import { PetriNet } from '../../../classes/diagram/petri-net';
@@ -8,7 +20,7 @@ import { arraify } from '../arraify';
 import { ConstraintsWithNewVariables } from './constraints-with-new-variables';
 import { DirectlyFollowsExtractor } from './directly-follows-extractor';
 import { Bound, SubjectTo, Variable } from './solver-classes';
-import { Constraint, Goal, MessageLevel } from './solver-constants';
+import { Constraint, Goal, MessageLevel, Solution } from './solver-constants';
 
 export enum VariableType {
   INITIAL_MARKING,
@@ -21,9 +33,19 @@ export interface SolutionVariable {
   type: VariableType;
 }
 
-export interface ProblemSolution {
+export type SolutionType =
+  | 'unbounded'
+  | 'sameIncming'
+  | 'sameOutgoing'
+  | 'arcsSame';
+
+export interface ProblemSolutionWithoutType {
   ilp: LP;
   solution: Result;
+}
+
+export interface ProblemSolution extends ProblemSolutionWithoutType {
+  type: SolutionType;
 }
 
 export enum VariableName {
@@ -78,7 +100,7 @@ export class IlpSolver {
     this.pairs = this._directlyFollowsExtractor.oneWayDirectlyFollows();
   }
 
-  computeSolutions(invalidPlaceId: string): Observable<ProblemSolution[]> {
+  computeSolutions(invalidPlaceId: string): Observable<ProblemSolution[][]> {
     const validPlaces = this.petriNet.places.filter(
       (p) => p.id !== invalidPlaceId
     );
@@ -111,18 +133,70 @@ export class IlpSolver {
       pair,
     }));
 
+    // TODO: Fix this!
     return from(problems).pipe(
       concatMap((problem) => {
         return this.solveILP(
-          this.populateIlp(
+          this.populateIlpByCausalPairs(
             problem.baseIlp,
             problem.baseConstraints,
             problem.pair
           )
+        ).pipe(
+          switchMap((solution) => {
+            const unboundSolution = {
+              type: 'unbounded' as SolutionType,
+              ilp: solution.ilp,
+              solution: solution.solution,
+            };
+
+            if (solution.solution.result.status === Solution.NO_SOLUTION) {
+              return of([unboundSolution]);
+            }
+
+            return combineLatest([
+              this.solveILP(
+                this.populateIlpBySameIncomingWeights(
+                  problem.baseIlp,
+                  problem.baseConstraints,
+                  problem.pair
+                )
+              ).pipe(
+                map((solution) => ({
+                  ...solution,
+                  type: 'sameIncming' as SolutionType,
+                }))
+              ),
+              this.solveILP(
+                this.populateIlpBySameOutgoingWeights(
+                  problem.baseIlp,
+                  problem.baseConstraints,
+                  problem.pair
+                )
+              ).pipe(
+                map((solution) => ({
+                  ...solution,
+                  type: 'sameOutgoing' as SolutionType,
+                }))
+              ),
+              this.solveILP(
+                this.populateIlpBySameWeights(
+                  problem.baseIlp,
+                  problem.baseConstraints,
+                  problem.pair
+                )
+              ).pipe(
+                map((solution) => ({
+                  ...solution,
+                  type: 'arcsSame' as SolutionType,
+                }))
+              ),
+            ]).pipe(map((solutions) => [unboundSolution, ...solutions]));
+          })
         );
       }),
       toArray(),
-      tap((solution) => {
+      tap(() => {
         console.log('Variable ingoing mapping:', this._labelVariableMapIngoing);
         console.log(
           'Variable outgoing mapping:',
@@ -133,7 +207,7 @@ export class IlpSolver {
     );
   }
 
-  private populateIlp(
+  private populateIlpByCausalPairs(
     baseIlp: LP,
     baseConstraints: Array<SubjectTo>,
     causalPair: [string | undefined, string]
@@ -141,7 +215,6 @@ export class IlpSolver {
     const result = Object.assign({}, baseIlp);
     result.subjectTo = [...baseConstraints];
 
-    // TODO: Include arc weights!
     if (causalPair[0]) {
       result.subjectTo = result.subjectTo.concat(
         this.greaterEqualThan(
@@ -170,8 +243,38 @@ export class IlpSolver {
     return result;
   }
 
-  protected solveILP(ilp: LP): Observable<ProblemSolution> {
-    const result$ = new ReplaySubject<ProblemSolution>(1);
+  // TODO: Implement me
+  private populateIlpBySameIncomingWeights(
+    baseIlp: LP,
+    baseConstraints: Array<SubjectTo>,
+    causalPair: [string | undefined, string]
+  ): LP {
+    const result = clonedeep(baseIlp);
+    return this.populateIlpByCausalPairs(result, baseConstraints, causalPair);
+  }
+
+  // TODO: Implement me
+  private populateIlpBySameOutgoingWeights(
+    baseIlp: LP,
+    baseConstraints: Array<SubjectTo>,
+    causalPair: [string | undefined, string]
+  ): LP {
+    const result = clonedeep(baseIlp);
+    return this.populateIlpByCausalPairs(result, baseConstraints, causalPair);
+  }
+
+  // TODO: Implement me
+  private populateIlpBySameWeights(
+    baseIlp: LP,
+    baseConstraints: Array<SubjectTo>,
+    causalPair: [string | undefined, string]
+  ): LP {
+    const result = clonedeep(baseIlp);
+    return this.populateIlpByCausalPairs(result, baseConstraints, causalPair);
+  }
+
+  protected solveILP(ilp: LP): Observable<ProblemSolutionWithoutType> {
+    const result$ = new ReplaySubject<ProblemSolutionWithoutType>(1);
 
     const result = this.glpk.solve(ilp, {
       msglev: MessageLevel.ERROR,
