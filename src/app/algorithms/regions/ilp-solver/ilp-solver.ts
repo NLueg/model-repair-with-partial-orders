@@ -2,7 +2,6 @@ import { GLPK, LP, Result } from 'glpk.js';
 import clonedeep from 'lodash.clonedeep';
 import {
   combineLatest,
-  concatMap,
   from,
   map,
   Observable,
@@ -10,7 +9,6 @@ import {
   ReplaySubject,
   switchMap,
   tap,
-  toArray,
 } from 'rxjs';
 
 import { PartialOrder } from '../../../classes/diagram/partial-order';
@@ -19,40 +17,18 @@ import { EventItem } from '../../../classes/diagram/transition';
 import { arraify } from '../arraify';
 import { ConstraintsWithNewVariables } from './constraints-with-new-variables';
 import { DirectlyFollowsExtractor } from './directly-follows-extractor';
-import { Bound, SubjectTo, Variable } from './solver-classes';
+import {
+  Bound,
+  ProblemSolution,
+  ProblemSolutionWithoutType,
+  SolutionType,
+  SolutionVariable,
+  SubjectTo,
+  Variable,
+  VariableName,
+  VariableType,
+} from './solver-classes';
 import { Constraint, Goal, MessageLevel, Solution } from './solver-constants';
-
-export enum VariableType {
-  INITIAL_MARKING,
-  OUTGOING_TRANSITION_WEIGHT,
-  INCOMING_TRANSITION_WEIGHT,
-}
-
-export interface SolutionVariable {
-  label: string;
-  type: VariableType;
-}
-
-export type SolutionType =
-  | 'unbounded'
-  | 'sameIncming'
-  | 'sameOutgoing'
-  | 'arcsSame';
-
-export interface ProblemSolutionWithoutType {
-  ilp: LP;
-  solution: Result;
-}
-
-export interface ProblemSolution extends ProblemSolutionWithoutType {
-  type: SolutionType;
-}
-
-export enum VariableName {
-  INITIAL_MARKING = 'm0',
-  OUTGOING_ARC_WEIGHT_PREFIX = 'out',
-  INGOING_ARC_WEIGHT_PREFIX = 'in',
-}
 
 export class IlpSolver {
   // k and K defined as per https://blog.adamfurmanek.pl/2015/09/12/ilp-part-4/
@@ -100,7 +76,7 @@ export class IlpSolver {
     this.pairs = this._directlyFollowsExtractor.oneWayDirectlyFollows();
   }
 
-  computeSolutions(invalidPlaceId: string): Observable<ProblemSolution[][]> {
+  computeSolutions(invalidPlaceId: string): Observable<ProblemSolution[]> {
     const validPlaces = this.petriNet.places.filter(
       (p) => p.id !== invalidPlaceId
     );
@@ -133,10 +109,9 @@ export class IlpSolver {
       pair,
     }));
 
-    // TODO: Fix this!
     return from(problems).pipe(
-      concatMap((problem) => {
-        return this.solveILP(
+      switchMap((problem) =>
+        this.solveILP(
           this.populateIlpByCausalPairs(
             problem.baseIlp,
             problem.baseConstraints,
@@ -191,18 +166,43 @@ export class IlpSolver {
                   type: 'arcsSame' as SolutionType,
                 }))
               ),
-            ]).pipe(map((solutions) => [unboundSolution, ...solutions]));
+            ]).pipe(
+              map((solutions) => {
+                const foundSolutions = [unboundSolution, ...solutions];
+
+                // Removes duplicate solutions
+                return foundSolutions.filter((value, index) => {
+                  const _value = JSON.stringify(value.solution.result.vars);
+                  return (
+                    index ===
+                    foundSolutions.findIndex((obj) => {
+                      return (
+                        JSON.stringify(obj.solution.result.vars) === _value
+                      );
+                    })
+                  );
+                });
+              })
+            );
           })
+        )
+      ),
+      tap((solution) => {
+        console.log(
+          'Solutions',
+          JSON.stringify(
+            solution.map((solution) => solution),
+            null,
+            2
+          )
         );
-      }),
-      toArray(),
-      tap(() => {
         console.log('Variable ingoing mapping:', this._labelVariableMapIngoing);
         console.log(
           'Variable outgoing mapping:',
           this._labelVariableMapOutgoing
         );
         console.log('PO Variable names:', this._poVariableNames);
+        console.log('All variables:', this._allVariables);
       })
     );
   }
@@ -240,6 +240,7 @@ export class IlpSolver {
         1
       ).constraints
     );
+
     return result;
   }
 
@@ -311,25 +312,24 @@ export class IlpSolver {
   }
 
   private setUpBaseIlp(): LP {
-    const goalVariables = Array.from(this._allVariables).concat(
-      VariableName.INITIAL_MARKING
-    );
+    const generals = Array.from(this._poVariableNames);
+    generals.push(VariableName.INITIAL_MARKING);
 
-    const vars = Array.from(this._poVariableNames);
-    vars.push(VariableName.INITIAL_MARKING);
+    const allVariables = Array.from(this._allVariables);
+    allVariables.push(VariableName.INITIAL_MARKING);
 
     return {
       name: 'ilp',
       objective: {
         name: 'goal',
         direction: Goal.MINIMUM,
-        vars: vars.map((v) => {
+        vars: allVariables.map((v) => {
           return this.variable(v, 1);
         }),
       },
       subjectTo: [],
-      binaries: goalVariables,
-      generals: Array.from(this._poVariableNames),
+      // General variables
+      generals,
     };
   }
 

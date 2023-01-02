@@ -6,14 +6,12 @@ import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
 import {
   ParsableSolution,
+  ParsableSolutionsPerType,
   PlaceSolution,
 } from '../../services/repair/repair.model';
 import { RepairService } from '../../services/repair/repair.service';
-import {
-  IlpSolver,
-  ProblemSolution,
-  VariableType,
-} from './ilp-solver/ilp-solver';
+import { IlpSolver } from './ilp-solver/ilp-solver';
+import { ProblemSolution, VariableType } from './ilp-solver/solver-classes';
 import { parseSolution } from './parse-solutions.fn';
 
 const createGlpk: Promise<() => Promise<GLPK>> = import('glpk.js').then(
@@ -73,9 +71,10 @@ export class PetriNetRegionsService {
   private handleSolutions(
     solutions: ProblemSolution[],
     solver: IlpSolver
-  ): ParsableSolution[] {
-    return solutions.flatMap((solution) =>
-      Object.entries(solution.solution.result.vars)
+  ): ParsableSolutionsPerType[] {
+    return solutions.map((solution) => ({
+      type: solution.type,
+      solutionParts: Object.entries(solution.solution.result.vars)
         .filter(
           ([variable, value]) =>
             value !== 0 && solver.getInverseVariableMapping(variable) !== null
@@ -88,21 +87,21 @@ export class PetriNetRegionsService {
               return {
                 type: 'increase-marking',
                 newMarking: value,
-              };
+              } as ParsableSolution;
             case VariableType.INCOMING_TRANSITION_WEIGHT:
               return {
                 type: 'incoming-arc',
                 incoming: decoded.label,
                 marking: value,
-              };
+              } as ParsableSolution;
             case VariableType.OUTGOING_TRANSITION_WEIGHT:
               return {
                 type: 'outgoing-arc',
                 outgoing: decoded.label,
                 marking: value,
-              };
+              } as ParsableSolution;
           }
-        })
-    );
+        }),
+    }));
   }
 }

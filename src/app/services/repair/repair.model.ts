@@ -1,4 +1,5 @@
-import { AutoRepair } from '../../algorithms/regions/parse-solutions.fn';
+import { SolutionType } from '../../algorithms/regions/ilp-solver/solver-classes';
+import { AutoRepairWithSolutionType } from '../../algorithms/regions/parse-solutions.fn';
 
 export type ParsableSolution =
   | {
@@ -16,9 +17,13 @@ export type ParsableSolution =
       marking: number;
     };
 
-// TODO: Make it possible to have multiple solutions
+export type ParsableSolutionsPerType = {
+  type: SolutionType;
+  solutionParts: ParsableSolution[];
+};
+
 export type PlaceSolution = {
   place: string;
-  solutions: AutoRepair | null;
+  solutions: AutoRepairWithSolutionType[];
   invalidTraceCount: number;
 };

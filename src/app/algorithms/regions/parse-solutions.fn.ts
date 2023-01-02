@@ -1,5 +1,9 @@
 import { Place } from '../../classes/diagram/place';
-import { ParsableSolution } from '../../services/repair/repair.model';
+import {
+  ParsableSolution,
+  ParsableSolutionsPerType,
+} from '../../services/repair/repair.model';
+import { SolutionType } from './ilp-solver/solver-classes';
 
 export type AutoRepairForSinglePlace =
   | {
@@ -19,6 +23,10 @@ export type AutoRepair =
       places: SinglePlaceParameter[];
     };
 
+export type AutoRepairWithSolutionType = AutoRepair & {
+  repairType: SolutionType;
+};
+
 export type SinglePlaceParameter = {
   newMarking?: number;
   incoming: ArcDefinition[];
@@ -28,103 +36,123 @@ export type SinglePlaceParameter = {
 type ArcDefinition = { transitionId: string; weight: number };
 
 export function parseSolution(
-  placeSolutions: ParsableSolution[],
+  placeSolutionList: ParsableSolutionsPerType[],
   existingPlace: Place | undefined
-): AutoRepair | null {
-  const singlePlaceSolution = getSinglePlaceSolution(placeSolutions);
+): AutoRepairWithSolutionType[] {
+  const returnList: (AutoRepairWithSolutionType | null)[] = placeSolutionList
+    .map((parsableSolutionsPerType) => {
+      const placeSolutions = parsableSolutionsPerType.solutionParts;
+      const singlePlaceSolution = getSinglePlaceSolution(placeSolutions);
 
-  if (!singlePlaceSolution || singlePlaceSolution.type === 'marking') {
-    return singlePlaceSolution;
-  }
-
-  if (singlePlaceSolution.newMarking) {
-    console.warn(
-      'Unable to split the place into multiple places, because it has a defined marking.'
-    );
-    return checkPlaceAndReturnMarkingIfEquals(
-      mergeAllDuplicatePlaces(singlePlaceSolution),
-      existingPlace
-    );
-  }
-
-  const newPlaces: SinglePlaceParameter[] = [];
-
-  const incomingAllTheSame =
-    singlePlaceSolution.incoming.length > 1
-      ? singlePlaceSolution.incoming.every(
-          (incoming) =>
-            incoming.transitionId ===
-            singlePlaceSolution.incoming[0].transitionId
-        )
-      : false;
-  if (
-    incomingAllTheSame &&
-    singlePlaceSolution.outgoing.length >= singlePlaceSolution.incoming.length
-  ) {
-    const incoming = [...singlePlaceSolution.incoming];
-    const outgoing = [...singlePlaceSolution.outgoing].reverse();
-
-    for (let index = 0; index < incoming.length; index++) {
-      const incomingArc = incoming[index];
-      const outgoingArc = outgoing.pop()!;
-      newPlaces.push({
-        incoming: [incomingArc],
-        outgoing: [outgoingArc],
-      });
-    }
-    newPlaces[newPlaces.length - 1].outgoing.concat(outgoing);
-  } else {
-    const outgoingAllTheSame =
-      singlePlaceSolution.outgoing.length > 1
-        ? singlePlaceSolution.outgoing.every(
-            (incoming) =>
-              incoming.transitionId ===
-              singlePlaceSolution.outgoing[0].transitionId
-          )
-        : false;
-
-    if (
-      outgoingAllTheSame &&
-      singlePlaceSolution.incoming.length >= singlePlaceSolution.outgoing.length
-    ) {
-      const incoming = [...singlePlaceSolution.incoming].reverse();
-      const outgoing = [...singlePlaceSolution.outgoing];
-
-      for (let index = 0; index < outgoing.length; index++) {
-        const outgoingElement = outgoing[index];
-        const incomingElement = incoming.pop()!;
-        newPlaces.push({
-          outgoing: [outgoingElement],
-          incoming: [incomingElement],
-        });
+      if (!singlePlaceSolution || singlePlaceSolution.type === 'marking') {
+        return {
+          ...singlePlaceSolution,
+          repairType: parsableSolutionsPerType.type,
+        } as AutoRepairWithSolutionType;
       }
-      newPlaces[newPlaces.length - 1].outgoing.concat(outgoing);
-    } else {
-      newPlaces.push({
-        ...singlePlaceSolution,
-      });
-    }
-  }
 
-  if (newPlaces.length === 0) {
-    return null;
-  }
+      if (singlePlaceSolution.newMarking) {
+        console.warn(
+          'Unable to split the place into multiple places, because it has a defined marking.'
+        );
+        return {
+          ...checkPlaceAndReturnMarkingIfEquals(
+            mergeAllDuplicatePlaces(singlePlaceSolution),
+            existingPlace
+          ),
+          repairType: parsableSolutionsPerType.type,
+        };
+      }
 
-  if (newPlaces.length === 1) {
-    const repair: AutoRepairForSinglePlace = {
-      type: 'modify-place',
-      ...newPlaces[0],
-    };
-    return checkPlaceAndReturnMarkingIfEquals(
-      mergeAllDuplicatePlaces(repair),
-      existingPlace
-    );
-  }
+      const newPlaces: SinglePlaceParameter[] = [];
 
-  return {
-    type: 'replace-place',
-    places: newPlaces.map((newPlace) => mergeAllDuplicatePlaces(newPlace)),
-  };
+      const incomingAllTheSame =
+        singlePlaceSolution.incoming.length > 1
+          ? singlePlaceSolution.incoming.every(
+              (incoming) =>
+                incoming.transitionId ===
+                singlePlaceSolution.incoming[0].transitionId
+            )
+          : false;
+      if (
+        incomingAllTheSame &&
+        singlePlaceSolution.outgoing.length >=
+          singlePlaceSolution.incoming.length
+      ) {
+        const incoming = [...singlePlaceSolution.incoming];
+        const outgoing = [...singlePlaceSolution.outgoing].reverse();
+
+        for (let index = 0; index < incoming.length; index++) {
+          const incomingArc = incoming[index];
+          const outgoingArc = outgoing.pop()!;
+          newPlaces.push({
+            incoming: [incomingArc],
+            outgoing: [outgoingArc],
+          });
+        }
+        newPlaces[newPlaces.length - 1].outgoing.concat(outgoing);
+      } else {
+        const outgoingAllTheSame =
+          singlePlaceSolution.outgoing.length > 1
+            ? singlePlaceSolution.outgoing.every(
+                (incoming) =>
+                  incoming.transitionId ===
+                  singlePlaceSolution.outgoing[0].transitionId
+              )
+            : false;
+
+        if (
+          outgoingAllTheSame &&
+          singlePlaceSolution.incoming.length >=
+            singlePlaceSolution.outgoing.length
+        ) {
+          const incoming = [...singlePlaceSolution.incoming].reverse();
+          const outgoing = [...singlePlaceSolution.outgoing];
+
+          for (let index = 0; index < outgoing.length; index++) {
+            const outgoingElement = outgoing[index];
+            const incomingElement = incoming.pop()!;
+            newPlaces.push({
+              outgoing: [outgoingElement],
+              incoming: [incomingElement],
+            });
+          }
+          newPlaces[newPlaces.length - 1].outgoing.concat(outgoing);
+        } else {
+          newPlaces.push({
+            ...singlePlaceSolution,
+          });
+        }
+      }
+
+      if (newPlaces.length === 0) {
+        return null;
+      }
+
+      if (newPlaces.length === 1) {
+        const repair: AutoRepairForSinglePlace = {
+          ...newPlaces[0],
+          type: 'modify-place',
+        };
+        return {
+          ...checkPlaceAndReturnMarkingIfEquals(
+            mergeAllDuplicatePlaces(repair),
+            existingPlace
+          ),
+          repairType: parsableSolutionsPerType.type,
+        };
+      }
+
+      const repair: AutoRepairWithSolutionType = {
+        type: 'replace-place',
+        repairType: parsableSolutionsPerType.type,
+        places: newPlaces.map((newPlace) => mergeAllDuplicatePlaces(newPlace)),
+      };
+      return repair;
+    })
+    .filter((solution) => !!solution);
+
+  return returnList as AutoRepairWithSolutionType[];
 }
 
 function checkPlaceAndReturnMarkingIfEquals(

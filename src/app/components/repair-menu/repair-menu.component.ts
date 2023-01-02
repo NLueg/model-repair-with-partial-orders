@@ -37,16 +37,14 @@ export class RepairMenuComponent implements OnInit {
     }).format(this.placeSolution.invalidTraceCount / this.partialOrderCount);
     this.infoHeader = `The place cannot fire for ${this.placeSolution.invalidTraceCount} (${percentage}) traces. Choose a solution to repair the place:`;
 
-    const solution = this.placeSolution.solutions;
-    if (!solution) {
+    const solutions = this.placeSolution.solutions;
+    if (!solutions) {
       console.error('No solution found!');
     } else {
-      this.shownTextsForSolutions = [
-        {
-          text: generateTextForAutoRepair(solution),
-          solution,
-        },
-      ];
+      this.shownTextsForSolutions = solutions.map((solution) => ({
+        text: generateTextForAutoRepair(solution),
+        solution,
+      }));
     }
   }
 
