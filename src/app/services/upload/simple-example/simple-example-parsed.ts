@@ -49,7 +49,7 @@ export const parsedSimpleExamplePetriNet = {
     {
       id: 'p1',
       incomingArcs: [],
-      marking: 1,
+      marking: 0,
       outgoingArcs: [
         {
           breakpoints: [],

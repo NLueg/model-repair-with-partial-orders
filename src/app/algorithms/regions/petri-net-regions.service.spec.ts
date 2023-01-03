@@ -34,30 +34,29 @@ describe('PetriNetRegionsService', () => {
           {
             invalidTraceCount: 1,
             place: 'p5',
-            solutions: null,
+            solutions: [],
           },
           {
             invalidTraceCount: 1,
             place: 'p7',
-            solutions: {
-              incoming: [
-                {
-                  transitionId: 'd',
-                  weight: 1,
-                },
-              ],
-              outgoing: [
-                {
-                  transitionId: 'c',
-                  weight: 1,
-                },
-                {
-                  transitionId: 'f',
-                  weight: 1,
-                },
-              ],
-              type: 'modify-place',
-            },
+            solutions: [
+              {
+                incoming: [
+                  {
+                    transitionId: 'd',
+                    weight: 1,
+                  },
+                ],
+                outgoing: [
+                  {
+                    transitionId: 'c',
+                    weight: 1,
+                  },
+                ],
+                repairType: 'arcsSame',
+                type: 'modify-place',
+              },
+            ],
           },
         ]);
         done();

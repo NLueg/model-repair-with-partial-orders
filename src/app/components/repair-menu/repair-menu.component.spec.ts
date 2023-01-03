@@ -18,10 +18,14 @@ describe('RepairMenuComponent', () => {
     component = fixture.componentInstance;
     component.placeSolution = {
       place: 'p1',
-      solutions: {
-        type: 'marking',
-        newMarking: 1,
-      },
+      solutions: [
+        {
+          type: 'marking',
+          repairType: 'unbounded',
+          newMarking: 1,
+        },
+      ],
+      missingTokens: undefined,
       invalidTraceCount: 0,
     };
 
