@@ -6,20 +6,24 @@ export type ParsableSolution =
       type: 'increase-marking';
       newMarking: number;
     }
-  | {
-      type: 'incoming-arc';
-      incoming: string;
-      marking: number;
-    }
-  | {
-      type: 'outgoing-arc';
-      outgoing: string;
-      marking: number;
-    };
+  | IncomingArcSolution
+  | OutgoingArcSolution;
+
+export type IncomingArcSolution = {
+  type: 'incoming-arc';
+  incoming: string;
+  marking: number;
+};
+
+export type OutgoingArcSolution = {
+  type: 'outgoing-arc';
+  outgoing: string;
+  marking: number;
+};
 
 export type ParsableSolutionsPerType = {
   type: SolutionType;
-  solutionParts: ParsableSolution[];
+  solutionParts: ParsableSolution[][];
 };
 
 export type PlaceSolution = {

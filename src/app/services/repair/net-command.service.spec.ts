@@ -142,6 +142,7 @@ p2 b 9`);
     service
       .repairNet('p2', {
         type: 'replace-place',
+        repairType: 'unbounded',
         places: [
           {
             incoming: [

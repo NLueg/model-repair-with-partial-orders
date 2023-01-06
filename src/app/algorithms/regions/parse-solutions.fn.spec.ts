@@ -19,10 +19,12 @@ describe('parseSolution', () => {
       {
         type: 'unbounded',
         solutionParts: [
-          {
-            type: 'increase-marking',
-            newMarking: 10,
-          },
+          [
+            {
+              type: 'increase-marking',
+              newMarking: 10,
+            },
+          ],
         ],
       },
     ];
@@ -44,11 +46,13 @@ describe('parseSolution', () => {
       {
         type: 'unbounded',
         solutionParts: [
-          {
-            type: 'incoming-arc',
-            incoming: 't1',
-            marking: 3,
-          },
+          [
+            {
+              type: 'incoming-arc',
+              incoming: 't1',
+              marking: 3,
+            },
+          ],
         ],
       },
     ];
@@ -71,11 +75,13 @@ describe('parseSolution', () => {
       {
         type: 'unbounded',
         solutionParts: [
-          {
-            type: 'outgoing-arc',
-            outgoing: 't1',
-            marking: 3,
-          },
+          [
+            {
+              type: 'outgoing-arc',
+              outgoing: 't1',
+              marking: 3,
+            },
+          ],
         ],
       },
     ];
@@ -98,16 +104,18 @@ describe('parseSolution', () => {
       {
         type: 'unbounded',
         solutionParts: [
-          {
-            type: 'incoming-arc',
-            incoming: 't1',
-            marking: 3,
-          },
-          {
-            type: 'outgoing-arc',
-            outgoing: 't1',
-            marking: 3,
-          },
+          [
+            {
+              type: 'incoming-arc',
+              incoming: 't1',
+              marking: 3,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 't1',
+              marking: 3,
+            },
+          ],
         ],
       },
     ];
@@ -130,21 +138,23 @@ describe('parseSolution', () => {
       {
         type: 'unbounded',
         solutionParts: [
-          {
-            type: 'incoming-arc',
-            incoming: 't1',
-            marking: 3,
-          },
-          {
-            type: 'outgoing-arc',
-            outgoing: 't1',
-            marking: 3,
-          },
-          {
-            type: 'outgoing-arc',
-            outgoing: 't1',
-            marking: 3,
-          },
+          [
+            {
+              type: 'incoming-arc',
+              incoming: 't1',
+              marking: 3,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 't1',
+              marking: 3,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 't1',
+              marking: 3,
+            },
+          ],
         ],
       },
     ];
@@ -167,25 +177,27 @@ describe('parseSolution', () => {
       {
         type: 'unbounded',
         solutionParts: [
-          {
-            type: 'incoming-arc',
-            incoming: 't1',
-            marking: 3,
-          },
-          {
-            type: 'incoming-arc',
-            incoming: 't1',
-            marking: 3,
-          },
-          {
-            type: 'outgoing-arc',
-            outgoing: 't1',
-            marking: 3,
-          },
-          {
-            type: 'increase-marking',
-            newMarking: 10,
-          },
+          [
+            {
+              type: 'incoming-arc',
+              incoming: 't1',
+              marking: 3,
+            },
+            {
+              type: 'incoming-arc',
+              incoming: 't1',
+              marking: 3,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 't1',
+              marking: 3,
+            },
+            {
+              type: 'increase-marking',
+              newMarking: 10,
+            },
+          ],
         ],
       },
     ];
@@ -209,26 +221,28 @@ describe('parseSolution', () => {
       {
         type: 'unbounded',
         solutionParts: [
-          {
-            type: 'incoming-arc',
-            incoming: 't1',
-            marking: 3,
-          },
-          {
-            type: 'incoming-arc',
-            incoming: 't1',
-            marking: 3,
-          },
-          {
-            type: 'outgoing-arc',
-            outgoing: 't1',
-            marking: 3,
-          },
-          {
-            type: 'outgoing-arc',
-            outgoing: 't2',
-            marking: 3,
-          },
+          [
+            {
+              type: 'incoming-arc',
+              incoming: 't1',
+              marking: 3,
+            },
+            {
+              type: 'incoming-arc',
+              incoming: 't1',
+              marking: 3,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 't1',
+              marking: 3,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 't2',
+              marking: 3,
+            },
+          ],
         ],
       },
     ];
@@ -254,31 +268,34 @@ describe('parseSolution', () => {
     expect(actual).toEqual(expected);
   });
 
+  // TODO: Check this test case again
   it('should return replace state for outgoing arcs the same', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
         type: 'unbounded',
         solutionParts: [
-          {
-            type: 'incoming-arc',
-            incoming: 't1',
-            marking: 3,
-          },
-          {
-            type: 'incoming-arc',
-            incoming: 't2',
-            marking: 3,
-          },
-          {
-            type: 'outgoing-arc',
-            outgoing: 't1',
-            marking: 3,
-          },
-          {
-            type: 'outgoing-arc',
-            outgoing: 't1',
-            marking: 3,
-          },
+          [
+            {
+              type: 'incoming-arc',
+              incoming: 't1',
+              marking: 3,
+            },
+            {
+              type: 'incoming-arc',
+              incoming: 't2',
+              marking: 3,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 't1',
+              marking: 3,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 't1',
+              marking: 3,
+            },
+          ],
         ],
       },
     ];
@@ -304,36 +321,39 @@ describe('parseSolution', () => {
     expect(actual).toEqual(expected);
   });
 
+  // TODO: Check this test case again
   it('should merge everything together if too same incoming elements', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
         type: 'unbounded',
         solutionParts: [
-          {
-            type: 'incoming-arc',
-            incoming: 't1',
-            marking: 3,
-          },
-          {
-            type: 'incoming-arc',
-            incoming: 't1',
-            marking: 3,
-          },
-          {
-            type: 'incoming-arc',
-            incoming: 't1',
-            marking: 3,
-          },
-          {
-            type: 'outgoing-arc',
-            outgoing: 't1',
-            marking: 3,
-          },
-          {
-            type: 'outgoing-arc',
-            outgoing: 't2',
-            marking: 3,
-          },
+          [
+            {
+              type: 'incoming-arc',
+              incoming: 't1',
+              marking: 3,
+            },
+            {
+              type: 'incoming-arc',
+              incoming: 't1',
+              marking: 3,
+            },
+            {
+              type: 'incoming-arc',
+              incoming: 't1',
+              marking: 3,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 't1',
+              marking: 3,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 't2',
+              marking: 3,
+            },
+          ],
         ],
       },
     ];
@@ -354,36 +374,39 @@ describe('parseSolution', () => {
     expect(actual).toEqual(expected);
   });
 
-  it('should merge everything together if too same outgoing elements', () => {
+  // TODO: Check this test case again
+  it('should merge everything together if same outgoing elements', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
         type: 'unbounded',
         solutionParts: [
-          {
-            type: 'incoming-arc',
-            incoming: 't1',
-            marking: 3,
-          },
-          {
-            type: 'incoming-arc',
-            incoming: 't2',
-            marking: 3,
-          },
-          {
-            type: 'outgoing-arc',
-            outgoing: 't1',
-            marking: 3,
-          },
-          {
-            type: 'outgoing-arc',
-            outgoing: 't1',
-            marking: 3,
-          },
-          {
-            type: 'outgoing-arc',
-            outgoing: 't1',
-            marking: 3,
-          },
+          [
+            {
+              type: 'incoming-arc',
+              incoming: 't1',
+              marking: 3,
+            },
+            {
+              type: 'incoming-arc',
+              incoming: 't2',
+              marking: 3,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 't1',
+              marking: 3,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 't1',
+              marking: 3,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 't1',
+              marking: 3,
+            },
+          ],
         ],
       },
     ];
@@ -399,6 +422,117 @@ describe('parseSolution', () => {
         ],
         outgoing: [{ transitionId: 't1', weight: 9 }],
         type: 'modify-place',
+      },
+    ];
+    expect(actual).toEqual(expected);
+  });
+
+  it('should should return empty list for no solution parts', () => {
+    const parameter: ParsableSolutionsPerType[] = [
+      {
+        type: 'arcsSame',
+        solutionParts: [],
+      },
+    ];
+
+    const actual = parseSolution(parameter, undefined);
+
+    const expected: AutoRepairWithSolutionType[] = [];
+    expect(actual).toEqual(expected);
+  });
+
+  it('should generate replace-place for example by kovar', () => {
+    const parameter: ParsableSolutionsPerType[] = [
+      {
+        type: 'arcsSame',
+        solutionParts: [
+          [
+            {
+              type: 'incoming-arc',
+              incoming: 'a',
+              marking: 1,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 'b',
+              marking: 1,
+            },
+            {
+              type: 'incoming-arc',
+              incoming: 'x',
+              marking: 1,
+            },
+          ],
+          [
+            {
+              type: 'incoming-arc',
+              incoming: 'a',
+              marking: 1,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 'b',
+              marking: 1,
+            },
+            {
+              type: 'incoming-arc',
+              incoming: 'x',
+              marking: 1,
+            },
+          ],
+          [
+            {
+              type: 'incoming-arc',
+              incoming: 'a',
+              marking: 1,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 'c',
+              marking: 1,
+            },
+            {
+              type: 'incoming-arc',
+              incoming: 'x',
+              marking: 1,
+            },
+          ],
+          [
+            {
+              type: 'incoming-arc',
+              incoming: 'a',
+              marking: 1,
+            },
+            {
+              type: 'outgoing-arc',
+              outgoing: 'c',
+              marking: 1,
+            },
+            {
+              type: 'incoming-arc',
+              incoming: 'x',
+              marking: 1,
+            },
+          ],
+        ],
+      },
+    ];
+
+    const actual = parseSolution(parameter, undefined);
+
+    const expected: AutoRepairWithSolutionType[] = [
+      {
+        repairType: 'arcsSame',
+        places: [
+          {
+            incoming: [
+              { transitionId: 't1', weight: 3 },
+              { transitionId: 't2', weight: 3 },
+            ],
+            outgoing: [{ transitionId: 't1', weight: 9 }],
+          },
+        ],
+        type: 'replace-place',
       },
     ];
     expect(actual).toEqual(expected);

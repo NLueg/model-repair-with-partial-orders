@@ -88,7 +88,7 @@ export class PetriNetRegionsService {
   ): ParsableSolutionsPerType[] {
     return solutions.map((solution) => ({
       type: solution.type,
-      solutionParts: solution.solutions.flatMap((singleSolution) =>
+      solutionParts: solution.solutions.map((singleSolution) =>
         Object.entries(singleSolution)
           .filter(
             ([variable, value]) =>
@@ -97,25 +97,30 @@ export class PetriNetRegionsService {
           .map(([variable, value]) => {
             const decoded = solver.getInverseVariableMapping(variable)!;
 
+            let parsableSolution: ParsableSolution;
             switch (decoded.type) {
               case VariableType.INITIAL_MARKING:
-                return {
+                parsableSolution = {
                   type: 'increase-marking',
                   newMarking: value,
-                } as ParsableSolution;
+                };
+                break;
               case VariableType.INCOMING_TRANSITION_WEIGHT:
-                return {
+                parsableSolution = {
                   type: 'incoming-arc',
                   incoming: decoded.label,
                   marking: value,
-                } as ParsableSolution;
+                };
+                break;
               case VariableType.OUTGOING_TRANSITION_WEIGHT:
-                return {
+                parsableSolution = {
                   type: 'outgoing-arc',
                   outgoing: decoded.label,
                   marking: value,
-                } as ParsableSolution;
+                };
             }
+
+            return parsableSolution;
           })
       ),
     }));

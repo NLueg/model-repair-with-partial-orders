@@ -16,12 +16,13 @@ type ModifyPlaceType = {
   type: 'modify-place';
 } & SinglePlaceParameter;
 
-export type AutoRepair =
-  | AutoRepairForSinglePlace
-  | {
-      type: 'replace-place';
-      places: SinglePlaceParameter[];
-    };
+export type AutoRepair = AutoRepairForSinglePlace | ReplacePlaceAutoRepair;
+
+export type ReplacePlaceAutoRepair = {
+  type: 'replace-place';
+  repairType: SolutionType;
+  places: SinglePlaceParameter[];
+};
 
 export type AutoRepairWithSolutionType = AutoRepair & {
   repairType: SolutionType;
@@ -42,7 +43,19 @@ export function parseSolution(
   const returnList: (AutoRepairWithSolutionType | null)[] = placeSolutionList
     .map((parsableSolutionsPerType) => {
       const placeSolutions = parsableSolutionsPerType.solutionParts;
-      const singlePlaceSolution = getSinglePlaceSolution(placeSolutions);
+      if (placeSolutions.length === 0) {
+        return null;
+      }
+
+      if (placeSolutions.length > 1) {
+        return {
+          type: 'replace-place',
+          repairType: parsableSolutionsPerType.type,
+          places: generateRepairForMultipleSolutions(placeSolutions),
+        } as ReplacePlaceAutoRepair;
+      }
+
+      const singlePlaceSolution = getSinglePlaceSolution(placeSolutions[0]);
 
       if (!singlePlaceSolution || singlePlaceSolution.type === 'marking') {
         return {
@@ -150,6 +163,41 @@ export function parseSolution(
     .filter((solution) => !!solution);
 
   return returnList as AutoRepairWithSolutionType[];
+}
+
+function generateRepairForMultipleSolutions(
+  placeSolutions: ParsableSolution[][]
+): SinglePlaceParameter[] {
+  const initialPlaces = placeSolutions.map((placeSolution) => {
+    return {
+      incoming: placeSolution
+        .map((place) => {
+          if (place.type === 'incoming-arc') {
+            return {
+              transitionId: place.incoming,
+              weight: place.marking,
+            };
+          }
+          return null;
+        })
+        .filter((arc) => arc !== null) as ArcDefinition[],
+      outgoing: placeSolution
+        .map((place) => {
+          if (place.type === 'outgoing-arc') {
+            return {
+              transitionId: place.outgoing,
+              weight: place.marking,
+            };
+          }
+          return null;
+        })
+        .filter((arc) => arc !== null) as ArcDefinition[],
+    };
+  });
+
+  // TODO: How to merge them together?
+
+  return initialPlaces;
 }
 
 function checkPlaceAndReturnMarkingIfEquals(

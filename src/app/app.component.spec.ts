@@ -1,9 +1,11 @@
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 
 import { AppComponent } from './app.component';
-import { DownloadService } from './services/download/download.service';
+import { DisplayService } from './services/display.service';
+import { NetCommandService } from './services/repair/net-command.service';
 import { UploadService } from './services/upload/upload.service';
 
 describe('AppComponent', () => {
@@ -12,8 +14,15 @@ describe('AppComponent', () => {
       imports: [RouterTestingModule],
       declarations: [AppComponent],
       providers: [
+        {
+          provide: DisplayService,
+          useValue: {
+            getPartialOrders$: jest.fn().mockReturnValue(of([])),
+            isCurrentRunEmpty$: jest.fn().mockReturnValue(of(false)),
+          },
+        },
         { provide: UploadService, useValue: {} },
-        { provide: DownloadService, useValue: {} },
+        { provide: NetCommandService, useValue: {} },
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();

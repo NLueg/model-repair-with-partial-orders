@@ -326,7 +326,6 @@ export class IlpSolver {
         }),
       },
       subjectTo: [],
-      // General variables
       generals,
     };
   }

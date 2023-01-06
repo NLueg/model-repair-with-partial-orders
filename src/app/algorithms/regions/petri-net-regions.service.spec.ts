@@ -33,11 +33,13 @@ describe('PetriNetRegionsService', () => {
         expect(result).toEqual([
           {
             invalidTraceCount: 1,
+            missingTokens: undefined,
             place: 'p5',
             solutions: [],
           },
           {
             invalidTraceCount: 1,
+            missingTokens: undefined,
             place: 'p7',
             solutions: [
               {
