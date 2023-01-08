@@ -25,7 +25,7 @@ describe('RepairMenuComponent', () => {
           newMarking: 1,
         },
       ],
-      missingTokens: undefined,
+      tokenDifference: undefined,
       invalidTraceCount: 0,
     };
 

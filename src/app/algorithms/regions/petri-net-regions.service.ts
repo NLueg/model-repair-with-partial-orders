@@ -4,6 +4,7 @@ import { combineLatest, from, map, Observable, of, switchMap, tap } from 'rxjs';
 
 import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
+import { Place } from '../../classes/diagram/place';
 import {
   ParsableSolution,
   ParsableSolutionsPerType,
@@ -62,7 +63,7 @@ export class PetriNetRegionsService {
                 const placeSolution: PlaceSolution = {
                   place,
                   solutions: parsedSolutions,
-                  missingTokens: missingTokens,
+                  tokenDifference: missingTokens ?? 0,
                   invalidTraceCount: invalidPlaces[place],
                 };
                 return placeSolution;
@@ -86,43 +87,65 @@ export class PetriNetRegionsService {
     solutions: ProblemSolution[],
     solver: IlpSolver
   ): ParsableSolutionsPerType[] {
-    return solutions.map((solution) => ({
-      type: solution.type,
-      solutionParts: solution.solutions.map((singleSolution) =>
-        Object.entries(singleSolution)
-          .filter(
-            ([variable, value]) =>
-              value != 0 && solver.getInverseVariableMapping(variable) !== null
+    return solutions
+      .map((solution) => ({
+        type: solution.type,
+        solutionParts: solution.solutions
+          .map((singleSolution) =>
+            Object.entries(singleSolution)
+              .filter(
+                ([variable, value]) =>
+                  value != 0 &&
+                  solver.getInverseVariableMapping(variable) !== null
+              )
+              .map(([variable, value]) => {
+                const decoded = solver.getInverseVariableMapping(variable)!;
+
+                let parsableSolution: ParsableSolution;
+                switch (decoded.type) {
+                  case VariableType.INITIAL_MARKING:
+                    parsableSolution = {
+                      type: 'increase-marking',
+                      newMarking: value,
+                    };
+                    break;
+                  case VariableType.INCOMING_TRANSITION_WEIGHT:
+                    parsableSolution = {
+                      type: 'incoming-arc',
+                      incoming: decoded.label,
+                      marking: value,
+                    };
+                    break;
+                  case VariableType.OUTGOING_TRANSITION_WEIGHT:
+                    parsableSolution = {
+                      type: 'outgoing-arc',
+                      outgoing: decoded.label,
+                      marking: value,
+                    };
+                }
+
+                return parsableSolution;
+              })
           )
-          .map(([variable, value]) => {
-            const decoded = solver.getInverseVariableMapping(variable)!;
-
-            let parsableSolution: ParsableSolution;
-            switch (decoded.type) {
-              case VariableType.INITIAL_MARKING:
-                parsableSolution = {
-                  type: 'increase-marking',
-                  newMarking: value,
-                };
-                break;
-              case VariableType.INCOMING_TRANSITION_WEIGHT:
-                parsableSolution = {
-                  type: 'incoming-arc',
-                  incoming: decoded.label,
-                  marking: value,
-                };
-                break;
-              case VariableType.OUTGOING_TRANSITION_WEIGHT:
-                parsableSolution = {
-                  type: 'outgoing-arc',
-                  outgoing: decoded.label,
-                  marking: value,
-                };
-            }
-
-            return parsableSolution;
-          })
-      ),
-    }));
+          .filter((solution) => solution.length > 0),
+      }))
+      .filter((solution) => solution.solutionParts.length > 0);
   }
+}
+
+function generateMarkingDifference(place?: Place): number {
+  if (!place) {
+    return 0;
+  }
+
+  const incomingMarking = place.incomingArcs.reduce(
+    (sum, arc) => sum + arc.weight,
+    0
+  );
+  const outgoingMarking = place.outgoingArcs.reduce(
+    (sum, arc) => sum + arc.weight,
+    0
+  );
+
+  return incomingMarking + place.marking - outgoingMarking;
 }

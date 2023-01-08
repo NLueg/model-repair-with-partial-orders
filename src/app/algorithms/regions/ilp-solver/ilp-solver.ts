@@ -145,7 +145,6 @@ export class IlpSolver {
                 ilp: this.populateIlpBySameIncomingWeights(
                   problem.baseIlp,
                   problem.baseConstraints,
-                  problem.pair,
                   invalidPlace
                 ),
               },
@@ -154,7 +153,6 @@ export class IlpSolver {
                 ilp: this.populateIlpBySameOutgoingWeights(
                   problem.baseIlp,
                   problem.baseConstraints,
-                  problem.pair,
                   invalidPlace
                 ),
               },
@@ -163,7 +161,6 @@ export class IlpSolver {
                 ilp: this.populateIlpBySameWeights(
                   problem.baseIlp,
                   problem.baseConstraints,
-                  problem.pair,
                   invalidPlace
                 ),
               },
@@ -197,6 +194,7 @@ export class IlpSolver {
           sameIncoming: [],
           arcsSame: [],
         };
+
         placeSolutions.forEach((placeSolution) => {
           placeSolution.forEach((solution) => {
             if (solution.solution.result.status !== Solution.NO_SOLUTION) {
@@ -408,44 +406,24 @@ export class IlpSolver {
   private populateIlpBySameIncomingWeights(
     baseIlp: LP,
     baseConstraints: Array<SubjectTo>,
-    causalPair: [string | undefined, string],
     existingPlace: Place
   ): LP | null {
     const result = clonedeep(baseIlp);
     result.subjectTo = [...baseConstraints];
 
-    if (!causalPair[0]) {
-      return null;
-    }
-
-    const weight = existingPlace.incomingArcs.find(
-      (arc) => arc.source === causalPair[0]
-    )?.weight;
-    if (!weight) {
-      return null;
-    }
-    result.subjectTo = result.subjectTo.concat(
-      this.equal(
-        this.variable(
-          this.transitionVariableName(
-            causalPair[0],
-            VariableName.OUTGOING_ARC_WEIGHT_PREFIX
-          )
-        ),
-        weight
-      ).constraints
-    );
-    result.subjectTo = result.subjectTo.concat(
-      this.greaterEqualThan(
-        this.variable(
-          this.transitionVariableName(
-            causalPair[1],
-            VariableName.INGOING_ARC_WEIGHT_PREFIX
-          )
-        ),
-        1
-      ).constraints
-    );
+    existingPlace.incomingArcs.forEach((arc) => {
+      result.subjectTo = result.subjectTo.concat(
+        this.greaterEqualThan(
+          this.variable(
+            this.transitionVariableName(
+              arc.source,
+              VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+            )
+          ),
+          arc.weight
+        ).constraints
+      );
+    });
 
     return result;
   }
@@ -453,44 +431,24 @@ export class IlpSolver {
   private populateIlpBySameOutgoingWeights(
     baseIlp: LP,
     baseConstraints: Array<SubjectTo>,
-    causalPair: [string | undefined, string],
     existingPlace: Place
   ): LP | null {
     const result = clonedeep(baseIlp);
     result.subjectTo = [...baseConstraints];
 
-    const weight = existingPlace.outgoingArcs.find(
-      (arc) => arc.target === causalPair[1]
-    )?.weight;
-    if (!weight) {
-      return null;
-    }
-
-    if (causalPair[0]) {
+    existingPlace.outgoingArcs.forEach((arc) => {
       result.subjectTo = result.subjectTo.concat(
         this.greaterEqualThan(
           this.variable(
             this.transitionVariableName(
-              causalPair[0],
-              VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+              arc.target,
+              VariableName.INGOING_ARC_WEIGHT_PREFIX
             )
           ),
-          1
+          arc.weight
         ).constraints
       );
-    }
-
-    result.subjectTo = result.subjectTo.concat(
-      this.greaterEqualThan(
-        this.variable(
-          this.transitionVariableName(
-            causalPair[1],
-            VariableName.INGOING_ARC_WEIGHT_PREFIX
-          )
-        ),
-        weight
-      ).constraints
-    );
+    });
 
     return result;
   }
@@ -498,50 +456,38 @@ export class IlpSolver {
   private populateIlpBySameWeights(
     baseIlp: LP,
     baseConstraints: Array<SubjectTo>,
-    causalPair: [string | undefined, string],
     existingPlace: Place
   ): LP | null {
     const result = clonedeep(baseIlp);
     result.subjectTo = [...baseConstraints];
 
-    if (!causalPair[0]) {
-      return null;
-    }
+    existingPlace.incomingArcs.forEach((arc) => {
+      result.subjectTo = result.subjectTo.concat(
+        this.greaterEqualThan(
+          this.variable(
+            this.transitionVariableName(
+              arc.source,
+              VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+            )
+          ),
+          arc.weight
+        ).constraints
+      );
+    });
 
-    const incomingWeight = existingPlace.incomingArcs.find(
-      (arc) => arc.source === causalPair[0]
-    )?.weight;
-
-    const outgoingWeight = existingPlace.outgoingArcs.find(
-      (arc) => arc.target === causalPair[1]
-    )?.weight;
-    if (!incomingWeight || !outgoingWeight) {
-      return null;
-    }
-
-    result.subjectTo = result.subjectTo.concat(
-      this.greaterEqualThan(
-        this.variable(
-          this.transitionVariableName(
-            causalPair[0],
-            VariableName.OUTGOING_ARC_WEIGHT_PREFIX
-          )
-        ),
-        incomingWeight
-      ).constraints
-    );
-
-    result.subjectTo = result.subjectTo.concat(
-      this.greaterEqualThan(
-        this.variable(
-          this.transitionVariableName(
-            causalPair[1],
-            VariableName.INGOING_ARC_WEIGHT_PREFIX
-          )
-        ),
-        outgoingWeight
-      ).constraints
-    );
+    existingPlace.outgoingArcs.forEach((arc) => {
+      result.subjectTo = result.subjectTo.concat(
+        this.greaterEqualThan(
+          this.variable(
+            this.transitionVariableName(
+              arc.target,
+              VariableName.INGOING_ARC_WEIGHT_PREFIX
+            )
+          ),
+          arc.weight
+        ).constraints
+      );
+    });
 
     return result;
   }

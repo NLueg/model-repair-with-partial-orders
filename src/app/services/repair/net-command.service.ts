@@ -172,7 +172,9 @@ function generatePlaceForSolution(
   if (solution.type === 'replace-place') {
     let textToReturn = '';
     for (let index = 0; index < solution.places.length; index++) {
-      textToReturn += `${oldPlace.id}_${index} 0`;
+      textToReturn += `${oldPlace.id}_${index} ${
+        solution.places[index].newMarking ?? 0
+      }`;
       if (index < solution.places.length - 1) {
         textToReturn += '\n';
       }

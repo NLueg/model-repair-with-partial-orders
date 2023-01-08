@@ -39,8 +39,8 @@ export class RepairMenuComponent implements OnInit {
     }).format(this.placeSolution.invalidTraceCount / this.partialOrderCount);
     this.infoHeader = `The place cannot fire for ${this.placeSolution.invalidTraceCount} (${percentage}) traces.<br/>`;
 
-    if (this.placeSolution.missingTokens) {
-      this.infoHeader += `The place has ${this.placeSolution.missingTokens} missing tokens.<br/>`;
+    if (this.placeSolution.tokenDifference < 0) {
+      this.infoHeader += `The place has ${this.placeSolution.tokenDifference} missing tokens.<br/>`;
     }
 
     const solutions = this.placeSolution.solutions;

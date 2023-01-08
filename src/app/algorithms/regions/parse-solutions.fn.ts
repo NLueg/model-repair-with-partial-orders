@@ -192,6 +192,13 @@ function generateRepairForMultipleSolutions(
           return null;
         })
         .filter((arc) => arc !== null) as ArcDefinition[],
+      newMarking: placeSolution.reduce(
+        (acc: number | undefined, place: ParsableSolution) =>
+          place.type === 'increase-marking'
+            ? Math.max(acc ?? 0, place.newMarking)
+            : acc,
+        undefined
+      ),
     };
   });
 

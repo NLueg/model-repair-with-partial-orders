@@ -30,5 +30,5 @@ export type PlaceSolution = {
   place: string;
   solutions: AutoRepairWithSolutionType[];
   invalidTraceCount: number;
-  missingTokens: number | undefined;
+  tokenDifference: number;
 };
