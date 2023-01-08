@@ -37,11 +37,11 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                     <name>
                         <text>a</text>
                         <graphics>
-                             <offset x="125" y="110"/>
+                             <offset x="0" y="40"/>
                         </graphics>
                     </name>
                     <graphics>
-                         <position x="125" y="70"/>
+                         <position x="0" y="0"/>
                          <dimension x="40" y="40"></dimension>
                     </graphics>
                </transition>
@@ -49,11 +49,11 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                     <name>
                         <text>b</text>
                         <graphics>
-                             <offset x="325" y="65"/>
+                             <offset x="0" y="40"/>
                         </graphics>
                     </name>
                     <graphics>
-                         <position x="325" y="25"/>
+                         <position x="0" y="0"/>
                          <dimension x="40" y="40"></dimension>
                     </graphics>
                </transition>
@@ -61,11 +61,11 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                     <name>
                         <text>c</text>
                         <graphics>
-                             <offset x="325" y="155"/>
+                             <offset x="0" y="40"/>
                         </graphics>
                     </name>
                     <graphics>
-                         <position x="325" y="115"/>
+                         <position x="0" y="0"/>
                          <dimension x="40" y="40"></dimension>
                     </graphics>
                </transition>
@@ -73,11 +73,35 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                     <name>
                         <text>d</text>
                         <graphics>
-                             <offset x="525" y="110"/>
+                             <offset x="0" y="40"/>
                         </graphics>
                     </name>
                     <graphics>
-                         <position x="525" y="70"/>
+                         <position x="0" y="0"/>
+                         <dimension x="40" y="40"></dimension>
+                    </graphics>
+               </transition>
+               <transition id="e">
+                    <name>
+                        <text>e</text>
+                        <graphics>
+                             <offset x="0" y="40"/>
+                        </graphics>
+                    </name>
+                    <graphics>
+                         <position x="0" y="0"/>
+                         <dimension x="40" y="40"></dimension>
+                    </graphics>
+               </transition>
+               <transition id="f">
+                    <name>
+                        <text>f</text>
+                        <graphics>
+                             <offset x="0" y="40"/>
+                        </graphics>
+                    </name>
+                    <graphics>
+                         <position x="0" y="0"/>
                          <dimension x="40" y="40"></dimension>
                     </graphics>
                </transition>
@@ -85,11 +109,11 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                     <name>
                          <text>p1</text>
                          <graphics>
-                              <offset x="25" y="110"/>
+                              <offset x="0" y="40"/>
                          </graphics>
                     </name>
                     <graphics>
-                         <position x="25" y="70"/>
+                         <position x="0" y="0"/>
                     </graphics>
                     <initialMarking>
                          <text>1</text>
@@ -99,11 +123,11 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                     <name>
                          <text>p2</text>
                          <graphics>
-                              <offset x="225" y="110"/>
+                              <offset x="0" y="40"/>
                          </graphics>
                     </name>
                     <graphics>
-                         <position x="225" y="70"/>
+                         <position x="0" y="0"/>
                     </graphics>
                     <initialMarking>
                          <text>0</text>
@@ -113,11 +137,11 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                     <name>
                          <text>p3</text>
                          <graphics>
-                              <offset x="425" y="65"/>
+                              <offset x="0" y="40"/>
                          </graphics>
                     </name>
                     <graphics>
-                         <position x="425" y="25"/>
+                         <position x="0" y="0"/>
                     </graphics>
                     <initialMarking>
                          <text>0</text>
@@ -127,11 +151,11 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                     <name>
                          <text>p4</text>
                          <graphics>
-                              <offset x="425" y="155"/>
+                              <offset x="0" y="40"/>
                          </graphics>
                     </name>
                     <graphics>
-                         <position x="425" y="115"/>
+                         <position x="0" y="0"/>
                     </graphics>
                     <initialMarking>
                          <text>0</text>
@@ -141,11 +165,39 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                     <name>
                          <text>p5</text>
                          <graphics>
-                              <offset x="625" y="110"/>
+                              <offset x="0" y="40"/>
                          </graphics>
                     </name>
                     <graphics>
-                         <position x="625" y="70"/>
+                         <position x="0" y="0"/>
+                    </graphics>
+                    <initialMarking>
+                         <text>0</text>
+                    </initialMarking>
+               </place>
+               <place id="p6">
+                    <name>
+                         <text>p6</text>
+                         <graphics>
+                              <offset x="0" y="40"/>
+                         </graphics>
+                    </name>
+                    <graphics>
+                         <position x="0" y="0"/>
+                    </graphics>
+                    <initialMarking>
+                         <text>0</text>
+                    </initialMarking>
+               </place>
+               <place id="p7">
+                    <name>
+                         <text>p7</text>
+                         <graphics>
+                              <offset x="0" y="40"/>
+                         </graphics>
+                    </name>
+                    <graphics>
+                         <position x="0" y="0"/>
                     </graphics>
                     <initialMarking>
                          <text>0</text>
@@ -166,14 +218,28 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                     <graphics/>
                </arc>
                 <arc id="A"
-                    source="p2" target="b">
+                    source="p2" target="c">
                     <inscription>
                         <text>1</text>
                     </inscription>
                     <graphics/>
                </arc>
                 <arc id="A"
-                    source="p2" target="c">
+                    source="c" target="p5">
+                    <inscription>
+                        <text>1</text>
+                    </inscription>
+                    <graphics/>
+               </arc>
+                <arc id="A"
+                    source="p5" target="a">
+                    <inscription>
+                        <text>1</text>
+                    </inscription>
+                    <graphics/>
+               </arc>
+                <arc id="A"
+                    source="p2" target="b">
                     <inscription>
                         <text>1</text>
                     </inscription>
@@ -187,13 +253,6 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                     <graphics/>
                </arc>
                 <arc id="A"
-                    source="c" target="p4">
-                    <inscription>
-                        <text>1</text>
-                    </inscription>
-                    <graphics/>
-               </arc>
-                <arc id="A"
                     source="p3" target="d">
                     <inscription>
                         <text>1</text>
@@ -201,14 +260,63 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                     <graphics/>
                </arc>
                 <arc id="A"
-                    source="p4" target="d">
+                    source="d" target="p7">
                     <inscription>
                         <text>1</text>
                     </inscription>
                     <graphics/>
                </arc>
                 <arc id="A"
-                    source="d" target="p5">
+                    source="p7" target="d">
+                    <inscription>
+                        <text>1</text>
+                    </inscription>
+                    <graphics/>
+               </arc>
+                <arc id="A"
+                    source="p7" target="c">
+                    <inscription>
+                        <text>1</text>
+                    </inscription>
+                    <graphics/>
+               </arc>
+                <arc id="A"
+                    source="c" target="p7">
+                    <inscription>
+                        <text>1</text>
+                    </inscription>
+                    <graphics/>
+               </arc>
+                <arc id="A"
+                    source="d" target="p6">
+                    <inscription>
+                        <text>1</text>
+                    </inscription>
+                    <graphics/>
+               </arc>
+                <arc id="A"
+                    source="c" target="p4">
+                    <inscription>
+                        <text>1</text>
+                    </inscription>
+                    <graphics/>
+               </arc>
+                <arc id="A"
+                    source="p4" target="e">
+                    <inscription>
+                        <text>1</text>
+                    </inscription>
+                    <graphics/>
+               </arc>
+                <arc id="A"
+                    source="e" target="p6">
+                    <inscription>
+                        <text>1</text>
+                    </inscription>
+                    <graphics/>
+               </arc>
+                <arc id="A"
+                    source="p6" target="f">
                     <inscription>
                         <text>1</text>
                     </inscription>

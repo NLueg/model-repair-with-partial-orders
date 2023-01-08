@@ -106,11 +106,13 @@ describe('PetriNetRegionsService', () => {
           {
             place: 'p1',
             reduceTokensTo: 1,
+            tooManyTokens: 1,
             type: 'warning',
           },
           {
             place: 'p3',
             reduceTokensTo: 0,
+            tooManyTokens: 1,
             type: 'warning',
           },
         ]);
