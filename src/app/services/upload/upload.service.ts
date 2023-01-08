@@ -11,7 +11,7 @@ export type StructureType = 'petri-net' | 'log';
 
 const allowedExtensions: { [key in StructureType]: string[] } = {
   'petri-net': ['pn', 'pnml'],
-  log: ['txt'],
+  log: ['txt', 'log'],
 };
 
 @Injectable({
