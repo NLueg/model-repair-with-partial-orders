@@ -5,7 +5,7 @@ import { PetriNet } from '../../classes/diagram/petri-net';
 import { DownloadFormat } from '../../components/download/download.const';
 import { DisplayService } from '../display.service';
 import { generateTextFromNet } from '../parser/net-to-text.func';
-import { RunToPnmlService } from './run-to-pnml/run-to-pnml.service';
+import { PetriNetToPnmlService } from './run-to-pnml/petri-net-to-pnml.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +15,7 @@ export class DownloadService implements OnDestroy {
 
   constructor(
     private displayService: DisplayService,
-    private runToPnmlService: RunToPnmlService
+    private runToPnmlService: PetriNetToPnmlService
   ) {
     this._download$ = new Subject<string>();
   }

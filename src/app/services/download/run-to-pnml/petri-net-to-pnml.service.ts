@@ -3,28 +3,22 @@ import { Injectable } from '@angular/core';
 import { PetriNet } from '../../../classes/diagram/petri-net';
 import { Place } from '../../../classes/diagram/place';
 import { Transition } from '../../../classes/diagram/transition';
-import { LayoutService } from '../../layout.service';
 
 const encoding = '<?xml version="1.0" encoding="UTF-8"?>\n';
 
-const firstPlaceId = 'p0';
 const transitionDimension = 40;
 
 @Injectable({
   providedIn: 'root',
 })
-export class RunToPnmlService {
-  constructor(private layoutService: LayoutService) {}
-
+export class PetriNetToPnmlService {
   convertPetriNetToPnml(name: string, petriNet: PetriNet): string {
-    const { net } = this.layoutService.layout(petriNet);
-
-    const transitionText = net.transitions
+    const transitionText = petriNet.transitions
       .map((element) => parseTransition(element))
       .join(`\n`);
 
-    const placesText = parsePlaces(net.places);
-    const arcsText = parseArcs(net);
+    const placesText = parsePlaces(petriNet.places);
+    const arcsText = parseArcs(petriNet);
 
     return `${encoding}
 <pnml>

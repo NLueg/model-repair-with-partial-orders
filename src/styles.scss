@@ -79,6 +79,11 @@ circle.place.place--invalid {
   color: var(--error-color);
 }
 
+circle.place.place--warning {
+  cursor: pointer;
+  color: var(--warn-color);
+}
+
 .current-overlay {
   background: var(--fancy-grey);
   border-radius: var(--border-radius);

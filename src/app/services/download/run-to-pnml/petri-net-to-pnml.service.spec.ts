@@ -1,14 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 
 import { parsedPetriNet } from '../../upload/example-file-parsed';
-import { RunToPnmlService } from './run-to-pnml.service';
+import { PetriNetToPnmlService } from './petri-net-to-pnml.service';
 
-describe('RunToPnmlService', () => {
-  let service: RunToPnmlService;
+describe('PetriNetToPnmlService', () => {
+  let service: PetriNetToPnmlService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(RunToPnmlService);
+    service = TestBed.inject(PetriNetToPnmlService);
   });
 
   it('should be created', () => {

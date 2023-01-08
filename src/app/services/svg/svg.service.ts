@@ -7,6 +7,7 @@ import { getElementsWithArcs } from '../../classes/diagram/functions/net-helper.
 import { PetriNet } from '../../classes/diagram/petri-net';
 import { Place } from '../../classes/diagram/place';
 import { Transition } from '../../classes/diagram/transition';
+import { getSvgOffset } from '../../components/canvas/bind-events.fn';
 import {
   ARC_END_STYLE,
   ARC_STYLE,
@@ -61,6 +62,8 @@ export class SvgService {
     );
     this.applyStyle(transEl, style);
 
+    registerSvgForElement(transition, transEl);
+
     const textEl = this.createTextElement(
       transition.id,
       transition.label as string
@@ -84,6 +87,9 @@ export class SvgService {
     placeEl.setAttribute('cx', '' + (getNumber(place.x) + offset.x));
     placeEl.setAttribute('cy', '' + (getNumber(place.y) + offset.y));
     this.applyStyle(placeEl, PLACE_STYLE);
+
+    registerSvgForElement(place, placeEl);
+
     const textEl = this.createTextElement(place.id);
     textEl.setAttribute('x', '' + (getNumber(place.x) + offset.x));
     textEl.setAttribute(
@@ -132,12 +138,17 @@ export class SvgService {
       markingEl.setAttribute('font-size', '2em');
       result.push(markingEl);
 
-      placeEl.addEventListener('click', () =>
-        this.repairService.showRepairPopover(
-          placeEl.getBoundingClientRect(),
-          place.id
-        )
-      );
+      placeEl.addEventListener('mouseup', () => {
+        if (
+          place.x === place.preDragPosition?.x &&
+          place.y === place.preDragPosition?.y
+        ) {
+          this.repairService.showRepairPopover(
+            placeEl.getBoundingClientRect(),
+            place.id
+          );
+        }
+      });
     } else if (place.marking > 0) {
       const markingEl = this.createTextElementForPlaceContent(
         place.id,
@@ -253,6 +264,7 @@ export class SvgService {
     result.classList.add('drag-point');
     result.setAttribute('cx', '' + (dragPoint.x + offset.x));
     result.setAttribute('cy', '' + (dragPoint.y + offset.y));
+    registerSvgForElement(dragPoint, result);
     return result;
   }
 
@@ -393,5 +405,22 @@ function getPoint(element: ConcreteElement): Point {
   return {
     x: getNumber(element.x),
     y: getNumber(element.y),
+  };
+}
+
+function registerSvgForElement(
+  element: ConcreteElement,
+  svg: SVGElement
+): void {
+  element.element = svg;
+  element.element.onmousedown = (event) => {
+    if (element.element === undefined) {
+      return;
+    }
+    event.stopPropagation();
+    element.dragging = true;
+    element.preDragPosition = { x: element.x ?? 0, y: element.y ?? 0 };
+    element.svgOffset = getSvgOffset(element);
+    element.lastPoint = { x: event.x, y: event.y };
   };
 }
