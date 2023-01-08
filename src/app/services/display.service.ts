@@ -16,7 +16,8 @@ export class DisplayService {
 
   private reset$: BehaviorSubject<Coordinates>;
 
-  constructor() {
+  // TODO: Same arcs is invalid
+  constructor(private parserService: ParserService) {
     const net = getEmptyNet();
     this.petriNet$ = new BehaviorSubject<PetriNet>(net);
     this.partialOrders$ = new BehaviorSubject<PartialOrder[]>([]);

@@ -87,6 +87,23 @@ function generateTextForNewNet(
     newText += `${transition.id} ${transition.label}\n`;
   });
 
+  const requiredTransitions = getRequiredTransitions(solution);
+  const transitionsThatDontExist = requiredTransitions.filter(
+    (requiredLabel) =>
+      !petriNet.transitions.some((arc) => arc.label === requiredLabel)
+  );
+
+  const labelToIdMap = new Map<string, string>();
+
+  for (const transitionLabel of transitionsThatDontExist) {
+    let id = transitionLabel;
+    while (petriNet.transitions.find((t) => t.id === id)) {
+      id += '_';
+    }
+    labelToIdMap.set(transitionLabel, id);
+    newText += `${id} ${transitionLabel}\n`;
+  }
+
   newText += `${placesAttribute}\n`;
   petriNet.places.forEach((place, index) => {
     if (index !== placeIndex) {
@@ -97,7 +114,12 @@ function generateTextForNewNet(
   });
 
   const oldPlace: Place = petriNet.places[placeIndex];
-  const arcsToGenerate = generateArcsForSolution(oldPlace, petriNet, solution);
+  const arcsToGenerate = generateArcsForSolution(
+    oldPlace,
+    petriNet,
+    solution,
+    labelToIdMap
+  );
 
   newText += `${arcsAttribute}\n`;
   arcsToGenerate.forEach((arc, index) => {
@@ -111,6 +133,30 @@ function generateTextForNewNet(
   });
 
   return newText;
+}
+
+function getRequiredTransitions(solution: AutoRepair): string[] {
+  if (solution.type === 'modify-place') {
+    return Array.from(
+      new Set([
+        ...solution.incoming.map((arc) => arc.transitionId),
+        ...solution.outgoing.map((arc) => arc.transitionId),
+      ])
+    );
+  }
+
+  if (solution.type === 'replace-place') {
+    return Array.from(
+      new Set(
+        solution.places.flatMap((place) => [
+          ...place.incoming.map((arc) => arc.transitionId),
+          ...place.outgoing.map((arc) => arc.transitionId),
+        ])
+      )
+    );
+  }
+
+  return [];
 }
 
 function generatePlaceForSolution(
@@ -140,7 +186,8 @@ function generatePlaceForSolution(
 function generateArcsForSolution(
   oldPlace: Place,
   petriNet: PetriNet,
-  solution: AutoRepair
+  solution: AutoRepair,
+  labelToIdMap: Map<string, string>
 ): SimpleArcDefinition[] {
   if (solution.type === 'marking') {
     return petriNet.arcs;
@@ -152,13 +199,15 @@ function generateArcsForSolution(
   if (solution.type === 'modify-place') {
     return filteredArcs.concat(
       ...solution.incoming.map((incoming) => ({
-        source: incoming.transitionId,
+        source:
+          labelToIdMap.get(incoming.transitionId) || incoming.transitionId,
         target: oldPlace.id,
         weight: incoming.weight,
       })),
       ...solution.outgoing.map((outgoing) => ({
         source: oldPlace.id,
-        target: outgoing.transitionId,
+        target:
+          labelToIdMap.get(outgoing.transitionId) || outgoing.transitionId,
         weight: outgoing.weight,
       }))
     );
@@ -167,13 +216,15 @@ function generateArcsForSolution(
   return filteredArcs.concat(
     solution.places.flatMap((place, index) => [
       ...place.incoming.map((incoming) => ({
-        source: incoming.transitionId,
+        source:
+          labelToIdMap.get(incoming.transitionId) || incoming.transitionId,
         target: `${oldPlace.id}_${index}`,
         weight: incoming.weight,
       })),
       ...place.outgoing.map((outgoing) => ({
         source: `${oldPlace.id}_${index}`,
-        target: outgoing.transitionId,
+        target:
+          labelToIdMap.get(outgoing.transitionId) || outgoing.transitionId,
         weight: outgoing.weight,
       })),
     ])
