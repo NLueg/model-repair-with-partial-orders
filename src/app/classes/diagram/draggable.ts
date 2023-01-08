@@ -1,18 +1,19 @@
-import { Arc } from './arc';
+import { Point } from '@angular/cdk/drag-drop';
 
-export type Draggable = {
-  htmlElement: HTMLElement;
-  infoElement?: HTMLElement;
-  contentElement?: HTMLElement;
-  incomingArcs: Array<HTMLElement>;
-  outgoingArcs: Array<HTMLElement>;
-};
+import { Arc } from './arc';
 
 export interface ConcreteElement {
   id: string;
   x?: number;
   y?: number;
-  layerPos?: number;
+
+  layerIndex?: number;
+  layerNodes?: Array<ConcreteElement>;
+  element?: SVGElement;
+  dragging?: boolean;
+  preDragPosition?: Point;
+  svgOffset?: Point;
+  lastPoint?: Point;
 }
 
 export interface ConcreteElementWithArcs extends ConcreteElement {

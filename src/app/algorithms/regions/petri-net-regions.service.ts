@@ -86,6 +86,7 @@ export class PetriNetRegionsService {
             const placeSolution: PlaceSolution = {
               type: 'warning',
               place: unhandledPlace.id,
+              tooManyTokens: markingDifference,
               reduceTokensTo: unhandledPlace.marking - markingDifference,
             };
             solutions.push(placeSolution as any);

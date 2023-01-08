@@ -1,4 +1,3 @@
-import { Point } from '@angular/cdk/drag-drop';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import {
   BehaviorSubject,
@@ -15,7 +14,7 @@ import { PetriNetRegionsService } from '../../algorithms/regions/petri-net-regio
 import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../../services/display.service';
-import { LayoutService } from '../../services/layout.service';
+import { LayoutResult, LayoutService } from '../../services/layout.service';
 import { SvgService } from '../../services/svg/svg.service';
 import { CanvasComponent } from '../canvas/canvas.component';
 
@@ -25,7 +24,7 @@ import { CanvasComponent } from '../canvas/canvas.component';
   styleUrls: ['./display.component.scss'],
 })
 export class DisplayComponent {
-  svgElements$: Observable<SVGElement[]>;
+  layoutResult$: Observable<LayoutResult>;
   @ViewChild('canvas') canvas: CanvasComponent | undefined;
   @ViewChild('svg_wrapper') svgWrapper: ElementRef<HTMLElement> | undefined;
 
@@ -48,7 +47,7 @@ export class DisplayComponent {
       shareReplay(1)
     );
 
-    this.svgElements$ = this.displayService.getPetriNet$().pipe(
+    this.layoutResult$ = this.displayService.getPetriNet$().pipe(
       map((currentRun) => this.layoutService.layout(currentRun)),
       switchMap(({ net, point }) =>
         this.displayService.getPartialOrders$().pipe(
@@ -95,24 +94,7 @@ export class DisplayComponent {
             return { net, point };
           })
         )
-      ),
-      map(({ net, point }) => {
-        let offset: Point;
-
-        if (this.canvas && this.canvas.drawingArea) {
-          const canvasWidth = this.canvas.drawingArea.nativeElement.clientWidth;
-          const canvasHeight =
-            this.canvas.drawingArea.nativeElement.clientHeight;
-
-          offset = {
-            x: Math.floor((canvasWidth - point.x) / 2),
-            y: Math.floor((canvasHeight - point.y) / 2),
-          };
-        } else {
-          offset = { x: 0, y: 0 };
-        }
-        return [...this.svgService.createNetElements(net, offset)];
-      })
+      )
     );
   }
 

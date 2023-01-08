@@ -12,6 +12,8 @@ import { Place } from '../classes/diagram/place';
 import { Transition } from '../classes/diagram/transition';
 import { PLACE_STYLE, TRANSITION_STYLE } from './element-style';
 
+export type LayoutResult = { net: PetriNet; point: Point };
+
 @Injectable({
   providedIn: 'root',
 })
@@ -19,7 +21,7 @@ export class LayoutService {
   private readonly LAYER_OFFSET = 50;
   private readonly NODE_OFFSET = 40;
 
-  layout(net: PetriNet): { net: PetriNet; point: Point } {
+  layout(net: PetriNet): LayoutResult {
     const transitionWidth = parseInt(TRANSITION_STYLE.width);
     const transitionHeight = parseInt(TRANSITION_STYLE.height);
     const placeWidth = parseInt(PLACE_STYLE.r) * 2;
@@ -74,7 +76,8 @@ export class LayoutService {
       for (let nodeIndex = 0; nodeIndex < layer.length; nodeIndex++) {
         const node = layer[nodeIndex];
 
-        node.layerPos = nodeIndex;
+        node.layerNodes = layer;
+        node.layerIndex = nodeIndex;
 
         node.x = layerIndex * LAYER_SPACING + CELL_WIDTH / 2;
         const nodeWidth = node.type === 'breakpoint' ? 0 : CELL_WIDTH;

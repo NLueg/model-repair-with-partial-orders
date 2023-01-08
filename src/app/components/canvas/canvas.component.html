@@ -1,4 +1,11 @@
-<svg #drawingArea class="canvas">
+<svg
+  #drawingArea
+  class="canvas"
+  (mousedown)="processMouseDown($event)"
+  (mousemove)="shareMouseMoved($event)"
+  (mouseup)="shareMouseUp($event)"
+  (mouseleave)="shareMouseUp($event)"
+>
   <defs>
     <marker
       id="arrowhead"

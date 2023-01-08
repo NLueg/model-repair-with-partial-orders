@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { DisplayService } from '../display.service';
 import { DownloadService } from './download.service';
-import { RunToPnmlService } from './run-to-pnml/run-to-pnml.service';
+import { PetriNetToPnmlService } from './run-to-pnml/petri-net-to-pnml.service';
 
 describe('DownloadService', () => {
   let service: DownloadService;
@@ -11,7 +11,7 @@ describe('DownloadService', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: DisplayService, useValue: {} },
-        { provide: RunToPnmlService, useValue: {} },
+        { provide: PetriNetToPnmlService, useValue: {} },
       ],
     });
     service = TestBed.inject(DownloadService);
