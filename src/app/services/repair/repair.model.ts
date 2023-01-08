@@ -26,9 +26,16 @@ export type ParsableSolutionsPerType = {
   solutionParts: ParsableSolution[][];
 };
 
-export type PlaceSolution = {
-  place: string;
-  solutions: AutoRepairWithSolutionType[];
-  invalidTraceCount: number;
-  tokenDifference: number;
-};
+export type PlaceSolution =
+  | {
+      type: 'error';
+      place: string;
+      solutions: AutoRepairWithSolutionType[];
+      invalidTraceCount: number;
+      missingTokens: number | undefined;
+    }
+  | {
+      type: 'warning';
+      place: string;
+      reduceTokensTo: number;
+    };

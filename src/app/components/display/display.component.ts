@@ -84,12 +84,12 @@ export class DisplayComponent {
           }),
           map((invalidPlaces) => {
             net.places.forEach((place) => {
-              place.invalid = undefined;
+              place.issueStatus = undefined;
             });
-            for (const place of invalidPlaces.map((p) => p.place)) {
-              const foundPlace = net.places.find((p) => p.id === place);
+            for (const place of invalidPlaces) {
+              const foundPlace = net.places.find((p) => p.id === place.place);
               if (foundPlace) {
-                foundPlace.invalid = true;
+                foundPlace.issueStatus = place.type;
               }
             }
             return { net, point };

@@ -61,24 +61,40 @@ export class PetriNetRegionsService {
                     : undefined;
 
                 const placeSolution: PlaceSolution = {
+                  type: 'error',
                   place,
                   solutions: parsedSolutions,
-                  tokenDifference: missingTokens ?? 0,
+                  missingTokens: missingTokens ?? 0,
                   invalidTraceCount: invalidPlaces[place],
                 };
                 return placeSolution;
               })
             )
           )
-        ).pipe(
-          tap((solutions) => {
-            console.log('Generated solutions', solutions);
-            this.repairService.saveNewSolutions(
-              solutions,
-              partialOrders.length
-            );
-          })
         );
+      }),
+      tap((solutions) => {
+        const unhandledPlaces = petriNet.places.filter(
+          (place) => !solutions.find((solution) => solution.place === place.id)
+        );
+        for (const unhandledPlace of unhandledPlaces) {
+          const markingDifference = generateMarkingDifference(unhandledPlace);
+          if (
+            markingDifference > 0 &&
+            unhandledPlace.marking - markingDifference >= 0
+          ) {
+            const placeSolution: PlaceSolution = {
+              type: 'warning',
+              place: unhandledPlace.id,
+              reduceTokensTo: unhandledPlace.marking - markingDifference,
+            };
+            solutions.push(placeSolution as any);
+            console.log(placeSolution);
+          }
+        }
+
+        console.log('Generated solutions', solutions);
+        this.repairService.saveNewSolutions(solutions, partialOrders.length);
       })
     );
   }

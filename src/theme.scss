@@ -193,7 +193,6 @@ $theme-accent: mat.define-palette($mat-accent, main, lighter, darker);
 
 
 body {
-  --warn-color: #ff0000;
   --warn-lighter-color: #ffb3b3;
   --warn-darker-color: #ff0000;
   --text-warn-color: #{$light-primary-text};

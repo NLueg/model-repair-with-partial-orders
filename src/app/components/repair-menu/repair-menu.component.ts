@@ -32,6 +32,23 @@ export class RepairMenuComponent implements OnInit {
   constructor(private netCommandService: NetCommandService) {}
 
   ngOnInit(): void {
+    if (this.placeSolution.type === 'warning') {
+      this.infoHeader = 'Too many tokens';
+      this.shownTextsForSolutions = [
+        {
+          text: {
+            label: `<b>Change marking to ${this.placeSolution.reduceTokensTo}</b>`,
+            tooltip: `Change marking to ${this.placeSolution.reduceTokensTo}`,
+          },
+          solution: {
+            type: 'marking',
+            newMarking: this.placeSolution.reduceTokensTo,
+          },
+        },
+      ];
+      return;
+    }
+
     const percentage = Intl.NumberFormat('default', {
       style: 'percent',
       minimumFractionDigits: 0,
@@ -39,8 +56,8 @@ export class RepairMenuComponent implements OnInit {
     }).format(this.placeSolution.invalidTraceCount / this.partialOrderCount);
     this.infoHeader = `The place cannot fire for ${this.placeSolution.invalidTraceCount} (${percentage}) traces.<br/>`;
 
-    if (this.placeSolution.tokenDifference < 0) {
-      this.infoHeader += `The place has ${this.placeSolution.tokenDifference} missing tokens.<br/>`;
+    if (this.placeSolution.missingTokens) {
+      this.infoHeader += `The place has ${this.placeSolution.missingTokens} missing tokens.<br/>`;
     }
 
     const solutions = this.placeSolution.solutions;

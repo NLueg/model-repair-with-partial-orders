@@ -6,11 +6,19 @@
     font-size: 14px;
 
     display: flex;
+    align-items: center;
     margin: var(--spaces-x2) var(--spaces-x2) 0;
 
     mat-icon {
       margin-right: 4px;
       min-width: 24px;
+
+      &.icon--warning {
+        color: var(--warn-color);
+      }
+      &.icon--error {
+        color: var(--error-color);
+      }
     }
   }
 
@@ -19,7 +27,12 @@
     text-align: left;
     white-space: normal;
     line-height: normal;
+    min-height: 48px;
     padding: var(--spaces) var(--spaces-x2);
+
+    &:hover {
+      background-color: var(--dark-grey);
+    }
   }
 
   button[mat-button] {

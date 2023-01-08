@@ -96,21 +96,39 @@ export class SvgService {
     );
     const result = [placeEl, textEl];
 
-    if (place.invalid) {
-      placeEl.classList.add('place--invalid');
-      placeEl.setAttribute('stroke', 'red');
+    if (place.issueStatus) {
+      if (place.issueStatus === 'warning') {
+        placeEl.classList.add('place--warning');
+        placeEl.setAttribute('stroke', 'var(--warn-color)');
 
-      const titleEl = this.createSvgElement('title');
-      titleEl.textContent =
-        'Invalid place. Click to see possibilities to solve the issues!';
-      placeEl.appendChild(titleEl);
+        const titleEl = this.createSvgElement('title');
+        titleEl.textContent =
+          'Place can be improved. Click to see possibilities to solve the issue!';
+        placeEl.appendChild(titleEl);
+      } else {
+        placeEl.classList.add('place--invalid');
+        placeEl.setAttribute('stroke', 'var(--error-color)');
 
-      const markingEl = this.createTextElementForPlaceContent(place.id, '!');
+        const titleEl = this.createSvgElement('title');
+        titleEl.textContent =
+          'Invalid place. Click to see possibilities to solve the issue!';
+        placeEl.appendChild(titleEl);
+      }
+
+      const markingEl = this.createTextElementForPlaceContent(
+        place.id,
+        place.issueStatus === 'warning' ? '?' : '!'
+      );
       markingEl.setAttribute('x', '' + (getNumber(place.x) + offset.x));
       markingEl.setAttribute('y', '' + (getNumber(place.y) + offset.y));
       markingEl.setAttribute('width', '48');
       markingEl.setAttribute('height', '48');
-      markingEl.setAttribute('stroke', 'red');
+      markingEl.setAttribute(
+        'stroke',
+        place.issueStatus === 'warning'
+          ? 'var(--warn-color)'
+          : 'var(--error-color)'
+      );
       markingEl.setAttribute('font-size', '2em');
       result.push(markingEl);
 

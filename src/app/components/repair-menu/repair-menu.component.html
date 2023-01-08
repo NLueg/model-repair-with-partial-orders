@@ -2,8 +2,8 @@
   <div class="more-info-header">
     <mat-icon
       aria-hidden="false"
-      aria-label="More info icon"
-      fontIcon="info"
+      [class]="'icon--' + placeSolution.type"
+      [fontIcon]="placeSolution.type === 'error' ? 'error' : 'warning'"
     ></mat-icon>
     <span [innerHTML]="infoHeader"> </span>
   </div>

@@ -48,9 +48,10 @@ svg foreignObject {
 
 :root {
     --success-color: #4CAF50;
-    --warn-color: #ff9800;
+    --warn-color: #ff8000;
     --error-color: #f44336;
     --fancy-grey: #f5f5f5;
+    --dark-grey: #d3d3d3;
 
     --border-radius: 5px;
     --spaces: 8px;
@@ -75,6 +76,7 @@ svg foreignObject {
 
 circle.place.place--invalid {
   cursor: pointer;
+  color: var(--error-color);
 }
 
 .current-overlay {
