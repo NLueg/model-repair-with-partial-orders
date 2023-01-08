@@ -5,7 +5,6 @@ export type Arc = {
   target: string;
   weight: number;
   breakpoints: Breakpoint[];
-  currentRun?: boolean;
 };
 
 export interface Breakpoint extends ConcreteElement {

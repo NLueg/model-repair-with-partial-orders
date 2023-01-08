@@ -12,7 +12,7 @@ describe('DisplayService', () => {
         {
           provide: ParserService,
           useValue: {
-            parsePartialOrder: jest.fn().mockReturnValue(null),
+            parsePartialOrders: jest.fn().mockReturnValue([]),
           },
         },
       ],

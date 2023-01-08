@@ -99,7 +99,7 @@ export class UploadService {
       this.displayService.setNewNet(petriNet, errors);
       this.currentUpload$.next(newSource);
     } else {
-      const partialOrder = this.parserService.parsePartialOrder(newSource);
+      const partialOrder = this.parserService.parsePartialOrders(newSource);
       if (!partialOrder) return;
 
       this.displayService.appendNewPartialOrder(partialOrder);

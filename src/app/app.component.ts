@@ -6,8 +6,7 @@ import { first, map, Observable, Subject } from 'rxjs';
 import { DisplayService } from './services/display.service';
 import { NetCommandService } from './services/repair/net-command.service';
 import {
-  simpleExampleLogInvalid,
-  simpleExampleLogInvalidSecond,
+  simpleExampleLog,
   simpleExamplePetriNet,
 } from './services/upload/simple-example/simple-example-texts';
 import { StructureType, UploadService } from './services/upload/upload.service';
@@ -58,8 +57,7 @@ export class AppComponent implements OnInit {
   downloadExample(): void {
     const zip = new JSZip();
     zip.file('simple-example-net.pn', simpleExamplePetriNet);
-    zip.file('simple-example-log.txt', simpleExampleLogInvalid);
-    zip.file('simple-example-log-second.txt', simpleExampleLogInvalidSecond);
+    zip.file('simple-example-log.txt', simpleExampleLog);
     zip.generateAsync({ type: 'blob' }).then((content) => {
       saveAs(content, 'simple-example.zip');
     });

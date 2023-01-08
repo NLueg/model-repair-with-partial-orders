@@ -20,7 +20,37 @@ export class DisplayService {
   constructor(private parserService: ParserService) {
     const net = getEmptyNet();
     this.petriNet$ = new BehaviorSubject<PetriNet>(net);
-    this.partialOrders$ = new BehaviorSubject<PartialOrder[]>([]);
+    this.partialOrders$ = new BehaviorSubject<PartialOrder[]>([
+      ...this.parserService.parsePartialOrders(
+        '.type log\n' +
+          '.attributes\n' +
+          'case-id\n' +
+          'concept:name\n' +
+          'event-id\n' +
+          'follows[]\n' +
+          '.events\n' +
+          '1 a e1\n' +
+          '1 b e2 [e1]\n' +
+          '1 c e3 [e1]\n' +
+          '1 d e4 [e2,e3]\n' +
+          '2 x e5\n' +
+          '2 b e6 [e5]\n' +
+          '2 c e7 [e5]\n' +
+          '2 d e8 [e6,e7]',
+        new Set<string>()
+      )!,
+      /* this.parserService.parsePartialOrder(
+        '.type log\n' +
+          '.events\n' +
+          'e2 b\n' +
+          'e3 c\n' +
+          'e4 x\n' +
+          '.arcs\n' +
+          'e4 e2\n' +
+          'e4 e3\n',
+        new Set<string>()
+      )!, */
+    ]);
     this.currentErrors$ = new BehaviorSubject<Set<string>>(new Set());
 
     this.reset$ = new BehaviorSubject<Coordinates>({ x: 0, y: 0 });
@@ -46,9 +76,9 @@ export class DisplayService {
     this.currentErrors$.next(errors);
   }
 
-  appendNewPartialOrder(partialOrder: PartialOrder): void {
+  appendNewPartialOrder(partialOrder: PartialOrder[]): void {
     const currentList = this.partialOrders$.value;
-    currentList.push(partialOrder);
+    currentList.push(...partialOrder);
     this.partialOrders$.next(currentList);
   }
 

@@ -15,7 +15,7 @@ describe('RunToPnmlService', () => {
     expect(service).toBeTruthy();
   });
 
-  xit('should parse example run to pnml', () => {
+  it('should parse example run to pnml', () => {
     const result = service.convertPetriNetToPnml(
       `my name.pnml`,
       parsedPetriNet

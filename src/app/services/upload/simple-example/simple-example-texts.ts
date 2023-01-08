@@ -18,26 +18,19 @@ c p3
 p3 d
 `;
 
-export const simpleExampleLogInvalid = `.type log
+export const simpleExampleLog = `.type log
+.attributes
+case-id
+concept:name
+event-id
+follows[]
 .events
-e1 a
-e2 b
-e3 c
-e4 d
-.arcs
-e1 e2
-e2 e3
-e3 e4
-`;
-
-export const simpleExampleLogInvalidSecond = `.type log
-.events
-e1 a
-e2 b
-e3 c
-e4 d
-.arcs
-e1 e3
-e3 e2
-e2 e4
+1 a e1
+1 b e2 [e1]
+1 c e3 [e1]
+1 d e4 [e2,e3]
+2 x e5
+2 b e6 [e5]
+2 c e7 [e5]
+2 d e8 [e6,e7]
 `;

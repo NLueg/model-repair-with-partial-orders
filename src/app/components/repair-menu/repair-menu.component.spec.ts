@@ -17,6 +17,7 @@ describe('RepairMenuComponent', () => {
 
     component = fixture.componentInstance;
     component.placeSolution = {
+      type: 'error',
       place: 'p1',
       solutions: [
         {
@@ -25,7 +26,7 @@ describe('RepairMenuComponent', () => {
           newMarking: 1,
         },
       ],
-      tokenDifference: undefined,
+      missingTokens: undefined,
       invalidTraceCount: 0,
     };
 
