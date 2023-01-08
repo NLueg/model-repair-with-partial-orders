@@ -37,5 +37,6 @@ export type PlaceSolution =
   | {
       type: 'warning';
       place: string;
+      tooManyTokens: number;
       reduceTokensTo: number;
     };
