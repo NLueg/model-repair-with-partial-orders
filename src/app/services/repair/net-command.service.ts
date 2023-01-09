@@ -53,7 +53,7 @@ export class NetCommandService {
     }
 
     this.uploadService
-      .getUpload$()
+      .getNetUpload$()
       .pipe(first())
       .subscribe((currentUpload) => {
         this.redoQueue.push(currentUpload);
@@ -68,7 +68,7 @@ export class NetCommandService {
     }
 
     this.uploadService
-      .getUpload$()
+      .getNetUpload$()
       .pipe(first())
       .subscribe((currentUpload) => {
         this.undoQueue.push(currentUpload);

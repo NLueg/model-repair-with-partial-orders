@@ -19,15 +19,15 @@ export function addTransition(
 }
 
 export function addEventItem(
-  partialOrder: PartialOrder,
+  partialOrder: PartialOrder | undefined,
   element: EventItem
 ): boolean {
-  const contained = partialOrder.events.some((item) => item.id == element.id);
+  const contained = partialOrder?.events.some((item) => item.id == element.id);
   if (contained) {
     return false;
   }
 
-  partialOrder.events.push(element);
+  partialOrder?.events.push(element);
   return true;
 }
 
@@ -41,15 +41,18 @@ export function addPlace(petriNet: PetriNet, place: Place): boolean {
   return true;
 }
 
-export function addArc(run: PetriNet | PartialOrder, arc: Arc): boolean {
-  const contained = run.arcs.some(
+export function addArc(
+  run: PetriNet | PartialOrder | undefined,
+  arc: Arc
+): boolean {
+  const contained = run?.arcs.some(
     (item) => item.source == arc.source && item.target == arc.target
   );
   if (contained) {
     return false;
   }
 
-  run.arcs.push(arc);
+  run?.arcs.push(arc);
   return true;
 }
 

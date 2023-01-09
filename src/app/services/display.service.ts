@@ -12,14 +12,14 @@ import { isNetEmpty, PetriNet } from '../classes/diagram/petri-net';
 export class DisplayService {
   private petriNet$: Subject<PetriNet>;
   private currentErrors$: Subject<Set<string>>;
-  private partialOrders$: BehaviorSubject<PartialOrder[]>;
+  private partialOrders$: Subject<PartialOrder[] | null>;
 
   private reset$: BehaviorSubject<Coordinates>;
 
   constructor() {
     const net = getEmptyNet();
     this.petriNet$ = new BehaviorSubject<PetriNet>(net);
-    this.partialOrders$ = new BehaviorSubject<PartialOrder[]>([]);
+    this.partialOrders$ = new BehaviorSubject<PartialOrder[] | null>(null);
     this.currentErrors$ = new BehaviorSubject<Set<string>>(new Set());
 
     this.reset$ = new BehaviorSubject<Coordinates>({ x: 0, y: 0 });
@@ -45,13 +45,11 @@ export class DisplayService {
     this.currentErrors$.next(errors);
   }
 
-  appendNewPartialOrder(partialOrder: PartialOrder): void {
-    const currentList = this.partialOrders$.value;
-    currentList.push(partialOrder);
-    this.partialOrders$.next(currentList);
+  setPartialOrders(partialOrder: PartialOrder[]): void {
+    this.partialOrders$.next(partialOrder);
   }
 
-  getPartialOrders$(): Observable<PartialOrder[]> {
+  getPartialOrders$(): Observable<PartialOrder[] | null> {
     return this.partialOrders$.asObservable();
   }
 }

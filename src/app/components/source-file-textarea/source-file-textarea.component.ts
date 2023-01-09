@@ -4,11 +4,11 @@ import {
   combineLatest,
   debounceTime,
   distinctUntilChanged,
-  first,
   Observable,
   Subscription,
 } from 'rxjs';
 
+import { PartialOrder } from '../../classes/diagram/partial-order';
 import { isNetEmpty, PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../../services/display.service';
 import { ParserService } from '../../services/parser/parser.service';
@@ -31,83 +31,59 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
 
   private _resetEventSubscription?: Subscription;
 
-  textareaFc: FormControl;
+  petriNetTextarea: FormControl<string | null>;
+  logTextarea: FormControl<string | null>;
+
   isCurrentRunEmpty$: Observable<boolean>;
 
   @Input()
   resetEvent?: Observable<void>;
 
-  runValidationStatus: Valid | null = null;
-  runHint = '';
+  netValidationStatus: Valid | null = null;
+  logValidationStatus: Valid | null = null;
+  netHint = '';
+  logHint = '';
 
   constructor(
     private parserService: ParserService,
     private displayService: DisplayService,
     private uploadService: UploadService
   ) {
-    this.textareaFc = new FormControl();
+    this.logTextarea = new FormControl<string | null>(null);
+    this.petriNetTextarea = new FormControl<string | null>(null);
 
     this.isCurrentRunEmpty$ = this.displayService
       .isCurrentRunEmpty$()
       .pipe(distinctUntilChanged());
 
-    this._sub = this.textareaFc.valueChanges
+    this._sub = this.petriNetTextarea.valueChanges
       .pipe(debounceTime(400))
-      .subscribe((val) => this.processSourceChange(val));
+      .subscribe((val) => this.processSourceChange(val, 'net'));
+
+    this.logTextarea.valueChanges
+      .pipe(debounceTime(400))
+      .subscribe((val) => this.processSourceChange(val, 'po'));
 
     this._fileSub = this.uploadService
-      .getUpload$()
-      .subscribe((content) => this.textareaFc.setValue(content));
+      .getNetUpload$()
+      .subscribe((content) => this.petriNetTextarea.setValue(content));
+
+    this._fileSub = this.uploadService
+      .getLogUpload$()
+      .subscribe((content) => this.logTextarea.setValue(content));
 
     combineLatest([
       this.displayService.getPetriNet$(),
       this.displayService.getCurrentErrors$(),
     ]).subscribe(([petriNet, errors]) => {
-      this.updateValidation(petriNet, errors);
+      this.updateValidationForNet(petriNet, errors);
     });
   }
 
   ngOnInit(): void {
     this._resetEventSubscription = this.resetEvent?.subscribe(() =>
-      this.processSourceChange(this.textareaFc.value)
+      this.processSourceChange(this.petriNetTextarea.value, 'net')
     );
-
-    this.uploadService
-      .getUpload$()
-      .pipe(first())
-      .subscribe((content) => {
-        this.textareaFc.setValue(
-          content ||
-            '.type pn\n' +
-              '.transitions\n' +
-              't1 t1\n' +
-              't2\n' +
-              't3 t3\n' +
-              't4\n' +
-              't5\n' +
-              't6 t6\n' +
-              '.places\n' +
-              'p1 1\n' +
-              'p2 0\n' +
-              'p3 0\n' +
-              'p4 0\n' +
-              'p5 0\n' +
-              '.arcs\n' +
-              'p1 t1\n' +
-              't1 p2\n' +
-              't1 p3\n' +
-              'p2 t2\n' +
-              't2 p4\n' +
-              'p4 t3\n' +
-              't3 p3\n' +
-              'p3 t4\n' +
-              't4 p5\n' +
-              'p4 t5\n' +
-              't5 p3\n' +
-              'p5 t6\n' +
-              't6 p3'
-        );
-      });
   }
 
   ngOnDestroy(): void {
@@ -116,29 +92,62 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     this._fileSub.unsubscribe();
   }
 
-  private processSourceChange(newSource: string): void {
-    const errors = new Set<string>();
-    const result = this.parserService.parsePetriNet(newSource, errors);
-    this.updateValidation(result, errors);
+  private processSourceChange(
+    newSource: string | null,
+    type: 'net' | 'po'
+  ): void {
+    if (newSource === null) {
+      return;
+    }
 
-    if (!result) return;
+    if (type === 'net') {
+      const errors = new Set<string>();
+      const result = this.parserService.parsePetriNet(newSource, errors);
 
-    this.displayService.setNewNet(result, errors);
+      this.updateValidationForNet(result, errors);
+      if (!result) return;
+
+      this.displayService.setNewNet(result, errors);
+    } else {
+      const errors = new Set<string>();
+      const result = this.parserService.parsePartialOrders(newSource, errors);
+
+      this.updateValidationForLog(result, errors);
+      if (!result) return;
+
+      this.displayService.setPartialOrders(result);
+    }
   }
 
-  private updateValidation(
+  private updateValidationForNet(
     run: PetriNet | null,
     errors: Set<string> = new Set<string>()
   ): void {
-    this.runHint = [...errors].join('\n');
+    this.netHint = [...errors].join('\n');
 
     if (!run || errors.size > 0) {
-      this.textareaFc.setErrors({ 'invalid run': true });
-      this.runValidationStatus = 'error';
+      this.petriNetTextarea.setErrors({ 'invalid net': true });
+      this.netValidationStatus = 'error';
     } else if (!isNetEmpty(run)) {
-      this.runValidationStatus = 'success';
+      this.netValidationStatus = 'success';
     } else {
-      this.runValidationStatus = null;
+      this.netValidationStatus = null;
+    }
+  }
+
+  private updateValidationForLog(
+    orders: PartialOrder[],
+    errors: Set<string> = new Set<string>()
+  ): void {
+    this.logHint = [...errors].join('\n');
+
+    if (orders.length === 0 || errors.size > 0) {
+      this.logTextarea.setErrors({ 'invalid log': true });
+      this.logValidationStatus = 'error';
+    } else if (orders.length > 0) {
+      this.logValidationStatus = 'success';
+    } else {
+      this.logValidationStatus = null;
     }
   }
 }

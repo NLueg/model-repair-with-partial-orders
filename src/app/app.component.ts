@@ -6,8 +6,7 @@ import { first, map, Observable, Subject } from 'rxjs';
 import { DisplayService } from './services/display.service';
 import { NetCommandService } from './services/repair/net-command.service';
 import {
-  simpleExampleLogInvalid,
-  simpleExampleLogInvalidSecond,
+  simpleExampleLog,
   simpleExamplePetriNet,
 } from './services/upload/simple-example/simple-example-texts';
 import { StructureType, UploadService } from './services/upload/upload.service';
@@ -30,7 +29,7 @@ export class AppComponent implements OnInit {
   ) {
     this.partialOrderCount$ = displayService
       .getPartialOrders$()
-      .pipe(map((pos) => ({ count: pos.length })));
+      .pipe(map((pos) => ({ count: pos?.length ?? 0 })));
 
     this.isCurrentRunEmpty$ = displayService.isCurrentRunEmpty$();
   }
@@ -52,14 +51,14 @@ export class AppComponent implements OnInit {
   startEditing(count: number): void {
     if (count > 0) {
       this.hasPartialOrders = true;
+      this.resetSvgPositioning();
     }
   }
 
   downloadExample(): void {
     const zip = new JSZip();
     zip.file('simple-example-net.pn', simpleExamplePetriNet);
-    zip.file('simple-example-log.txt', simpleExampleLogInvalid);
-    zip.file('simple-example-log-second.txt', simpleExampleLogInvalidSecond);
+    zip.file('simple-example-log.log', simpleExampleLog);
     zip.generateAsync({ type: 'blob' }).then((content) => {
       saveAs(content, 'simple-example.zip');
     });

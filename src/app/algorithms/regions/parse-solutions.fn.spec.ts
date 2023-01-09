@@ -522,16 +522,81 @@ describe('parseSolution', () => {
 
     const expected: AutoRepairWithSolutionType[] = [
       {
-        repairType: 'arcsSame',
         places: [
           {
             incoming: [
-              { transitionId: 't1', weight: 3 },
-              { transitionId: 't2', weight: 3 },
+              {
+                transitionId: 'a',
+                weight: 1,
+              },
+              {
+                transitionId: 'x',
+                weight: 1,
+              },
             ],
-            outgoing: [{ transitionId: 't1', weight: 9 }],
+            outgoing: [
+              {
+                transitionId: 'b',
+                weight: 1,
+              },
+            ],
+          },
+          {
+            incoming: [
+              {
+                transitionId: 'a',
+                weight: 1,
+              },
+              {
+                transitionId: 'x',
+                weight: 1,
+              },
+            ],
+            outgoing: [
+              {
+                transitionId: 'b',
+                weight: 1,
+              },
+            ],
+          },
+          {
+            incoming: [
+              {
+                transitionId: 'a',
+                weight: 1,
+              },
+              {
+                transitionId: 'x',
+                weight: 1,
+              },
+            ],
+            outgoing: [
+              {
+                transitionId: 'c',
+                weight: 1,
+              },
+            ],
+          },
+          {
+            incoming: [
+              {
+                transitionId: 'a',
+                weight: 1,
+              },
+              {
+                transitionId: 'x',
+                weight: 1,
+              },
+            ],
+            outgoing: [
+              {
+                transitionId: 'c',
+                weight: 1,
+              },
+            ],
           },
         ],
+        repairType: 'arcsSame',
         type: 'replace-place',
       },
     ];
