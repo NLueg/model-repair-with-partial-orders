@@ -29,7 +29,7 @@ export class AppComponent implements OnInit {
   ) {
     this.partialOrderCount$ = displayService
       .getPartialOrders$()
-      .pipe(map((pos) => ({ count: pos.length })));
+      .pipe(map((pos) => ({ count: pos?.length ?? 0 })));
 
     this.isCurrentRunEmpty$ = displayService.isCurrentRunEmpty$();
   }
@@ -51,13 +51,14 @@ export class AppComponent implements OnInit {
   startEditing(count: number): void {
     if (count > 0) {
       this.hasPartialOrders = true;
+      this.resetSvgPositioning();
     }
   }
 
   downloadExample(): void {
     const zip = new JSZip();
     zip.file('simple-example-net.pn', simpleExamplePetriNet);
-    zip.file('simple-example-log.txt', simpleExampleLog);
+    zip.file('simple-example-log.log', simpleExampleLog);
     zip.generateAsync({ type: 'blob' }).then((content) => {
       saveAs(content, 'simple-example.zip');
     });

@@ -7,6 +7,7 @@ import { parsedSimpleExamplePetriNet } from '../upload/simple-example/simple-exa
 import {
   simpleExampleLog,
   simpleExamplePetriNet,
+  simpleExamplePo,
 } from '../upload/simple-example/simple-example-texts';
 import { ParserService } from './parser.service';
 
@@ -43,9 +44,140 @@ describe('ParserService', () => {
     expect(result).toEqual(parsedSimpleExamplePetriNet);
   });
 
-  it('parseLog should parse second simple invalid example log', () => {
+  it('parseLog should parse simple invalid log', () => {
     const errors = new Set<string>();
     const result = service.parsePartialOrders(simpleExampleLog, errors);
+    expect(result).toEqual([
+      {
+        arcs: [
+          {
+            breakpoints: [],
+            source: 'e1',
+            target: 'e3',
+            weight: 1,
+          },
+          {
+            breakpoints: [],
+            source: 'e3',
+            target: 'e2',
+            weight: 1,
+          },
+          {
+            breakpoints: [],
+            source: 'e2',
+            target: 'e4',
+            weight: 1,
+          },
+        ],
+        events: [
+          {
+            id: 'e1',
+            incomingArcs: [],
+            label: 'a',
+            nextEvents: ['e3'],
+            outgoingArcs: [],
+            previousEvents: [],
+            type: 'event',
+          },
+          {
+            id: 'e3',
+            incomingArcs: [],
+            label: 'c',
+            nextEvents: ['e2'],
+            outgoingArcs: [],
+            previousEvents: ['e1'],
+            type: 'event',
+          },
+          {
+            id: 'e2',
+            incomingArcs: [],
+            label: 'b',
+            nextEvents: ['e4'],
+            outgoingArcs: [],
+            previousEvents: ['e3'],
+            type: 'event',
+          },
+          {
+            id: 'e4',
+            incomingArcs: [],
+            label: 'd',
+            nextEvents: [],
+            outgoingArcs: [],
+            previousEvents: ['e2'],
+            type: 'event',
+          },
+        ],
+        finalEvents: ['e4'],
+        initialEvents: ['e1'],
+      },
+      {
+        arcs: [
+          {
+            breakpoints: [],
+            source: 'e1',
+            target: 'e2',
+            weight: 1,
+          },
+          {
+            breakpoints: [],
+            source: 'e2',
+            target: 'e3',
+            weight: 1,
+          },
+          {
+            breakpoints: [],
+            source: 'e3',
+            target: 'e4',
+            weight: 1,
+          },
+        ],
+        events: [
+          {
+            id: 'e1',
+            incomingArcs: [],
+            label: 'a',
+            nextEvents: ['e2'],
+            outgoingArcs: [],
+            previousEvents: [],
+            type: 'event',
+          },
+          {
+            id: 'e2',
+            incomingArcs: [],
+            label: 'b',
+            nextEvents: ['e3'],
+            outgoingArcs: [],
+            previousEvents: ['e1'],
+            type: 'event',
+          },
+          {
+            id: 'e3',
+            incomingArcs: [],
+            label: 'c',
+            nextEvents: ['e4'],
+            outgoingArcs: [],
+            previousEvents: ['e2'],
+            type: 'event',
+          },
+          {
+            id: 'e4',
+            incomingArcs: [],
+            label: 'd',
+            nextEvents: [],
+            outgoingArcs: [],
+            previousEvents: ['e3'],
+            type: 'event',
+          },
+        ],
+        finalEvents: ['e4'],
+        initialEvents: ['e1'],
+      },
+    ]);
+  });
+
+  it('parseLog should parse simple partial order', () => {
+    const errors = new Set<string>();
+    const result = service.parsePartialOrders(simpleExamplePo, errors);
     expect(result).toEqual([
       {
         arcs: [

@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { Observable, ReplaySubject, Subject } from 'rxjs';
 
-import { DisplayService } from '../display.service';
-import { ParserService } from '../parser/parser.service';
 import { netTypeKey } from '../parser/parsing-constants';
 import { getRunTextFromPnml } from './pnml/pnml-to-run.fn';
 
@@ -18,28 +16,29 @@ const allowedExtensions: { [key in StructureType]: string[] } = {
   providedIn: 'root',
 })
 export class UploadService {
-  private currentUpload$: Subject<string>;
+  private currentNetUpload$: Subject<string>;
+  private currentLogUpload$: Subject<string>;
 
-  constructor(
-    private toastr: ToastrService,
-    private parserService: ParserService,
-    private displayService: DisplayService
-  ) {
-    this.currentUpload$ = new BehaviorSubject<string>('');
+  constructor(private toastr: ToastrService) {
+    this.currentNetUpload$ = new ReplaySubject<string>(1);
+    this.currentLogUpload$ = new ReplaySubject<string>(1);
   }
 
   setUploadText(text: string): void {
-    this.currentUpload$.next(text);
+    this.currentNetUpload$.next(text);
   }
 
-  getUpload$(): Observable<string> {
-    return this.currentUpload$.asObservable();
+  getNetUpload$(): Observable<string> {
+    return this.currentNetUpload$.asObservable();
+  }
+
+  getLogUpload$(): Observable<string> {
+    return this.currentLogUpload$.asObservable();
   }
 
   openFileSelector(type?: StructureType): void {
     const fileUpload = document.createElement('input');
     fileUpload.setAttribute('type', 'file');
-    fileUpload.setAttribute('multiple', 'multiple');
 
     const relevantExtensions = type
       ? allowedExtensions[type]
@@ -66,43 +65,33 @@ export class UploadService {
       this.toastr.error("Couldn't find any valid file");
       return;
     }
+    if (filteredFiles.length > 1) {
+      this.toastr.warning('Only the first file will be used');
+    } else {
+      this.toastr.success(`Processed file`);
+    }
 
-    this.toastr.success(
-      `Processed ${filteredFiles.length} valid ${
-        filteredFiles.length === 1 ? 'file' : 'files'
-      }`
-    );
-    filteredFiles.forEach((file) => {
-      const reader = new FileReader();
-      const fileExtension = getExtensionForFileName(file.name);
+    const file = filteredFiles[0];
+    const reader = new FileReader();
+    const fileExtension = getExtensionForFileName(file.name);
 
-      reader.onload = () => {
-        let content: string = reader.result as string;
+    reader.onload = () => {
+      let content: string = reader.result as string;
 
-        if (fileExtension?.toLowerCase() === 'pnml') {
-          content = getRunTextFromPnml(content);
-        }
-        this.processNewSource(content);
-      };
+      if (fileExtension?.toLowerCase() === 'pnml') {
+        content = getRunTextFromPnml(content);
+      }
+      this.processNewSource(content);
+    };
 
-      reader.readAsText(file);
-    });
+    reader.readAsText(file);
   }
 
   private processNewSource(newSource: string): void {
-    const errors = new Set<string>();
-
     if (newSource.trim().startsWith(netTypeKey)) {
-      const petriNet = this.parserService.parsePetriNet(newSource, errors);
-      if (!petriNet) return;
-
-      this.displayService.setNewNet(petriNet, errors);
-      this.currentUpload$.next(newSource);
+      this.currentNetUpload$.next(newSource);
     } else {
-      const partialOrder = this.parserService.parsePartialOrders(newSource);
-      if (!partialOrder) return;
-
-      this.displayService.appendNewPartialOrder(partialOrder);
+      this.currentLogUpload$.next(newSource);
     }
   }
 }

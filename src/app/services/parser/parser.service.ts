@@ -51,7 +51,7 @@ export class ParserService {
 
   private readonly logEventRegex = /^(\S+)\s*(\S+)\s*(\S+)\s*(\S*)$/;
 
-  parsePartialOrders(content: string, errors?: Set<string>): PartialOrder[] {
+  parsePartialOrders(content: string, errors: Set<string>): PartialOrder[] {
     const contentLines = content.split('\n');
 
     let currentParsingState: LogParsingStates = 'initial';
@@ -79,7 +79,7 @@ export class ParserService {
           if (trimmedLine === logTypeKey) {
             currentParsingState = 'type';
           } else {
-            errors?.add(
+            errors.add(
               `The type of the file with the net has to be '` + netTypeKey + `'`
             );
             this.toastr.error(
@@ -94,15 +94,14 @@ export class ParserService {
             currentParsingState = 'attributes';
             break;
           } else {
-            errors?.add(`The file contains invalid parts`);
+            errors.add(`The log contains invalid parts`);
             this.toastr.error(
-              `The file contains invalid parts`,
-              `Unable to parse file`
+              `The log contains invalid parts`,
+              `Unable to parse log`
             );
             return [];
           }
         case 'attributes':
-          // TODO: Parse attributes
           if (trimmedLine !== eventsAttribute) {
             if (trimmedLine === caseIdAttribute) {
               caseIdIndex = attributesCounter;
@@ -119,16 +118,15 @@ export class ParserService {
             currentParsingState = 'events';
             break;
           } else {
-            errors?.add(`The file contains invalid parts`);
+            errors.add(`The log contains invalid parts`);
             this.toastr.error(
-              `The file contains invalid parts`,
-              `Unable to parse file`
+              `The log contains invalid parts`,
+              `Unable to parse log`
             );
             return [];
           }
         case 'events':
           if (trimmedLine !== eventsAttribute) {
-            // TODO: Parse events
             const match = this.logEventRegex.exec(trimmedLine);
             if (!match) {
               break;
@@ -170,41 +168,47 @@ export class ParserService {
             };
             if (!addEventItem(currentPartialOrder, newEvent)) {
               this.toastr.warning(
-                `File contains duplicate transitions`,
+                `Log contains duplicate transitions`,
                 `Duplicate transitions are ignored`
               );
-            } else if (lastCaseId || follows.length > 0) {
-              if (follows.length === 0 && lastCaseId) {
-                this.addArcToPartialOrder(currentPartialOrder, {
-                  target: id,
-                  source: lastCaseId,
-                  weight: 1,
-                  breakpoints: [],
-                });
-              } else if (follows.length > 0) {
-                follows.forEach((follow) => {
+            } else {
+              if (lastCaseId || follows.length > 0) {
+                if (follows.length === 0 && lastCaseId) {
                   this.addArcToPartialOrder(currentPartialOrder, {
                     target: id,
-                    source: follow,
+                    source: lastCaseId,
                     weight: 1,
                     breakpoints: [],
                   });
-                });
+                } else if (follows.length > 0) {
+                  follows.forEach((follow) => {
+                    this.addArcToPartialOrder(currentPartialOrder, {
+                      target: id,
+                      source: follow,
+                      weight: 1,
+                      breakpoints: [],
+                    });
+                  });
+                }
               }
-
               lastCaseId = id;
             }
             break;
           } else {
-            errors?.add(`Unable to parse file`);
-            this.toastr.error(`Error`, `Unable to parse file`);
+            errors.add(`Unable to parse log`);
+            this.toastr.error(`Unable to parse log`, 'Error');
             return [];
           }
       }
     }
     if (currentPartialOrder) {
       determineInitialAndFinalEvents(currentPartialOrder);
-      return returnList.concat(currentPartialOrder);
+      returnList.push(currentPartialOrder);
+    }
+
+    if (returnList.length === 0) {
+      errors.add(`No parsable traces where found`);
+      this.toastr.error(`No parsable traces where found in the log`, 'Error');
     }
     return returnList;
   }

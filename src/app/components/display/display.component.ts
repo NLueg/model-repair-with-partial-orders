@@ -43,7 +43,7 @@ export class DisplayComponent {
     );
 
     this.tracesCount$ = this.displayService.getPartialOrders$().pipe(
-      map((partialOrders) => partialOrders.length),
+      map((partialOrders) => partialOrders?.length ?? 0),
       shareReplay(1)
     );
 
@@ -52,7 +52,7 @@ export class DisplayComponent {
       switchMap(({ net, point }) =>
         this.displayService.getPartialOrders$().pipe(
           switchMap((partialOrders) => {
-            if (partialOrders.length === 0) {
+            if (!partialOrders || partialOrders.length === 0) {
               return of([]);
             }
 

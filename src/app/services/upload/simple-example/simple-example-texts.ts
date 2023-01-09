@@ -26,6 +26,23 @@ event-id
 follows[]
 .events
 1 a e1
+1 c e3
+1 b e2
+1 d e4
+2 a e1
+2 b e2
+2 c e3
+2 d e4
+`;
+
+export const simpleExamplePo = `.type log
+.attributes
+case-id
+concept:name
+event-id
+follows[]
+.events
+1 a e1
 1 b e2 [e1]
 1 c e3 [e1]
 1 d e4 [e2,e3]

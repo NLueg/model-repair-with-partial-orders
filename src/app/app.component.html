@@ -13,12 +13,7 @@
   </p>
 
   <ng-container *ngIf="partialOrderCount$ | async as partialOrderCount">
-    <ng-container
-      *ngIf="
-        hasPartialOrders && partialOrderCount.count > 0;
-        else initialContent
-      "
-    >
+    <div [style.display]="hasPartialOrders ? 'block' : 'none'">
       <main>
         <app-display class="padding full-size"></app-display>
 
@@ -65,9 +60,9 @@
         </div>
       </main>
 
-      <div fxLayout="row" fxLayoutAlign="space-evenly start">
+      <div class="button-row">
         <app-template-button
-          buttonText="Upload new petri net or add new logs"
+          buttonText="Upload new net or log"
           buttonIcon="upload"
           (buttonAction)="openFileSelector(undefined)"
           (dropAction)="dropFiles($event, undefined)"
@@ -79,9 +74,9 @@
 
         <app-download></app-download>
       </div>
-    </ng-container>
+    </div>
 
-    <ng-template #initialContent>
+    <ng-container *ngIf="!hasPartialOrders">
       <main>
         <div class="initial-content">
           <p>
@@ -134,7 +129,7 @@
           <p class="color_success text-center">
             <mat-icon class="color_success"> check_circle </mat-icon>
             Uploaded {{ partialOrderCount.count }}
-            {{ partialOrderCount.count === 1 ? 'log' : 'logs' }}
+            {{ partialOrderCount.count === 1 ? 'trace' : 'traces' }}
           </p>
         </ng-template>
       </main>
@@ -146,7 +141,7 @@
         styleClass="color_primary"
         (buttonAction)="downloadExample()"
       ></app-template-button>
-    </ng-template>
+    </ng-container>
   </ng-container>
 
   <app-footer></app-footer>

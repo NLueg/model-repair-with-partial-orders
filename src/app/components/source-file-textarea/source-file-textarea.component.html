@@ -1,7 +1,7 @@
-<mat-form-field appearance="outline" class="textarea" [matTooltip]="runHint">
+<mat-form-field appearance="outline" class="textarea" [matTooltip]="logHint">
   <mat-label class="input-label">
-    <span>Source file</span>
-    <ng-container [ngSwitch]="runValidationStatus">
+    <span>Log</span>
+    <ng-container [ngSwitch]="logValidationStatus">
       <mat-icon *ngSwitchCase="'success'" class="color_success">
         check_circle
       </mat-icon>
@@ -19,6 +19,31 @@
     cdkTextareaAutosize
     cdkAutosizeMinRows="10"
     cdkAutosizeMaxRows="20"
-    [formControl]="textareaFc"
+    [formControl]="logTextarea"
+  ></textarea>
+</mat-form-field>
+
+<mat-form-field appearance="outline" class="textarea" [matTooltip]="netHint">
+  <mat-label class="input-label">
+    <span>Petri net</span>
+    <ng-container [ngSwitch]="netValidationStatus">
+      <mat-icon *ngSwitchCase="'success'" class="color_success">
+        check_circle
+      </mat-icon>
+      <mat-icon *ngSwitchCase="'warn'" class="color_warning">
+        warning_amber
+      </mat-icon>
+      <mat-icon *ngSwitchCase="'error'" class="color_error">
+        error_outline
+      </mat-icon>
+    </ng-container>
+  </mat-label>
+
+  <textarea
+    matInput
+    cdkTextareaAutosize
+    cdkAutosizeMinRows="10"
+    cdkAutosizeMaxRows="20"
+    [formControl]="petriNetTextarea"
   ></textarea>
 </mat-form-field>
