@@ -144,7 +144,7 @@ export class IlpSolver {
                 type: 'sameIncoming' as SolutionType,
                 ilp: this.populateIlpBySameIncomingWeights(
                   problem.baseIlp,
-                  problem.baseConstraints,
+                  solution.ilp.subjectTo,
                   invalidPlace
                 ),
               },
@@ -152,7 +152,7 @@ export class IlpSolver {
                 type: 'sameOutgoing' as SolutionType,
                 ilp: this.populateIlpBySameOutgoingWeights(
                   problem.baseIlp,
-                  problem.baseConstraints,
+                  solution.ilp.subjectTo,
                   invalidPlace
                 ),
               },
@@ -160,7 +160,7 @@ export class IlpSolver {
                 type: 'arcsSame' as SolutionType,
                 ilp: this.populateIlpBySameWeights(
                   problem.baseIlp,
-                  problem.baseConstraints,
+                  solution.ilp.subjectTo,
                   invalidPlace
                 ),
               },
