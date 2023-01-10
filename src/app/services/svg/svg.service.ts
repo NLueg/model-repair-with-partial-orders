@@ -19,6 +19,8 @@ import {
 import { RepairService } from '../repair/repair.service';
 import { idAttribute } from './svg-constants';
 
+const hashAttribute = 'element-hash';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -26,6 +28,8 @@ export class SvgService {
   private readonly TEXT_OFFSET = 20;
   private readonly ARC_WEIGHT_OFFSET_VERTICAL = 15;
   private readonly ARC_WEIGHT_OFFSET_HORIZONTAL = 10;
+
+  private lastElements: SVGElement[] = [];
 
   constructor(private repairService: RepairService) {}
 
@@ -42,6 +46,29 @@ export class SvgService {
     for (const arc of net.arcs) {
       result.push(...this.createArc(elements, arc, offset));
     }
+
+    if (this.lastElements.length > 0) {
+      const newElements = result.filter(
+        (element) =>
+          !this.lastElements.find(
+            (lastElement) =>
+              lastElement.getAttribute(hashAttribute) ===
+              element.getAttribute(hashAttribute)
+          )
+      );
+      newElements.forEach((element) => {
+        element.classList.add('new-svg-element');
+        if (element.tagName === 'line' && element.hasAttribute('marker-end')) {
+          element.setAttribute('marker-end', 'url(#arrowhead-changed)');
+        }
+
+        const titleEl = this.createSvgElement('title');
+        titleEl.textContent =
+          'This element was changed or added since the last display.';
+        element.appendChild(titleEl);
+      });
+    }
+    this.lastElements = result;
     return result;
   }
 
@@ -51,6 +78,7 @@ export class SvgService {
   ): Array<SVGElement> {
     const transEl = this.createSvgElement('rect');
     transEl.setAttribute(idAttribute, transition.id);
+    transEl.setAttribute(hashAttribute, transition.id);
     const style = TRANSITION_STYLE;
     transEl.setAttribute(
       'x',
@@ -84,6 +112,7 @@ export class SvgService {
     const placeEl = this.createSvgElement('circle');
     placeEl.classList.add('place');
     placeEl.setAttribute(idAttribute, place.id);
+    placeEl.setAttribute(hashAttribute, `${place.id}-${place.marking}`);
     placeEl.setAttribute('cx', '' + (getNumber(place.x) + offset.x));
     placeEl.setAttribute('cy', '' + (getNumber(place.y) + offset.y));
     this.applyStyle(placeEl, PLACE_STYLE);
@@ -154,6 +183,7 @@ export class SvgService {
         place.id,
         '' + place.marking
       );
+      placeEl.setAttribute(hashAttribute, `${place.id}-${place.marking}-text`);
       markingEl.setAttribute('x', '' + (getNumber(place.x) + offset.x));
       markingEl.setAttribute('y', '' + (getNumber(place.y) + offset.y));
       markingEl.setAttribute('font-size', '1.5em');
@@ -237,9 +267,10 @@ export class SvgService {
     offset: Point
   ): Array<SVGElement> {
     const result = [];
+    const id = `${arc.source}-${arc.target}-${arc.weight}`;
     const points = [src, ...arc.breakpoints, dest];
     for (let i = 0; i < points.length - 1; i++) {
-      result.push(this.createSvgLine(points[i], points[i + 1], offset));
+      result.push(this.createSvgLine(points[i], points[i + 1], offset, id));
     }
     this.applyStyle(result[result.length - 1], ARC_END_STYLE);
     for (let i = 0; i < arc.breakpoints.length; i++) {
@@ -248,9 +279,15 @@ export class SvgService {
     return result;
   }
 
-  private createSvgLine(src: Point, dest: Point, offset: Point): SVGElement {
+  private createSvgLine(
+    src: Point,
+    dest: Point,
+    offset: Point,
+    id: string
+  ): SVGElement {
     const result = this.createSvgElement('line');
     this.applyStyle(result, ARC_STYLE);
+    result.setAttribute(hashAttribute, id);
     result.setAttribute('x1', '' + (src.x + offset.x));
     result.setAttribute('y1', '' + (src.y + offset.y));
     result.setAttribute('x2', '' + (dest.x + offset.x));
@@ -376,6 +413,7 @@ export class SvgService {
   private createTextElement(id: string, content?: string): SVGElement {
     const result = this.createSvgElement('text');
     result.setAttribute('describes', id);
+    result.setAttribute(hashAttribute, `${id}-${content}`);
     this.applyStyle(result, TEXT_STYLE);
     result.textContent = content ?? id;
     return result;
