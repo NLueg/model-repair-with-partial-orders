@@ -46,37 +46,35 @@ export class IlpSolver {
   private variableCount = 0;
   private constraintCount = 0;
 
-  private readonly _allVariables: Set<string>;
-  private readonly _poVariableNames: Set<string>;
+  private readonly allVariables: Set<string>;
+  private readonly poVariableNames: Set<string>;
 
-  private readonly _labelVariableMapIngoing: Map<string, string>;
-  private readonly _labelVariableMapOutgoing: Map<string, string>;
-  private readonly _inverseLabelVariableMapIngoing: Map<string, string>;
-  private readonly _inverseLabelVariableMapOutgoing: Map<string, string>;
-  private readonly _directlyFollowsExtractor: DirectlyFollowsExtractor;
+  private readonly labelVariableMapIngoing: Map<string, string>;
+  private readonly labelVariableMapOutgoing: Map<string, string>;
+  private readonly inverseLabelVariableMapIngoing: Map<string, string>;
+  private readonly inverseLabelVariableMapOutgoing: Map<string, string>;
+  private readonly directlyFollowsExtractor: DirectlyFollowsExtractor;
 
-  private baseIlp: LP;
-  private baseConstraints: Array<SubjectTo>;
-  private pairs: Array<[first: string | undefined, second: string]>;
+  private readonly baseIlp: LP;
+  private readonly baseConstraints: Array<SubjectTo>;
+  private readonly pairs: Array<[first: string | undefined, second: string]>;
 
   constructor(
     private glpk: GLPK,
     private partialOrders: Array<PartialOrder>,
     private petriNet: PetriNet
   ) {
-    this._directlyFollowsExtractor = new DirectlyFollowsExtractor();
-    this._allVariables = new Set<string>();
-    this._poVariableNames = new Set<string>();
-    this._labelVariableMapIngoing = new Map<string, string>();
-    this._labelVariableMapOutgoing = new Map<string, string>();
-    this._inverseLabelVariableMapIngoing = new Map<string, string>();
-    this._inverseLabelVariableMapOutgoing = new Map<string, string>();
+    this.directlyFollowsExtractor = new DirectlyFollowsExtractor();
+    this.allVariables = new Set<string>();
+    this.poVariableNames = new Set<string>();
+    this.labelVariableMapIngoing = new Map<string, string>();
+    this.labelVariableMapOutgoing = new Map<string, string>();
+    this.inverseLabelVariableMapIngoing = new Map<string, string>();
+    this.inverseLabelVariableMapOutgoing = new Map<string, string>();
 
     this.baseConstraints = this.buildBasicIlpForPartialOrders(partialOrders);
-
     this.baseIlp = this.setUpBaseIlp();
-
-    this.pairs = this._directlyFollowsExtractor.oneWayDirectlyFollows();
+    this.pairs = this.directlyFollowsExtractor.oneWayDirectlyFollows();
   }
 
   /**
@@ -143,26 +141,20 @@ export class IlpSolver {
               {
                 type: 'sameIncoming' as SolutionType,
                 ilp: this.populateIlpBySameIncomingWeights(
-                  problem.baseIlp,
-                  solution.ilp.subjectTo,
+                  solution.ilp,
                   invalidPlace
                 ),
               },
               {
                 type: 'sameOutgoing' as SolutionType,
                 ilp: this.populateIlpBySameOutgoingWeights(
-                  problem.baseIlp,
-                  solution.ilp.subjectTo,
+                  solution.ilp,
                   invalidPlace
                 ),
               },
               {
                 type: 'arcsSame' as SolutionType,
-                ilp: this.populateIlpBySameWeights(
-                  problem.baseIlp,
-                  solution.ilp.subjectTo,
-                  invalidPlace
-                ),
+                ilp: this.populateIlpBySameWeights(solution.ilp, invalidPlace),
               },
             ].filter((ilp) => !!ilp.ilp) as {
               type: SolutionType;
@@ -308,10 +300,10 @@ export class IlpSolver {
   }
 
   private setUpBaseIlp(): LP {
-    const generals = Array.from(this._poVariableNames);
+    const generals = Array.from(this.poVariableNames);
     generals.push(VariableName.INITIAL_MARKING);
 
-    const allVariables = Array.from(this._allVariables);
+    const allVariables = Array.from(this.allVariables);
     allVariables.push(VariableName.INITIAL_MARKING);
 
     return {
@@ -341,7 +333,7 @@ export class IlpSolver {
       if (!preLabel) {
         throw Error('Predecessor label not found!');
       }
-      this._directlyFollowsExtractor.add(event.label, preLabel);
+      this.directlyFollowsExtractor.add(event.label, preLabel);
     }
     variables.push(
       this.variable(
@@ -405,91 +397,96 @@ export class IlpSolver {
    */
   private populateIlpBySameIncomingWeights(
     baseIlp: LP,
-    baseConstraints: Array<SubjectTo>,
     existingPlace: Place
   ): LP | null {
     const result = clonedeep(baseIlp);
-    result.subjectTo = [...baseConstraints];
-
-    existingPlace.incomingArcs.forEach((arc) => {
-      result.subjectTo = result.subjectTo.concat(
-        this.greaterEqualThan(
-          this.variable(
-            this.transitionVariableName(
-              arc.source,
-              VariableName.OUTGOING_ARC_WEIGHT_PREFIX
-            )
-          ),
-          arc.weight
-        ).constraints
-      );
-    });
-
+    this.addConstraintsForSameIncomingWeights(existingPlace, result);
     return result;
   }
 
   private populateIlpBySameOutgoingWeights(
     baseIlp: LP,
-    baseConstraints: Array<SubjectTo>,
     existingPlace: Place
   ): LP | null {
     const result = clonedeep(baseIlp);
-    result.subjectTo = [...baseConstraints];
-
-    existingPlace.outgoingArcs.forEach((arc) => {
-      result.subjectTo = result.subjectTo.concat(
-        this.greaterEqualThan(
-          this.variable(
-            this.transitionVariableName(
-              arc.target,
-              VariableName.INGOING_ARC_WEIGHT_PREFIX
-            )
-          ),
-          arc.weight
-        ).constraints
-      );
-    });
-
+    this.addConstraintsForSameOutgoingWeights(existingPlace, result);
     return result;
   }
 
   private populateIlpBySameWeights(
     baseIlp: LP,
-    baseConstraints: Array<SubjectTo>,
     existingPlace: Place
   ): LP | null {
     const result = clonedeep(baseIlp);
-    result.subjectTo = [...baseConstraints];
-
-    existingPlace.incomingArcs.forEach((arc) => {
-      result.subjectTo = result.subjectTo.concat(
-        this.greaterEqualThan(
-          this.variable(
-            this.transitionVariableName(
-              arc.source,
-              VariableName.OUTGOING_ARC_WEIGHT_PREFIX
-            )
-          ),
-          arc.weight
-        ).constraints
-      );
-    });
-
-    existingPlace.outgoingArcs.forEach((arc) => {
-      result.subjectTo = result.subjectTo.concat(
-        this.greaterEqualThan(
-          this.variable(
-            this.transitionVariableName(
-              arc.target,
-              VariableName.INGOING_ARC_WEIGHT_PREFIX
-            )
-          ),
-          arc.weight
-        ).constraints
-      );
-    });
-
+    this.addConstraintsForSameIncomingWeights(existingPlace, result);
+    this.addConstraintsForSameOutgoingWeights(existingPlace, result);
     return result;
+  }
+
+  private addConstraintsForSameOutgoingWeights(
+    existingPlace: Place,
+    result: LP
+  ) {
+    if (existingPlace.outgoingArcs.length > 0) {
+      existingPlace.outgoingArcs.forEach((arc) => {
+        result.subjectTo = result.subjectTo.concat(
+          this.greaterEqualThan(
+            this.variable(
+              this.transitionVariableName(
+                arc.target,
+                VariableName.INGOING_ARC_WEIGHT_PREFIX
+              )
+            ),
+            arc.weight
+          ).constraints
+        );
+      });
+    } else {
+      result.subjectTo = result.subjectTo.concat(
+        this.getRulesForNoArcs(VariableName.INGOING_ARC_WEIGHT_PREFIX)
+      );
+    }
+  }
+
+  private addConstraintsForSameIncomingWeights(
+    existingPlace: Place,
+    result: LP
+  ) {
+    if (existingPlace.incomingArcs.length > 0) {
+      existingPlace.incomingArcs.forEach((arc) => {
+        result.subjectTo = result.subjectTo.concat(
+          this.greaterEqualThan(
+            this.variable(
+              this.transitionVariableName(
+                arc.source,
+                VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+              )
+            ),
+            arc.weight
+          ).constraints
+        );
+      });
+    } else {
+      result.subjectTo = result.subjectTo.concat(
+        this.getRulesForNoArcs(VariableName.OUTGOING_ARC_WEIGHT_PREFIX)
+      );
+    }
+  }
+
+  private getRulesForNoArcs(
+    variableName:
+      | VariableName.INGOING_ARC_WEIGHT_PREFIX
+      | VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+  ): Array<SubjectTo> {
+    return this.petriNet.transitions.flatMap(
+      (transition) =>
+        this.equal(
+          this.variable(
+            this.transitionVariableName(transition.id, variableName)
+          ),
+          0
+        ).constraints
+    );
   }
 
   getInverseVariableMapping(variable: string): SolutionVariable | null {
@@ -499,7 +496,7 @@ export class IlpSolver {
         type: VariableType.INITIAL_MARKING,
       };
     } else if (variable.startsWith(VariableName.INGOING_ARC_WEIGHT_PREFIX)) {
-      const label = this._inverseLabelVariableMapIngoing.get(variable);
+      const label = this.inverseLabelVariableMapIngoing.get(variable);
       if (label === undefined) {
         throw new Error(
           `ILP variable '${variable}' could not be resolved to an ingoing transition label!`
@@ -510,7 +507,7 @@ export class IlpSolver {
         type: VariableType.OUTGOING_TRANSITION_WEIGHT,
       };
     } else if (variable.startsWith(VariableName.OUTGOING_ARC_WEIGHT_PREFIX)) {
-      const label = this._inverseLabelVariableMapOutgoing.get(variable);
+      const label = this.inverseLabelVariableMapOutgoing.get(variable);
       if (label === undefined) {
         throw new Error(
           `ILP variable '${variable}' could not be resolved to an outgoing transition label!`
@@ -526,7 +523,7 @@ export class IlpSolver {
 
   private getPoEventId(id: string, i: number): string {
     const d = `${i}${this.PO_ARC_SEPARATOR}${id}`;
-    this._poVariableNames.add(d);
+    this.poVariableNames.add(d);
     return d;
   }
 
@@ -536,7 +533,7 @@ export class IlpSolver {
     i: number
   ): string {
     const id = `${i}${this.PO_ARC_SEPARATOR}Arc${this.PO_ARC_SEPARATOR}${sourceId}${this.PO_ARC_SEPARATOR}to${this.PO_ARC_SEPARATOR}${destinationId}`;
-    this._poVariableNames.add(id);
+    this.poVariableNames.add(id);
     return id;
   }
 
@@ -554,11 +551,11 @@ export class IlpSolver {
   ): string {
     let map, inverseMap;
     if (prefix === VariableName.INGOING_ARC_WEIGHT_PREFIX) {
-      map = this._labelVariableMapIngoing;
-      inverseMap = this._inverseLabelVariableMapIngoing;
+      map = this.labelVariableMapIngoing;
+      inverseMap = this.inverseLabelVariableMapIngoing;
     } else {
-      map = this._labelVariableMapOutgoing;
-      inverseMap = this._inverseLabelVariableMapOutgoing;
+      map = this.labelVariableMapOutgoing;
+      inverseMap = this.inverseLabelVariableMapOutgoing;
     }
 
     const saved = map.get(label);
@@ -578,8 +575,8 @@ export class IlpSolver {
       helpVariableName = `${prefix}${this.PO_ARC_SEPARATOR}${label}${
         this.PO_ARC_SEPARATOR
       }${this.variableCount++}`;
-    } while (this._allVariables.has(helpVariableName));
-    this._allVariables.add(helpVariableName);
+    } while (this.allVariables.has(helpVariableName));
+    this.allVariables.add(helpVariableName);
     return helpVariableName;
   }
 
