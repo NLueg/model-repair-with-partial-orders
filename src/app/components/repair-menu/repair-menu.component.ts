@@ -152,7 +152,7 @@ function tooltipForSinglePlaceParameter(
               ? `${arc.transitionId} (${arc.weight})`
               : arc.transitionId
           )
-          .join(', ')}`
+          .join(', ')} \n`
       : '';
   const outgoingString =
     solution.outgoing.length > 0
@@ -162,12 +162,12 @@ function tooltipForSinglePlaceParameter(
               ? `${arc.transitionId} (${arc.weight})`
               : arc.transitionId
           )
-          .join(', ')}`
+          .join(', ')} \n`
       : '';
 
   return `
-  ${incomingString}
-  ${outgoingString}
-  • marking: ${solution.newMarking ? solution.newMarking : '0'}
+  ${incomingString}${outgoingString}• marking: ${
+    solution.newMarking ? solution.newMarking : '0'
+  }
   `.trim();
 }
