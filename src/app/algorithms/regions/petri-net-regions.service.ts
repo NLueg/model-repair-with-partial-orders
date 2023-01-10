@@ -167,19 +167,21 @@ export class PetriNetRegionsService {
   }
 }
 
+/**
+ * Current marking - outgoing
+ * We don't take ingoing marking into account as we don't know if everything fires.
+ * So this might be valid.
+ * @param place
+ */
 function generateMarkingDifference(place?: Place): number {
   if (!place) {
     return 0;
   }
 
-  const incomingMarking = place.incomingArcs.reduce(
-    (sum, arc) => sum + arc.weight,
-    0
-  );
   const outgoingMarking = place.outgoingArcs.reduce(
     (sum, arc) => sum + arc.weight,
     0
   );
 
-  return incomingMarking + place.marking - outgoingMarking;
+  return place.marking - outgoingMarking;
 }
