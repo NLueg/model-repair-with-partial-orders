@@ -79,13 +79,17 @@ export class IlpSolver {
 
   /**
    * Generates a place for every invalid place in the net.
-   * @param invalidPlaceId
+   * @param invalidPlaceId the id of the place to generate a new for
+   * @param invalidPlaceList the list of invalid places
    */
-  computeSolutions(invalidPlaceId: string): Observable<ProblemSolution[]> {
+  computeSolutions(
+    invalidPlaceId: string,
+    invalidPlaceList: string[]
+  ): Observable<ProblemSolution[]> {
     const validPlaces = this.petriNet.places.filter(
       (p) => p.id !== invalidPlaceId
     );
-    const pairsThatArentHandled = this.pairs.filter(
+    let pairsThatArentHandled = this.pairs.filter(
       ([source, target]) =>
         !validPlaces.some(
           (p) =>
@@ -94,18 +98,20 @@ export class IlpSolver {
         )
     );
 
-    // Handle initial place(s)
     const invalidPlace = this.petriNet.places.find(
       (p) => p.id === invalidPlaceId
     );
+    // If we have other places, that can handle the inner stuff, or we have no invalid pair
     if (
-      pairsThatArentHandled.length === 0 &&
       invalidPlace &&
-      invalidPlace.incomingArcs.length === 0
+      invalidPlace.incomingArcs.length === 0 &&
+      (pairsThatArentHandled.length === 0 || invalidPlaceList.length > 1)
     ) {
-      invalidPlace.outgoingArcs.forEach((outgoing) => {
-        pairsThatArentHandled.push([undefined, outgoing.target]);
-      });
+      // Only the target transitions can be a problem!
+      pairsThatArentHandled = invalidPlace.outgoingArcs.map((outgoing) => [
+        undefined,
+        outgoing.target,
+      ]);
     }
 
     const problems = pairsThatArentHandled.map((pair) => ({
@@ -288,10 +294,10 @@ export class IlpSolver {
     for (let i = 0; i < partialOrders.length; i++) {
       const events = partialOrders[i].events;
       for (const e of events) {
-        console.warn(`___ Start Event ${e.id} ___`);
+        console.debug(`___ Start Event ${e.id} ___`);
         baseIlpConstraints.push(...this.firingRule(e, i, partialOrders[i]));
         baseIlpConstraints.push(...this.tokenFlow(e, i));
-        console.warn(`________________________`);
+        console.debug(`________________________`);
       }
       baseIlpConstraints.push(...this.initialMarking(events, i));
     }

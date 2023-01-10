@@ -41,7 +41,7 @@ export class PetriNetRegionsService {
 
         return combineLatest(
           invalidPlaceList.map((place) =>
-            solver.computeSolutions(place).pipe(
+            solver.computeSolutions(place, invalidPlaceList).pipe(
               map((solutions) => {
                 const existingPlace = petriNet.places.find(
                   (p) => p.id === place
