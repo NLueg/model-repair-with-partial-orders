@@ -1,5 +1,5 @@
 import { OverlayRef } from '@angular/cdk/overlay';
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit } from '@angular/core';
 
 import { SolutionType } from '../../algorithms/regions/ilp-solver/solver-classes';
 import {
@@ -28,6 +28,8 @@ export class RepairMenuComponent implements OnInit {
   overlayRef?: OverlayRef;
 
   infoHeader = '';
+
+  applySolution = new EventEmitter<void>();
 
   constructor(private netCommandService: NetCommandService) {}
 
@@ -74,6 +76,7 @@ export class RepairMenuComponent implements OnInit {
   }
 
   useSolution(solution: AutoRepair): void {
+    this.applySolution.next();
     this.netCommandService
       .repairNet(this.placeSolution.place, solution)
       .subscribe(() => this.overlayRef?.dispose());

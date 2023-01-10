@@ -18,6 +18,8 @@ export class RepairService {
   private overlayRef?: OverlayRef;
   private outsideClickSubscription?: Unsubscribable;
 
+  private unsubscribables: Unsubscribable[] = [];
+
   constructor(private toastr: ToastrService, private overlay: Overlay) {}
 
   saveNewSolutions(
@@ -70,15 +72,29 @@ export class RepairService {
     this.overlayRef.addPanelClass('current-overlay');
     this.overlayRef.updatePositionStrategy(position);
     this.overlayRef.updateScrollStrategy(this.overlay.scrollStrategies.noop());
-    this.outsideClickSubscription = this.overlayRef
-      .outsidePointerEvents()
-      .subscribe(() => {
-        this.overlayRef?.dispose();
-      });
+
+    this.unsubscribables.push(
+      (this.outsideClickSubscription = this.overlayRef
+        .outsidePointerEvents()
+        .subscribe(() => this.clearOverlay()))
+    );
 
     const componentRef = this.overlayRef.attach(componentPortal);
     componentRef.instance.overlayRef = this.overlayRef;
     componentRef.instance.placeSolution = solutionsForPlace;
     componentRef.instance.partialOrderCount = this.partialOrderCount;
+
+    this.unsubscribables.push(
+      componentRef.instance.applySolution.subscribe(() => this.clearOverlay())
+    );
+  }
+
+  private clearOverlay(): void {
+    this.currentPlace = undefined;
+    this.overlayRef?.dispose();
+    this.overlayRef = undefined;
+
+    this.unsubscribables.forEach((u) => u.unsubscribe());
+    this.unsubscribables = [];
   }
 }

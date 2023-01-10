@@ -167,7 +167,7 @@ export class IlpSolver {
               ilp: LP;
             }[];
 
-            if (!ilpsToSolve.length) {
+            if (ilpsToSolve.length === 0) {
               return of([unboundSolution]);
             }
 
