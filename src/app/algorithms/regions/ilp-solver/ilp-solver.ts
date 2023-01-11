@@ -87,45 +87,18 @@ export class IlpSolver {
     invalidPlaceId: string,
     invalidPlaceList: string[]
   ): Observable<ProblemSolution[]> {
+    const invalidPlace = this.petriNet.places.find(
+      (p) => p.id === invalidPlaceId
+    );
     const validPlaces = this.petriNet.places.filter(
       (p) => p.id !== invalidPlaceId
     );
 
-    // TODO: Deeper look into the pairs
-    let pairsThatArentHandled = this.pairs.filter(
-      ([source, target]) =>
-        !validPlaces.some(
-          (p) =>
-            p.incomingArcs.some(
-              (incoming) =>
-                this.idToTransitionLabelMap[incoming.source] === source
-            ) &&
-            p.outgoingArcs.some(
-              (outgoing) =>
-                this.idToTransitionLabelMap[outgoing.target] === target
-            )
-        )
-    );
-
-    console.log(pairsThatArentHandled);
-
-    const invalidPlace = this.petriNet.places.find(
-      (p) => p.id === invalidPlaceId
-    );
-    // If we have other places, that can handle the inner stuff, or we have no invalid pair
-    if (
-      invalidPlace &&
-      invalidPlace.incomingArcs.length === 0 &&
-      (pairsThatArentHandled.length === 0 || invalidPlaceList.length > 1)
-    ) {
-      // Only the target transitions can be a problem!
-      pairsThatArentHandled = invalidPlace.outgoingArcs.map((outgoing) => [
-        undefined,
-        this.idToTransitionLabelMap[outgoing.target],
-      ]);
-    }
-
-    const problems = pairsThatArentHandled.map((pair) => ({
+    const problems = this.getUnhandledPairs(
+      invalidPlace,
+      validPlaces,
+      invalidPlaceList
+    ).map((pair) => ({
       baseConstraints: this.baseConstraints,
       baseIlp: this.baseIlp,
       pair,
@@ -242,6 +215,52 @@ export class IlpSolver {
     );
   }
 
+  /**
+   * Filters the initial pairs by only returning the relevant pairs for the current place.
+   */
+  private getUnhandledPairs(
+    invalidPlace: Place | undefined,
+    validPlaces: Place[],
+    invalidPlaceList: string[]
+  ): Array<[first: string | undefined, second: string]> {
+    const pairsThatArentHandled = this.pairs.filter(
+      ([source, target]) =>
+        !validPlaces.some(
+          (p) =>
+            p.incomingArcs.some(
+              (incoming) =>
+                this.idToTransitionLabelMap[incoming.source] === source
+            ) &&
+            p.outgoingArcs.some(
+              (outgoing) =>
+                this.idToTransitionLabelMap[outgoing.target] === target
+            )
+        )
+    );
+
+    // If we have other places, that can handle the inner stuff, or we have no invalid pair
+    const invalidPlaceIsAtStart =
+      invalidPlace && invalidPlace.incomingArcs.length === 0;
+    if (invalidPlaceIsAtStart) {
+      const noOtherStartPlaceExists = !this.petriNet.places.some(
+        (p) => p.id !== invalidPlace.id && p.incomingArcs.length === 0
+      );
+
+      if (
+        pairsThatArentHandled.length === 0 ||
+        invalidPlaceList.length > 1 ||
+        noOtherStartPlaceExists
+      )
+        // Only the target transitions can be a problem!
+        return invalidPlace.outgoingArcs.map((outgoing) => [
+          undefined,
+          this.idToTransitionLabelMap[outgoing.target],
+        ]);
+    }
+
+    return pairsThatArentHandled;
+  }
+
   private populateIlpByCausalPairs(
     baseIlp: LP,
     baseConstraints: Array<SubjectTo>,
@@ -286,6 +305,7 @@ export class IlpSolver {
       msglev: MessageLevel.ERROR,
     });
 
+    // Hack for testing :/
     const res = result instanceof Promise ? result : Promise.resolve(result);
     res
       .then((solution: Result) => {
