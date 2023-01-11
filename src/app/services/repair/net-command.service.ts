@@ -87,12 +87,14 @@ function generateTextForNewNet(
     newText += `${transition.id} ${transition.label}\n`;
   });
 
+  // Handle completely new transitions
   const requiredTransitions = getRequiredTransitions(solution);
   const transitionsThatDontExist = requiredTransitions.filter(
     (requiredLabel) =>
-      !petriNet.transitions.some((arc) => arc.label === requiredLabel)
+      !petriNet.transitions.some(
+        (transition) => transition.label === requiredLabel
+      )
   );
-
   const labelToIdMap = new Map<string, string>();
 
   for (const transitionLabel of transitionsThatDontExist) {
@@ -102,6 +104,16 @@ function generateTextForNewNet(
     }
     labelToIdMap.set(transitionLabel, id);
     newText += `${id} ${transitionLabel}\n`;
+  }
+
+  // Get Ids of existing transitions with same label
+  for (const requiredTransition of requiredTransitions) {
+    const transition = petriNet.transitions.find(
+      (t) => t.label === requiredTransition
+    );
+    if (transition) {
+      labelToIdMap.set(requiredTransition, transition.id);
+    }
   }
 
   newText += `${placesAttribute}\n`;
@@ -139,8 +151,8 @@ function getRequiredTransitions(solution: AutoRepair): string[] {
   if (solution.type === 'modify-place') {
     return Array.from(
       new Set([
-        ...solution.incoming.map((arc) => arc.transitionId),
-        ...solution.outgoing.map((arc) => arc.transitionId),
+        ...solution.incoming.map((arc) => arc.transitionLabel),
+        ...solution.outgoing.map((arc) => arc.transitionLabel),
       ])
     );
   }
@@ -149,8 +161,8 @@ function getRequiredTransitions(solution: AutoRepair): string[] {
     return Array.from(
       new Set(
         solution.places.flatMap((place) => [
-          ...place.incoming.map((arc) => arc.transitionId),
-          ...place.outgoing.map((arc) => arc.transitionId),
+          ...place.incoming.map((arc) => arc.transitionLabel),
+          ...place.outgoing.map((arc) => arc.transitionLabel),
         ])
       )
     );
@@ -202,14 +214,16 @@ function generateArcsForSolution(
     return filteredArcs.concat(
       ...solution.incoming.map((incoming) => ({
         source:
-          labelToIdMap.get(incoming.transitionId) || incoming.transitionId,
+          labelToIdMap.get(incoming.transitionLabel) ||
+          incoming.transitionLabel,
         target: oldPlace.id,
         weight: incoming.weight,
       })),
       ...solution.outgoing.map((outgoing) => ({
         source: oldPlace.id,
         target:
-          labelToIdMap.get(outgoing.transitionId) || outgoing.transitionId,
+          labelToIdMap.get(outgoing.transitionLabel) ||
+          outgoing.transitionLabel,
         weight: outgoing.weight,
       }))
     );
@@ -219,14 +233,16 @@ function generateArcsForSolution(
     solution.places.flatMap((place, index) => [
       ...place.incoming.map((incoming) => ({
         source:
-          labelToIdMap.get(incoming.transitionId) || incoming.transitionId,
+          labelToIdMap.get(incoming.transitionLabel) ||
+          incoming.transitionLabel,
         target: `${oldPlace.id}_${index}`,
         weight: incoming.weight,
       })),
       ...place.outgoing.map((outgoing) => ({
         source: `${oldPlace.id}_${index}`,
         target:
-          labelToIdMap.get(outgoing.transitionId) || outgoing.transitionId,
+          labelToIdMap.get(outgoing.transitionLabel) ||
+          outgoing.transitionLabel,
         weight: outgoing.weight,
       })),
     ])

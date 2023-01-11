@@ -37,7 +37,22 @@ export class PetriNetRegionsService {
           return of([]);
         }
 
-        const solver = new IlpSolver(glpk, partialOrders, petriNet);
+        const idToTransitionLabelMap = petriNet.transitions.reduce(
+          (acc, transition) => {
+            if (!acc[transition.id]) {
+              acc[transition.id] = transition.label;
+            }
+            return acc;
+          },
+          {} as { [key: string]: string }
+        );
+
+        const solver = new IlpSolver(
+          glpk,
+          partialOrders,
+          petriNet,
+          idToTransitionLabelMap
+        );
 
         return combineLatest(
           invalidPlaceList.map((place) =>
@@ -49,7 +64,8 @@ export class PetriNetRegionsService {
 
                 const parsedSolutions = parseSolution(
                   this.handleSolutions(solutions, solver),
-                  existingPlace
+                  existingPlace,
+                  idToTransitionLabelMap
                 );
 
                 const newTokens = parsedSolutions.find(
@@ -104,7 +120,7 @@ export class PetriNetRegionsService {
     solutions: ProblemSolution[],
     solver: IlpSolver
   ): ParsableSolutionsPerType[] {
-    return solutions
+    const solutionsWithMaybeDuplicates = solutions
       .map((solution) => ({
         type: solution.type,
         solutionParts: solution.solutions
@@ -146,24 +162,17 @@ export class PetriNetRegionsService {
           )
           .filter((solution) => solution.length > 0),
       }))
-      .filter((solution) => {
-        if (solution.solutionParts.length === 0) {
-          return false;
-        }
+      .filter((solution) => solution.solutionParts.length > 0);
 
-        solution.solutionParts = solution.solutionParts.filter(
-          (value, index) => {
-            const stringifiedValue = JSON.stringify(value);
-            return (
-              index ===
-              solution.solutionParts.findIndex(
-                (obj) => JSON.stringify(obj) === stringifiedValue
-              )
-            );
-          }
-        );
-        return true;
-      });
+    return solutionsWithMaybeDuplicates.filter((value, index) => {
+      const stringifiedValue = JSON.stringify(value.solutionParts);
+      return (
+        index ===
+        solutionsWithMaybeDuplicates.findIndex(
+          (obj) => JSON.stringify(obj.solutionParts) === stringifiedValue
+        )
+      );
+    });
   }
 }
 

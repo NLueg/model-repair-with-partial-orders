@@ -62,7 +62,8 @@ export class IlpSolver {
   constructor(
     private glpk: GLPK,
     private partialOrders: Array<PartialOrder>,
-    private petriNet: PetriNet
+    private petriNet: PetriNet,
+    private idToTransitionLabelMap: { [id: string]: string }
   ) {
     this.directlyFollowsExtractor = new DirectlyFollowsExtractor();
     this.allVariables = new Set<string>();
@@ -89,14 +90,24 @@ export class IlpSolver {
     const validPlaces = this.petriNet.places.filter(
       (p) => p.id !== invalidPlaceId
     );
+
+    // TODO: Deeper look into the pairs
     let pairsThatArentHandled = this.pairs.filter(
       ([source, target]) =>
         !validPlaces.some(
           (p) =>
-            p.incomingArcs.some((incoming) => incoming.source === source) &&
-            p.outgoingArcs.some((outgoing) => outgoing.target === target)
+            p.incomingArcs.some(
+              (incoming) =>
+                this.idToTransitionLabelMap[incoming.source] === source
+            ) &&
+            p.outgoingArcs.some(
+              (outgoing) =>
+                this.idToTransitionLabelMap[outgoing.target] === target
+            )
         )
     );
+
+    console.log(pairsThatArentHandled);
 
     const invalidPlace = this.petriNet.places.find(
       (p) => p.id === invalidPlaceId
@@ -110,7 +121,7 @@ export class IlpSolver {
       // Only the target transitions can be a problem!
       pairsThatArentHandled = invalidPlace.outgoingArcs.map((outgoing) => [
         undefined,
-        outgoing.target,
+        this.idToTransitionLabelMap[outgoing.target],
       ]);
     }
 
@@ -439,7 +450,7 @@ export class IlpSolver {
           this.greaterEqualThan(
             this.variable(
               this.transitionVariableName(
-                arc.target,
+                this.idToTransitionLabelMap[arc.target],
                 VariableName.INGOING_ARC_WEIGHT_PREFIX
               )
             ),
@@ -464,7 +475,7 @@ export class IlpSolver {
           this.greaterEqualThan(
             this.variable(
               this.transitionVariableName(
-                arc.source,
+                this.idToTransitionLabelMap[arc.source],
                 VariableName.OUTGOING_ARC_WEIGHT_PREFIX
               )
             ),
@@ -488,7 +499,7 @@ export class IlpSolver {
       (transition) =>
         this.equal(
           this.variable(
-            this.transitionVariableName(transition.id, variableName)
+            this.transitionVariableName(transition.label, variableName)
           ),
           0
         ).constraints

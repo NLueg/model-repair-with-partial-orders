@@ -152,8 +152,8 @@ function tooltipForSinglePlaceParameter(
       ? `• incoming: ${solution.incoming
           .map((arc) =>
             arc.weight > 1
-              ? `${arc.transitionId} (${arc.weight})`
-              : arc.transitionId
+              ? `${arc.transitionLabel} (${arc.weight})`
+              : arc.transitionLabel
           )
           .join(', ')} \n`
       : '';
@@ -162,8 +162,8 @@ function tooltipForSinglePlaceParameter(
       ? `• outgoing: ${solution.outgoing
           .map((arc) =>
             arc.weight > 1
-              ? `${arc.transitionId} (${arc.weight})`
-              : arc.transitionId
+              ? `${arc.transitionLabel} (${arc.weight})`
+              : arc.transitionLabel
           )
           .join(', ')} \n`
       : '';
