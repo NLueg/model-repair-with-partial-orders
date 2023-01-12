@@ -39,4 +39,12 @@ export type PlaceSolution =
       place: string;
       tooManyTokens: number;
       reduceTokensTo: number;
-    };
+    }
+  | NewTransitionSolution;
+
+export type NewTransitionSolution = {
+  type: 'newTransition';
+  missingTransition: string;
+  solutions: AutoRepairWithSolutionType[];
+  invalidTraceCount: number;
+};

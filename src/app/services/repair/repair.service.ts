@@ -2,7 +2,7 @@ import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { Injectable } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
-import { Unsubscribable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Unsubscribable } from 'rxjs';
 
 import { RepairMenuComponent } from '../../components/repair-menu/repair-menu.component';
 import { PlaceSolution } from './repair.model';
@@ -11,7 +11,7 @@ import { PlaceSolution } from './repair.model';
   providedIn: 'root',
 })
 export class RepairService {
-  private currentPlace?: string;
+  private currentOpenElement?: string;
 
   private solutions: PlaceSolution[] = [];
   private partialOrderCount = 0;
@@ -19,6 +19,9 @@ export class RepairService {
   private outsideClickSubscription?: Unsubscribable;
 
   private unsubscribables: Unsubscribable[] = [];
+  private solutions$: Subject<PlaceSolution[]> = new BehaviorSubject<
+    PlaceSolution[]
+  >([]);
 
   constructor(private toastr: ToastrService, private overlay: Overlay) {}
 
@@ -28,18 +31,17 @@ export class RepairService {
   ): void {
     this.solutions = solutions;
     this.partialOrderCount = partialOrderCount;
+
+    this.solutions$.next(solutions);
   }
 
-  showRepairPopover(ref: DOMRect, place: string): void {
-    if (this.currentPlace === place) {
-      this.currentPlace = undefined;
-      this.overlayRef?.dispose();
-      return;
-    }
+  getSolutions$(): Observable<PlaceSolution[]> {
+    return this.solutions$;
+  }
 
-    const solutionsForPlace = this.solutions.find((s) => s.place === place);
-    if (!solutionsForPlace) {
-      this.toastr.warning(`No solutions found for place ${place}`);
+  showRepairPopoverForSolution(ref: DOMRect, solution?: PlaceSolution): void {
+    if (!solution) {
+      this.toastr.warning(`No solutions found`);
       return;
     }
 
@@ -47,7 +49,10 @@ export class RepairService {
       this.overlayRef.dispose();
     }
 
-    this.currentPlace = place;
+    this.currentOpenElement =
+      solution.type === 'newTransition'
+        ? solution.missingTransition
+        : solution.place;
     if (this.outsideClickSubscription) {
       this.outsideClickSubscription.unsubscribe();
     }
@@ -81,7 +86,7 @@ export class RepairService {
 
     const componentRef = this.overlayRef.attach(componentPortal);
     componentRef.instance.overlayRef = this.overlayRef;
-    componentRef.instance.placeSolution = solutionsForPlace;
+    componentRef.instance.placeSolution = solution;
     componentRef.instance.partialOrderCount = this.partialOrderCount;
 
     this.unsubscribables.push(
@@ -89,8 +94,21 @@ export class RepairService {
     );
   }
 
+  showRepairPopover(ref: DOMRect, place: string): void {
+    if (this.currentOpenElement === place) {
+      this.currentOpenElement = undefined;
+      this.overlayRef?.dispose();
+      return;
+    }
+
+    const solutionsForPlace = this.solutions.find(
+      (s) => s.type === 'error' && s.place === place
+    );
+    this.showRepairPopoverForSolution(ref, solutionsForPlace);
+  }
+
   private clearOverlay(): void {
-    this.currentPlace = undefined;
+    this.currentOpenElement = undefined;
     this.overlayRef?.dispose();
     this.overlayRef = undefined;
 

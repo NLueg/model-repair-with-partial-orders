@@ -34,6 +34,14 @@ import {
 } from './solver-classes';
 import { Constraint, Goal, MessageLevel, Solution } from './solver-constants';
 
+export type SolutionGeneratorType =
+  | {
+      type: 'repair';
+      placeId: string;
+      blockedArcs: Arc[];
+    }
+  | { type: 'transition'; newTransition: string };
+
 export class IlpSolver {
   // k and K defined as per https://blog.adamfurmanek.pl/2015/09/12/ilp-part-4/
   // for some reason k = 2^19 while not large enough to cause precision problems in either doubles or integers
@@ -83,22 +91,22 @@ export class IlpSolver {
    * Generates a place for every invalid place in the net.
    * @param placeModel the id of the place to generate a new for
    */
-  computeSolutions(placeModel: {
-    placeId: string;
-    blockedArcs: Arc[];
-  }): Observable<ProblemSolution[]> {
-    const invalidPlace = this.petriNet.places.find(
-      (p) => p.id === placeModel.placeId
-    );
-    const validPlaces = this.petriNet.places.filter(
-      (p) => p.id !== placeModel.placeId
-    );
+  computeSolutions(
+    placeModel: SolutionGeneratorType
+  ): Observable<ProblemSolution[]> {
+    const invalidPlace =
+      placeModel.type === 'repair'
+        ? this.petriNet.places.find((p) => p.id === placeModel.placeId)
+        : undefined;
 
-    const unhandledPairs = this.getUnhandledPairs(
-      invalidPlace,
-      validPlaces,
-      placeModel.blockedArcs
-    );
+    const unhandledPairs =
+      placeModel.type === 'repair'
+        ? this.getUnhandledPairs(
+            invalidPlace,
+            placeModel.type === 'repair' ? placeModel.blockedArcs : []
+          )
+        : this.gerPairsForMissingTransition(placeModel.newTransition);
+
     const problems = unhandledPairs.map((pair) => ({
       baseConstraints: this.baseConstraints,
       baseIlp: this.baseIlp,
@@ -221,7 +229,6 @@ export class IlpSolver {
    */
   private getUnhandledPairs(
     invalidPlace: Place | undefined,
-    validPlaces: Place[],
     blockedArcs: Arc[]
   ): Array<[first: string | undefined, second: string]> {
     const blockedTargets = blockedArcs.map(
@@ -231,6 +238,7 @@ export class IlpSolver {
       blockedTargets.includes(target)
     );
 
+    console.error(this.pairs);
     console.error(pairsThatArentHandled);
     console.error(blockedTargets);
 
@@ -250,6 +258,18 @@ export class IlpSolver {
       ]);
     }
 
+    return pairsThatArentHandled;
+  }
+
+  private gerPairsForMissingTransition(
+    transitionName: string
+  ): Array<[first: string | undefined, second: string]> {
+    const pairsThatArentHandled = this.pairs.filter(
+      ([_, target]) => transitionName === target
+    );
+    if (pairsThatArentHandled.length === 0) {
+      return [[undefined, transitionName]];
+    }
     return pairsThatArentHandled;
   }
 

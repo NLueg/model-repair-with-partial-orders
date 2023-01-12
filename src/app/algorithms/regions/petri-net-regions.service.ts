@@ -12,7 +12,7 @@ import {
   PlaceSolution,
 } from '../../services/repair/repair.model';
 import { RepairService } from '../../services/repair/repair.service';
-import { IlpSolver } from './ilp-solver/ilp-solver';
+import { IlpSolver, SolutionGeneratorType } from './ilp-solver/ilp-solver';
 import { ProblemSolution, VariableType } from './ilp-solver/solver-classes';
 import { AutoRepairForSinglePlace, parseSolution } from './parse-solutions.fn';
 
@@ -33,10 +33,38 @@ export class PetriNetRegionsService {
   ): Observable<PlaceSolution[]> {
     return from(createGlpk.then((create) => create())).pipe(
       switchMap((glpk) => {
-        const invalidPlaceList = Object.entries(invalidPlaces).map(
-          ([place, object]) => ({ placeId: place, ...object })
+        const invalidModelList: SolutionGeneratorType[] = Object.entries(
+          invalidPlaces
+        ).map(([place, object]) => ({
+          type: 'repair',
+          placeId: place,
+          ...object,
+        }));
+
+        const allNetLabels = new Set<string>(
+          petriNet.transitions.map((t) => t.label)
         );
-        if (invalidPlaceList.length === 0) {
+        const missingTransitions: { [key: string]: number } = {};
+        const allEvents = partialOrders.flatMap((po) => po.events);
+
+        for (const event of allEvents) {
+          if (allNetLabels.has(event.label)) {
+            continue;
+          }
+
+          if (missingTransitions[event.label] === undefined) {
+            missingTransitions[event.label] = 0;
+          }
+          missingTransitions[event.label]++;
+        }
+
+        invalidModelList.push(
+          ...(Object.keys(missingTransitions).map((label) => ({
+            type: 'transition',
+            newTransition: label,
+          })) as SolutionGeneratorType[])
+        );
+        if (invalidModelList.length === 0) {
           return of([]);
         }
 
@@ -58,12 +86,13 @@ export class PetriNetRegionsService {
         );
 
         return combineLatest(
-          invalidPlaceList.map((place) =>
+          invalidModelList.map((place) =>
             solver.computeSolutions(place).pipe(
               map((solutions) => {
-                const existingPlace = petriNet.places.find(
-                  (p) => p.id === place.placeId
-                );
+                const existingPlace =
+                  place.type === 'repair'
+                    ? petriNet.places.find((p) => p.id === place.placeId)
+                    : undefined;
 
                 const parsedSolutions = parseSolution(
                   this.handleSolutions(solutions, solver),
@@ -79,13 +108,22 @@ export class PetriNetRegionsService {
                     ? newTokens.newMarking - existingPlace.marking
                     : undefined;
 
-                const placeSolution: PlaceSolution = {
-                  type: 'error',
-                  place: place.placeId,
-                  solutions: parsedSolutions,
-                  missingTokens: missingTokens ?? 0,
-                  invalidTraceCount: invalidPlaces[place.placeId].count,
-                };
+                const placeSolution: PlaceSolution =
+                  place.type === 'repair'
+                    ? {
+                        type: 'error',
+                        place: place.placeId,
+                        solutions: parsedSolutions,
+                        missingTokens: missingTokens ?? 0,
+                        invalidTraceCount: invalidPlaces[place.placeId].count,
+                      }
+                    : {
+                        type: 'newTransition',
+                        missingTransition: place.newTransition,
+                        solutions: parsedSolutions,
+                        invalidTraceCount:
+                          missingTransitions[place.newTransition],
+                      };
                 return placeSolution;
               })
             )
@@ -94,7 +132,11 @@ export class PetriNetRegionsService {
       }),
       tap((solutions) => {
         const unhandledPlaces = petriNet.places.filter(
-          (place) => !solutions.find((solution) => solution.place === place.id)
+          (place) =>
+            !solutions.find(
+              (solution) =>
+                solution.type === 'error' && solution.place === place.id
+            )
         );
         for (const unhandledPlace of unhandledPlaces) {
           const markingDifference = generateMarkingDifference(unhandledPlace);
@@ -109,7 +151,6 @@ export class PetriNetRegionsService {
               reduceTokensTo: unhandledPlace.marking - markingDifference,
             };
             solutions.push(placeSolution as any);
-            console.log(placeSolution);
           }
         }
 

@@ -56,6 +56,17 @@ export class RepairMenuComponent implements OnInit {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(this.placeSolution.invalidTraceCount / this.partialOrderCount);
+    if (this.placeSolution.type === 'newTransition') {
+      this.infoHeader = `The transition ${this.placeSolution.missingTransition} is missing for ${this.placeSolution.invalidTraceCount} (${percentage}) traces.`;
+      this.shownTextsForSolutions = this.placeSolution.solutions.map(
+        (solution) => ({
+          text: generateTextForAutoRepair(solution),
+          solution,
+        })
+      );
+      return;
+    }
+
     this.infoHeader = `The place cannot fire for ${this.placeSolution.invalidTraceCount} (${percentage}) traces.<br/>`;
 
     if (this.placeSolution.missingTokens) {
@@ -77,9 +88,19 @@ export class RepairMenuComponent implements OnInit {
 
   useSolution(solution: AutoRepair): void {
     this.applySolution.next();
-    this.netCommandService
-      .repairNet(this.placeSolution.place, solution)
-      .subscribe(() => this.overlayRef?.dispose());
+
+    if (this.placeSolution.type === 'newTransition') {
+      this.netCommandService
+        .repairNetForNewTransition(
+          this.placeSolution.missingTransition,
+          solution
+        )
+        .subscribe(() => this.overlayRef?.dispose());
+    } else {
+      this.netCommandService
+        .repairNet(this.placeSolution.place, solution)
+        .subscribe(() => this.overlayRef?.dispose());
+    }
   }
 }
 
