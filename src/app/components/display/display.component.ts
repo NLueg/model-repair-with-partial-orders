@@ -9,8 +9,12 @@ import {
   switchMap,
 } from 'rxjs';
 
-import { FirePartialOrder } from '../../algorithms/fire-partial-orders/fire-partial-order';
+import {
+  FirePartialOrder,
+  FireResultPerPlace,
+} from '../../algorithms/fire-partial-orders/fire-partial-order';
 import { PetriNetRegionsService } from '../../algorithms/regions/petri-net-regions.service';
+import { Arc } from '../../classes/diagram/arc';
 import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../../services/display.service';
@@ -56,7 +60,9 @@ export class DisplayComponent {
               return of([]);
             }
 
-            const invalidPlaces: { [key: string]: number } = {};
+            const invalidPlaces: {
+              [key: string]: { count: number; blockedArcs: Arc[] };
+            } = {};
             for (let index = 0; index < partialOrders.length; index++) {
               const currentInvalid = this.firePartialOrder(
                 net,
@@ -64,10 +70,16 @@ export class DisplayComponent {
               );
 
               currentInvalid.forEach((place) => {
-                if (invalidPlaces[place] === undefined) {
-                  invalidPlaces[place] = 0;
+                if (invalidPlaces[place.placeId] === undefined) {
+                  invalidPlaces[place.placeId] = {
+                    count: 0,
+                    blockedArcs: [],
+                  };
                 }
-                invalidPlaces[place]++;
+                invalidPlaces[place.placeId].count++;
+                invalidPlaces[place.placeId].blockedArcs.push(
+                  ...place.invalidArcs
+                );
               });
             }
 
@@ -101,7 +113,7 @@ export class DisplayComponent {
   private firePartialOrder(
     petriNet: PetriNet,
     partialOrder: PartialOrder
-  ): string[] {
+  ): FireResultPerPlace[] {
     return new FirePartialOrder(petriNet, partialOrder).getInvalidPlaces();
   }
 }

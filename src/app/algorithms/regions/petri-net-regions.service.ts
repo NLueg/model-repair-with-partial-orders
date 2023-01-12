@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { GLPK } from 'glpk.js';
 import { combineLatest, from, map, Observable, of, switchMap, tap } from 'rxjs';
 
+import { Arc } from '../../classes/diagram/arc';
 import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
 import { Place } from '../../classes/diagram/place';
@@ -28,11 +29,13 @@ export class PetriNetRegionsService {
   computeRegions(
     partialOrders: PartialOrder[],
     petriNet: PetriNet,
-    invalidPlaces: { [key: string]: number }
+    invalidPlaces: { [key: string]: { count: number; blockedArcs: Arc[] } }
   ): Observable<PlaceSolution[]> {
     return from(createGlpk.then((create) => create())).pipe(
       switchMap((glpk) => {
-        const invalidPlaceList = Object.keys(invalidPlaces).flat();
+        const invalidPlaceList = Object.entries(invalidPlaces).map(
+          ([place, object]) => ({ placeId: place, ...object })
+        );
         if (invalidPlaceList.length === 0) {
           return of([]);
         }
@@ -56,10 +59,10 @@ export class PetriNetRegionsService {
 
         return combineLatest(
           invalidPlaceList.map((place) =>
-            solver.computeSolutions(place, invalidPlaceList).pipe(
+            solver.computeSolutions(place).pipe(
               map((solutions) => {
                 const existingPlace = petriNet.places.find(
-                  (p) => p.id === place
+                  (p) => p.id === place.placeId
                 );
 
                 const parsedSolutions = parseSolution(
@@ -78,10 +81,10 @@ export class PetriNetRegionsService {
 
                 const placeSolution: PlaceSolution = {
                   type: 'error',
-                  place,
+                  place: place.placeId,
                   solutions: parsedSolutions,
                   missingTokens: missingTokens ?? 0,
-                  invalidTraceCount: invalidPlaces[place],
+                  invalidTraceCount: invalidPlaces[place.placeId].count,
                 };
                 return placeSolution;
               })

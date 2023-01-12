@@ -12,6 +12,7 @@ import {
   toArray,
 } from 'rxjs';
 
+import { Arc } from '../../../classes/diagram/arc';
 import { PartialOrder } from '../../../classes/diagram/partial-order';
 import { PetriNet } from '../../../classes/diagram/petri-net';
 import { Place } from '../../../classes/diagram/place';
@@ -80,25 +81,25 @@ export class IlpSolver {
 
   /**
    * Generates a place for every invalid place in the net.
-   * @param invalidPlaceId the id of the place to generate a new for
-   * @param invalidPlaceList the list of invalid places
+   * @param placeModel the id of the place to generate a new for
    */
-  computeSolutions(
-    invalidPlaceId: string,
-    invalidPlaceList: string[]
-  ): Observable<ProblemSolution[]> {
+  computeSolutions(placeModel: {
+    placeId: string;
+    blockedArcs: Arc[];
+  }): Observable<ProblemSolution[]> {
     const invalidPlace = this.petriNet.places.find(
-      (p) => p.id === invalidPlaceId
+      (p) => p.id === placeModel.placeId
     );
     const validPlaces = this.petriNet.places.filter(
-      (p) => p.id !== invalidPlaceId
+      (p) => p.id !== placeModel.placeId
     );
 
-    const problems = this.getUnhandledPairs(
+    const unhandledPairs = this.getUnhandledPairs(
       invalidPlace,
       validPlaces,
-      invalidPlaceList
-    ).map((pair) => ({
+      placeModel.blockedArcs
+    );
+    const problems = unhandledPairs.map((pair) => ({
       baseConstraints: this.baseConstraints,
       baseIlp: this.baseIlp,
       pair,
@@ -221,41 +222,32 @@ export class IlpSolver {
   private getUnhandledPairs(
     invalidPlace: Place | undefined,
     validPlaces: Place[],
-    invalidPlaceList: string[]
+    blockedArcs: Arc[]
   ): Array<[first: string | undefined, second: string]> {
-    const pairsThatArentHandled = this.pairs.filter(
-      ([source, target]) =>
-        !validPlaces.some(
-          (p) =>
-            p.incomingArcs.some(
-              (incoming) =>
-                this.idToTransitionLabelMap[incoming.source] === source
-            ) &&
-            p.outgoingArcs.some(
-              (outgoing) =>
-                this.idToTransitionLabelMap[outgoing.target] === target
-            )
-        )
+    const blockedTargets = blockedArcs.map(
+      (arc) => this.idToTransitionLabelMap[arc.target]
+    );
+    const pairsThatArentHandled = this.pairs.filter(([_, target]) =>
+      blockedTargets.includes(target)
     );
 
-    // If we have other places, that can handle the inner stuff, or we have no invalid pair
-    const invalidPlaceIsAtStart =
-      invalidPlace && invalidPlace.incomingArcs.length === 0;
-    if (invalidPlaceIsAtStart) {
-      const noOtherStartPlaceExists = !this.petriNet.places.some(
-        (p) => p.id !== invalidPlace.id && p.incomingArcs.length === 0
-      );
+    console.error(pairsThatArentHandled);
+    console.error(blockedTargets);
 
-      if (
-        pairsThatArentHandled.length === 0 ||
-        invalidPlaceList.length > 1 ||
-        noOtherStartPlaceExists
-      )
-        // Only the target transitions can be a problem!
-        return invalidPlace.outgoingArcs.map((outgoing) => [
-          undefined,
-          this.idToTransitionLabelMap[outgoing.target],
-        ]);
+    // If this is a starting place or we have no pairs to handle
+    const invalidPlaceShouldJustReceiveMarking =
+      invalidPlace &&
+      (invalidPlace.incomingArcs.length === 0 ||
+        pairsThatArentHandled.length === 0);
+    if (invalidPlaceShouldJustReceiveMarking) {
+      const pairsToGenerate =
+        blockedArcs.length > 0 ? blockedArcs : invalidPlace.outgoingArcs;
+
+      // Only the target transitions can be a problem!
+      return pairsToGenerate.map((outgoing) => [
+        undefined,
+        this.idToTransitionLabelMap[outgoing.target],
+      ]);
     }
 
     return pairsThatArentHandled;
