@@ -11,4 +11,5 @@ export interface Breakpoint extends ConcreteElement {
   type: 'breakpoint';
   x: number;
   y: number;
+  arc: Arc;
 }

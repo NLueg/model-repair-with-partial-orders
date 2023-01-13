@@ -37,6 +37,7 @@ export class LayoutService {
     const acyclicArcs = this.removeCycles(net);
     const acyclicNet = this.createFromArcSubset(net, acyclicArcs);
     const layeredNodes = this.assignLayers(acyclicNet);
+    this.minimizeCrossing(net, layeredNodes);
 
     const nodeLayer = new Map<string, number>(); // id -> layer
 
@@ -239,6 +240,7 @@ export class LayoutService {
               id: node.id + i,
               x: 0,
               y: 0,
+              arc,
             };
             nodes[i].push(breakpoint);
             arc.breakpoints.push(breakpoint);
@@ -247,4 +249,266 @@ export class LayoutService {
       }
     }
   }
+
+  /**
+   * Rearrange order of elements/breakpoints per layer to minimize crossing of lines
+   * For every layer check to optimal ordering with the lowest crossing of incoming and outgoing lines
+   * Note: This will not always find the optimal order throughout all layers!
+   * @param currentRun run to parse
+   * @param layers layers with elements and breakpoints
+   */
+  private minimizeCrossing(
+    currentRun: PetriNet,
+    layers: Array<ConcreteElement[]>
+  ): void {
+    layers.forEach((layer, index) => {
+      const layerTmp = new Array<ConcreteElement>();
+      this.reorderLayer(currentRun, layers, layer, index, 0, layerTmp);
+      layer.splice(0, layer.length);
+      layer.push(...layerTmp);
+    });
+  }
+
+  /**
+   * Find the optimal order for a single layer
+   * @param currentRun run to parse
+   * @param layers all layers
+   * @param layer current layer
+   * @param layerIndex index of current layer
+   * @param currentLayerPosition current position in the layer which must be filled with an element
+   * @param reorderedLayer layer with rearranged order
+   * @returns number of crossings
+   */
+  private reorderLayer(
+    currentRun: PetriNet,
+    layers: Array<ConcreteElement[]>,
+    layer: ConcreteElement[],
+    layerIndex: number,
+    currentLayerPosition: number,
+    reorderedLayer: ConcreteElement[]
+  ): number {
+    let min = this.countCrossings(currentRun, layers, layerIndex);
+    let minLayer = layer;
+
+    const tmp = layer[currentLayerPosition];
+
+    if (currentLayerPosition == layer.length - 1) {
+      const crossings = this.countCrossings(currentRun, layers, layerIndex);
+      if (crossings < min) {
+        min = crossings;
+        minLayer = [...layer];
+      }
+    } else {
+      // Loop through all remaining elements and set each element once to the current position
+      for (let i = currentLayerPosition + 1; i < layer.length; i++) {
+        // ignore elements/breakpoints with fixed positions
+        if (!layer[i].layerIndex && !tmp.layerIndex) {
+          layer[currentLayerPosition] = layer[i];
+          layer[i] = tmp;
+        }
+        const layerTmp = new Array<ConcreteElement>();
+        const crossings = this.reorderLayer(
+          currentRun,
+          layers,
+          layer,
+          layerIndex,
+          currentLayerPosition + 1,
+          layerTmp
+        );
+        if (crossings < min) {
+          min = crossings;
+          minLayer = layerTmp;
+        }
+        if (!layer[i].layerIndex && !tmp.layerIndex) {
+          layer[i] = layer[currentLayerPosition];
+          layer[currentLayerPosition] = tmp;
+        }
+      }
+    }
+
+    reorderedLayer.push(...minLayer);
+    return min;
+  }
+
+  /**
+   * Identifies the number of crossing between the actual and previous/next layer
+   * @param currentRun run to parse
+   * @param layers all layers
+   * @param layerIndex index of the current layer
+   * @returns number of crossings
+   */
+  private countCrossings(
+    currentRun: PetriNet,
+    layers: Array<ConcreteElement[]>,
+    layerIndex: number
+  ): number {
+    const connections: ElementArrows = {
+      incoming: [],
+      outgoing: [],
+    };
+    layers[layerIndex].forEach((e, index) => {
+      const layerInfo = {
+        layers,
+        index,
+        layerIndex,
+      };
+      if (e.type === 'place' || e.type === 'transition') {
+        //Check outgoing and incoming lines from element to the next/previous breakpoint or element
+        const elementWithArcs = e as ConcreteElementWithArcs;
+        connections.incoming.push(
+          ...this.findIncomingConnections(
+            elementWithArcs.incomingArcs,
+            layerInfo
+          )
+        );
+        connections.outgoing.push(
+          ...this.findOutgoingConnections(
+            elementWithArcs.outgoingArcs,
+            layerInfo
+          )
+        );
+      } else {
+        this.getElementArrowsFromBreakpoint(
+          currentRun,
+          connections,
+          e as Breakpoint,
+          layerInfo
+        );
+      }
+    });
+
+    return (
+      this.calculateCrossings(connections.incoming) +
+      this.calculateCrossings(connections.outgoing)
+    );
+  }
+
+  private findIncomingConnections(arcs: Arc[], layerInfo: LayerInfoParameter) {
+    const incomings = new Array<Connection>();
+
+    arcs.forEach((arc) => {
+      let sourcePos: number | undefined;
+      if (arc.breakpoints.length > 0) {
+        sourcePos = layerInfo.layers[layerInfo.layerIndex - 1].indexOf(
+          arc.breakpoints[arc.breakpoints.length - 1]
+        );
+      } else {
+        sourcePos = layerInfo.layers[layerInfo.layerIndex - 1].findIndex(
+          (layer) => 'id' in layer && layer.id === arc.source
+        );
+      }
+
+      if (sourcePos >= 0) {
+        incomings.push({
+          sourcePos: sourcePos,
+          targetPos: layerInfo.index,
+        });
+      }
+    });
+    return incomings;
+  }
+
+  private findOutgoingConnections(
+    arcs: Arc[],
+    layerInfo: LayerInfoParameter
+  ): Connection[] {
+    const outgoings = new Array<Connection>();
+
+    arcs.forEach((arc) => {
+      let targetPos: number | undefined;
+      if (arc.breakpoints.length > 0) {
+        targetPos = layerInfo.layers[layerInfo.layerIndex + 1].indexOf(
+          arc.breakpoints[0]
+        );
+      } else {
+        targetPos = layerInfo.layers[layerInfo.layerIndex + 1].findIndex(
+          (layer) => 'id' in layer && layer.id === arc.target
+        );
+      }
+
+      if (targetPos >= 0)
+        outgoings.push({
+          sourcePos: layerInfo.index,
+          targetPos: targetPos,
+        });
+    });
+    return outgoings;
+  }
+
+  private calculateCrossings(connections: Array<Connection>): number {
+    let crossings = 0;
+    connections.forEach((e, index) => {
+      for (let i = index + 1; i < connections.length; i++) {
+        if (
+          (e.sourcePos < connections[i].sourcePos &&
+            e.targetPos > connections[i].targetPos) ||
+          (e.sourcePos > connections[i].sourcePos &&
+            e.targetPos < connections[i].targetPos)
+        ) {
+          crossings++;
+        }
+      }
+    });
+    return crossings;
+  }
+
+  private getElementArrowsFromBreakpoint(
+    petriNet: PetriNet,
+    connections: ElementArrows,
+    breakpoint: Breakpoint,
+    layerInfo: LayerInfoParameter
+  ): void {
+    // check incoming and outgoing line from breakpoint to the next/previous breakpoint or element
+    let prev: ConcreteElement | undefined;
+    let next: ConcreteElement | undefined;
+
+    const breakpointIndex = breakpoint.arc.breakpoints.indexOf(breakpoint);
+
+    const elementsWithArcs = getElementsWithArcs(petriNet);
+    const source = elementsWithArcs.find(
+      (element) => element.id === breakpoint.arc.source
+    );
+    if (breakpointIndex === 0 && source) {
+      prev = source;
+    } else if (breakpointIndex > 0) {
+      prev = breakpoint.arc.breakpoints[breakpointIndex - 1];
+    }
+    if (prev) {
+      connections.incoming.push({
+        sourcePos: layerInfo.layers[layerInfo.layerIndex - 1].indexOf(prev),
+        targetPos: layerInfo.index,
+      });
+    }
+
+    const target = elementsWithArcs.find(
+      (element) => element.id === breakpoint.arc.target
+    );
+    if (breakpointIndex == breakpoint.arc.breakpoints.length - 1 && target) {
+      next = target;
+    } else if (breakpoint.arc.breakpoints.length > breakpointIndex + 1) {
+      next = breakpoint.arc.breakpoints[breakpointIndex + 1];
+    }
+    if (next) {
+      connections.outgoing.push({
+        sourcePos: layerInfo.index,
+        targetPos: layerInfo.layers[layerInfo.layerIndex + 1].indexOf(next),
+      });
+    }
+  }
 }
+
+type Connection = {
+  sourcePos: number;
+  targetPos: number;
+};
+
+type ElementArrows = {
+  incoming: Connection[];
+  outgoing: Connection[];
+};
+
+type LayerInfoParameter = {
+  layers: Array<ConcreteElement[]>;
+  layerIndex: number;
+  index: number;
+};
