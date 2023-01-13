@@ -14,7 +14,7 @@ import {
   FirePartialOrder,
   FireResultPerPlace,
 } from '../../algorithms/fire-partial-orders/fire-partial-order';
-import { PetriNetRegionsService } from '../../algorithms/regions/petri-net-regions.service';
+import { PetriNetSolutionService } from '../../algorithms/regions/petri-net-solution.service';
 import { Arc } from '../../classes/diagram/arc';
 import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
@@ -44,7 +44,7 @@ export class DisplayComponent {
     private layoutService: LayoutService,
     private svgService: SvgService,
     private displayService: DisplayService,
-    private petriNetRegionsService: PetriNetRegionsService,
+    private petriNetRegionsService: PetriNetSolutionService,
     private repairService: RepairService
   ) {
     this.invalidPlaceCount$ = new BehaviorSubject<{ count: number } | null>(
@@ -103,7 +103,7 @@ export class DisplayComponent {
               count: Object.keys(invalidPlaces).length,
             });
 
-            return this.petriNetRegionsService.computeRegions(
+            return this.petriNetRegionsService.computeSolutions(
               partialOrders,
               net,
               invalidPlaces

@@ -158,6 +158,7 @@ const solutionTypeToText: { [key in SolutionType]: string } = {
   sameIncoming: 'Same incoming weights',
   sameOutgoing: 'Same outgoing weights',
   unbounded: 'New place',
+  multiplePlaces: 'Multiple places',
 };
 
 function generateBaseText(type: SolutionType): string {

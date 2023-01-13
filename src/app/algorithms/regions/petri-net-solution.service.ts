@@ -23,10 +23,10 @@ const createGlpk: Promise<() => Promise<GLPK>> = import('glpk.js').then(
 @Injectable({
   providedIn: 'root',
 })
-export class PetriNetRegionsService {
+export class PetriNetSolutionService {
   constructor(private repairService: RepairService) {}
 
-  computeRegions(
+  computeSolutions(
     partialOrders: PartialOrder[],
     petriNet: PetriNet,
     invalidPlaces: { [key: string]: { count: number; blockedArcs: Arc[] } }
@@ -78,10 +78,15 @@ export class PetriNetRegionsService {
           {} as { [key: string]: string }
         );
 
+        const validPlaces = petriNet.places.filter(
+          (place) => !invalidPlaces[place.id]
+        );
+
         const solver = new IlpSolver(
           glpk,
           partialOrders,
           petriNet,
+          validPlaces,
           idToTransitionLabelMap
         );
 
@@ -167,44 +172,42 @@ export class PetriNetRegionsService {
     const solutionsWithMaybeDuplicates = solutions
       .map((solution) => ({
         type: solution.type,
-        solutionParts: solution.solutions
-          .map((singleSolution) =>
-            Object.entries(singleSolution)
-              .filter(
-                ([variable, value]) =>
-                  value != 0 &&
-                  solver.getInverseVariableMapping(variable) !== null
-              )
-              .map(([variable, value]) => {
-                const decoded = solver.getInverseVariableMapping(variable)!;
+        solutionParts: solution.solutions.map((singleSolution) =>
+          Object.entries(singleSolution)
+            .filter(
+              ([variable, value]) =>
+                value != 0 &&
+                solver.getInverseVariableMapping(variable) !== null
+            )
+            .map(([variable, value]) => {
+              const decoded = solver.getInverseVariableMapping(variable)!;
 
-                let parsableSolution: ParsableSolution;
-                switch (decoded.type) {
-                  case VariableType.INITIAL_MARKING:
-                    parsableSolution = {
-                      type: 'increase-marking',
-                      newMarking: value,
-                    };
-                    break;
-                  case VariableType.INCOMING_TRANSITION_WEIGHT:
-                    parsableSolution = {
-                      type: 'incoming-arc',
-                      incoming: decoded.label,
-                      marking: value,
-                    };
-                    break;
-                  case VariableType.OUTGOING_TRANSITION_WEIGHT:
-                    parsableSolution = {
-                      type: 'outgoing-arc',
-                      outgoing: decoded.label,
-                      marking: value,
-                    };
-                }
+              let parsableSolution: ParsableSolution;
+              switch (decoded.type) {
+                case VariableType.INITIAL_MARKING:
+                  parsableSolution = {
+                    type: 'increase-marking',
+                    newMarking: value,
+                  };
+                  break;
+                case VariableType.INCOMING_TRANSITION_WEIGHT:
+                  parsableSolution = {
+                    type: 'incoming-arc',
+                    incoming: decoded.label,
+                    marking: value,
+                  };
+                  break;
+                case VariableType.OUTGOING_TRANSITION_WEIGHT:
+                  parsableSolution = {
+                    type: 'outgoing-arc',
+                    outgoing: decoded.label,
+                    marking: value,
+                  };
+              }
 
-                return parsableSolution;
-              })
-          )
-          .filter((solution) => solution.length > 0),
+              return parsableSolution;
+            })
+        ),
       }))
       .filter((solution) => {
         if (solution.solutionParts.length === 0) {

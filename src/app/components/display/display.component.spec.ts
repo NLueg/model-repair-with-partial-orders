@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
-import { PetriNetRegionsService } from '../../algorithms/regions/petri-net-regions.service';
+import { PetriNetSolutionService } from '../../algorithms/regions/petri-net-solution.service';
 import { DisplayService } from '../../services/display.service';
 import { LayoutService } from '../../services/layout.service';
 import { SvgService } from '../../services/svg/svg.service';
@@ -33,7 +33,7 @@ describe('DisplayComponent', () => {
           },
         },
         {
-          provide: PetriNetRegionsService,
+          provide: PetriNetSolutionService,
           useValue: {
             layout: jest.fn(),
           },
