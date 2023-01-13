@@ -21,6 +21,12 @@ import { idAttribute } from './svg-constants';
 
 const hashAttribute = 'element-hash';
 
+const foreignElementHeight = 40;
+const foreignElementWidth = 120;
+
+const foreignElementXOffset = foreignElementWidth / 2;
+const foreignElementYOffset = foreignElementHeight / 2 - 5;
+
 @Injectable({
   providedIn: 'root',
 })
@@ -92,18 +98,22 @@ export class SvgService {
 
     registerSvgForElement(transition, transEl);
 
-    const textEl = this.createTextElement(
+    const textEl = this.createForeignElement(
       transition.id,
       transition.label as string
     );
-    textEl.setAttribute('x', '' + (getNumber(transition.x) + offset.x));
+    textEl.setAttribute(
+      'x',
+      '' + (getNumber(transition.x) + offset.x - foreignElementXOffset)
+    );
     textEl.setAttribute(
       'y',
       '' +
         (getNumber(transition.y) +
           parseInt(style.height) / 2 +
           this.TEXT_OFFSET +
-          offset.y)
+          offset.y -
+          foreignElementYOffset)
     );
     return [transEl, textEl];
   }
@@ -119,15 +129,19 @@ export class SvgService {
 
     registerSvgForElement(place, placeEl);
 
-    const textEl = this.createTextElement(place.id);
-    textEl.setAttribute('x', '' + (getNumber(place.x) + offset.x));
+    const textEl = this.createForeignElement(place.id);
+    textEl.setAttribute(
+      'x',
+      '' + (getNumber(place.x) + offset.x - foreignElementXOffset)
+    );
     textEl.setAttribute(
       'y',
       '' +
         (getNumber(place.y) +
           parseInt(PLACE_STYLE.r) +
           this.TEXT_OFFSET +
-          offset.y)
+          offset.y -
+          foreignElementYOffset)
     );
     const result = [placeEl, textEl];
 
@@ -416,6 +430,22 @@ export class SvgService {
     result.setAttribute(hashAttribute, `${id}-${content}`);
     this.applyStyle(result, TEXT_STYLE);
     result.textContent = content ?? id;
+    return result;
+  }
+
+  private createForeignElement(id: string, content?: string): SVGElement {
+    const result = this.createSvgElement('foreignObject');
+    result.setAttribute('height', `${foreignElementHeight}`);
+    result.setAttribute('width', `${foreignElementWidth}`);
+    result.setAttribute('describes', id);
+    result.setAttribute(hashAttribute, `${id}-${content}`);
+    this.applyStyle(result, TEXT_STYLE);
+
+    const span = document.createElement('span');
+    span.setAttribute('title', content ?? id);
+    span.textContent = content ?? id;
+    result.append(span);
+
     return result;
   }
 

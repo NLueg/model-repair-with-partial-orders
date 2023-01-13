@@ -30,7 +30,10 @@
           <span
             matTooltip="Some of the traces have transitions, that aren't found in the net. You can add them by clicking on the buttons!"
           >
-            {{ transitionSolutions.length }} missing transitions:
+            {{ transitionSolutions.length }} missing
+            {{
+              transitionSolutions.length === 1 ? 'transition' : 'transitions'
+            }}:
           </span>
         </div>
 
