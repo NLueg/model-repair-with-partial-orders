@@ -206,7 +206,23 @@ export class PetriNetRegionsService {
           )
           .filter((solution) => solution.length > 0),
       }))
-      .filter((solution) => solution.solutionParts.length > 0);
+      .filter((solution) => {
+        if (solution.solutionParts.length === 0) {
+          return false;
+        }
+        solution.solutionParts = solution.solutionParts.filter(
+          (value, index) => {
+            const stringifiedValue = JSON.stringify(value);
+            return (
+              index ===
+              solution.solutionParts.findIndex(
+                (obj) => JSON.stringify(obj) === stringifiedValue
+              )
+            );
+          }
+        );
+        return true;
+      });
 
     return solutionsWithMaybeDuplicates.filter((value, index) => {
       const stringifiedValue = JSON.stringify(value.solutionParts);
