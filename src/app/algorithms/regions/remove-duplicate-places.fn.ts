@@ -10,7 +10,6 @@ export function removeDuplicatePlaces(
     if (solution.solutionParts.length === 0) {
       return false;
     }
-    console.error('Solution', JSON.parse(JSON.stringify(solution)));
 
     const removedIndices: number[] = [];
     solution.solutionParts = solution.solutionParts.filter(

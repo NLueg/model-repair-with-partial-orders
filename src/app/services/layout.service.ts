@@ -37,7 +37,6 @@ export class LayoutService {
     const acyclicArcs = this.removeCycles(net);
     const acyclicNet = this.createFromArcSubset(net, acyclicArcs);
     const layeredNodes = this.assignLayers(acyclicNet);
-    this.minimizeCrossing(net, layeredNodes);
 
     const nodeLayer = new Map<string, number>(); // id -> layer
 
@@ -60,6 +59,7 @@ export class LayoutService {
     for (const layer of originalLayeredNodes) {
       maxNodesPerLayer = Math.max(maxNodesPerLayer, layer.length);
     }
+    this.minimizeCrossing(net, originalLayeredNodes);
 
     let maxX = 0;
     let maxY = 0;
@@ -271,7 +271,7 @@ export class LayoutService {
 
   /**
    * Find the optimal order for a single layer
-   * @param currentRun run to parse
+   * @param currentNet run to parse
    * @param layers all layers
    * @param layer current layer
    * @param layerIndex index of current layer
@@ -280,20 +280,20 @@ export class LayoutService {
    * @returns number of crossings
    */
   private reorderLayer(
-    currentRun: PetriNet,
+    currentNet: PetriNet,
     layers: Array<ConcreteElement[]>,
     layer: ConcreteElement[],
     layerIndex: number,
     currentLayerPosition: number,
     reorderedLayer: ConcreteElement[]
   ): number {
-    let min = this.countCrossings(currentRun, layers, layerIndex);
+    let min = this.countCrossings(currentNet, layers, layerIndex);
     let minLayer = layer;
 
     const tmp = layer[currentLayerPosition];
 
     if (currentLayerPosition == layer.length - 1) {
-      const crossings = this.countCrossings(currentRun, layers, layerIndex);
+      const crossings = this.countCrossings(currentNet, layers, layerIndex);
       if (crossings < min) {
         min = crossings;
         minLayer = [...layer];
@@ -308,7 +308,7 @@ export class LayoutService {
         }
         const layerTmp = new Array<ConcreteElement>();
         const crossings = this.reorderLayer(
-          currentRun,
+          currentNet,
           layers,
           layer,
           layerIndex,
