@@ -20,7 +20,7 @@ import { StructureType, UploadService } from './services/upload/upload.service';
 })
 export class AppComponent implements OnInit {
   hasPartialOrders = false;
-  isCurrentRunEmpty$: Observable<boolean>;
+  isCurrentNetEmpty$: Observable<boolean>;
   partialOrderCount$: Observable<{ count: number }>;
   resetPositioningSubject: Subject<void> = new Subject<void>();
 
