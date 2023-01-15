@@ -5,6 +5,7 @@ import {
   Observable,
   ReplaySubject,
   shareReplay,
+  startWith,
   Subject,
 } from 'rxjs';
 
@@ -38,9 +39,10 @@ export class DisplayService {
     return this.petriNet$.asObservable();
   }
 
-  isCurrentRunEmpty$(): Observable<boolean> {
+  isCurrentNetEmpty$(): Observable<boolean> {
     return this.petriNet$.pipe(
       map((run) => isNetEmpty(run)),
+      startWith(true),
       shareReplay(1)
     );
   }

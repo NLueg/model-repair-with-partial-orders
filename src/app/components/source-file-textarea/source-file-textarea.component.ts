@@ -34,7 +34,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
   petriNetTextarea: FormControl<string | null>;
   logTextarea: FormControl<string | null>;
 
-  isCurrentRunEmpty$: Observable<boolean>;
+  isCurrentNetEmpty$: Observable<boolean>;
 
   @Input()
   resetEvent?: Observable<void>;
@@ -52,8 +52,8 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     this.logTextarea = new FormControl<string | null>(null);
     this.petriNetTextarea = new FormControl<string | null>(null);
 
-    this.isCurrentRunEmpty$ = this.displayService
-      .isCurrentRunEmpty$()
+    this.isCurrentNetEmpty$ = this.displayService
+      .isCurrentNetEmpty$()
       .pipe(distinctUntilChanged());
 
     this._sub = this.petriNetTextarea.valueChanges
