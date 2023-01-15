@@ -51,3 +51,64 @@ follows[]
 2 c e7 [e5]
 2 d e8 [e6,e7]
 `;
+
+export const colloquiumNet = `.type pn
+.transitions
+rp Reise_planen
+fs Flug_suchen
+hs Hotel_suchen
+fb Flug_buchen
+hb Hotel_buchen
+us Unterlagen_speichern
+.places
+p1 1
+p2 0
+p3 0
+p4 0
+p5 0
+p6 0
+p7 0
+p8 0
+.arcs
+p1 rp
+rp p2
+rp p3
+p2 fs
+p3 hs
+hs p4
+p4 hb
+hb p5
+fs p6
+p6 fb
+fb p7
+p5 us
+p7 us
+us p8
+`;
+
+export const colloquiumLog = `.type log
+.attributes
+case-id
+concept:name
+event-id
+follows[]
+.events
+1 Reise_planen a
+1 Flug_suchen b
+1 Flug_buchen c
+1 Hotel_suchen d
+1 Hotel_buchen e
+1 Unterlagen_speichern f
+2 Reise_planen a
+2 Flug_buchen b
+2 Hotel_suchen c
+2 Hotel_buchen d
+2 Unterlagen_speichern e
+3 Reise_planen a
+3 Flug_suchen b
+3 Flug_buchen c
+3 Hotel_suchen d
+3 Frühstück_buchen e
+3 Hotel_buchen f
+3 Unterlagen_speichern g
+`;

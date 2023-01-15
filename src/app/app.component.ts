@@ -6,6 +6,8 @@ import { first, map, Observable, Subject } from 'rxjs';
 import { DisplayService } from './services/display.service';
 import { NetCommandService } from './services/repair/net-command.service';
 import {
+  colloquiumLog,
+  colloquiumNet,
   simpleExampleLog,
   simpleExamplePetriNet,
 } from './services/upload/simple-example/simple-example-texts';
@@ -61,6 +63,15 @@ export class AppComponent implements OnInit {
     zip.file('simple-example-log.log', simpleExampleLog);
     zip.generateAsync({ type: 'blob' }).then((content) => {
       saveAs(content, 'simple-example.zip');
+    });
+  }
+
+  downloadColloquiumExample(): void {
+    const zip = new JSZip();
+    zip.file('colloquium-net.pn', colloquiumNet);
+    zip.file('colloquium-log.log', colloquiumLog);
+    zip.generateAsync({ type: 'blob' }).then((content) => {
+      saveAs(content, 'colloquium-example.zip');
     });
   }
 
