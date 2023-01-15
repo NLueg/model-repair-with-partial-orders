@@ -34,7 +34,8 @@ export type SolutionType =
   | 'unbounded'
   | 'sameIncoming'
   | 'sameOutgoing'
-  | 'arcsSame';
+  | 'arcsSame'
+  | 'multiplePlaces';
 
 export interface ProblemSolutionWithoutType {
   ilp: LP;

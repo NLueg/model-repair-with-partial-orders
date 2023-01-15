@@ -1,14 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 
+import { Arc } from '../../classes/diagram/arc';
 import { RepairService } from '../../services/repair/repair.service';
 import {
   parsedInvalidPartialOrder,
   parsedPetriNet,
 } from '../../services/upload/example-file-parsed';
-import { PetriNetRegionsService } from './petri-net-regions.service';
+import { PetriNetSolutionService } from './petri-net-solution.service';
 
-describe('PetriNetRegionsService', () => {
-  let service: PetriNetRegionsService;
+describe('PetriNetSolutionService', () => {
+  let service: PetriNetSolutionService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -16,7 +17,7 @@ describe('PetriNetRegionsService', () => {
         { provide: RepairService, useValue: { saveNewSolutions: jest.fn() } },
       ],
     });
-    service = TestBed.inject(PetriNetRegionsService);
+    service = TestBed.inject(PetriNetSolutionService);
   });
 
   it('should be created', () => {
@@ -24,60 +25,85 @@ describe('PetriNetRegionsService', () => {
   });
 
   it('should generate solutions', (done) => {
+    const arc: Arc[] = [];
+
     service
-      .computeRegions([parsedInvalidPartialOrder], parsedPetriNet, {
-        p5: 1,
-        p7: 1,
+      .computeSolutions([parsedInvalidPartialOrder], parsedPetriNet, {
+        p5: { count: 1, blockedArcs: arc },
+        p7: { count: 1, blockedArcs: arc },
       })
       .subscribe((result) => {
         expect(result).toEqual([
           {
             invalidTraceCount: 1,
-            missingTokens: 0,
+            missingTokens: 1,
             place: 'p5',
-            solutions: [],
+            solutions: [
+              {
+                newMarking: 2,
+                repairType: 'sameIncoming',
+                type: 'marking',
+              },
+              {
+                incoming: [],
+                newMarking: 2,
+                outgoing: [
+                  {
+                    transitionLabel: 'a',
+                    weight: 1,
+                  },
+                ],
+                repairType: 'sameOutgoing',
+                type: 'modify-place',
+              },
+            ],
             type: 'error',
           },
           {
             invalidTraceCount: 1,
-            missingTokens: 0,
+            missingTokens: 1,
             place: 'p7',
             solutions: [
               {
-                newMarking: 1,
+                newMarking: 2,
                 repairType: 'arcsSame',
                 type: 'marking',
               },
               {
                 incoming: [
                   {
-                    transitionId: 'd',
+                    transitionLabel: 'd',
                     weight: 1,
                   },
                   {
-                    transitionId: 'c',
+                    transitionLabel: 'c',
                     weight: 1,
                   },
                 ],
-                outgoing: [],
+                outgoing: [
+                  {
+                    transitionLabel: 'c',
+                    weight: 1,
+                  },
+                ],
                 repairType: 'sameIncoming',
                 type: 'modify-place',
               },
               {
                 incoming: [
                   {
-                    transitionId: 'a',
+                    transitionLabel: 'd',
                     weight: 1,
                   },
                 ],
-                newMarking: 1,
+                newMarking: 2,
                 outgoing: [
                   {
-                    transitionId: 'd',
+                    transitionLabel: 'd',
                     weight: 1,
                   },
                   {
-                    transitionId: 'c',
+                    transitionLabel: 'c',
                     weight: 1,
                   },
                 ],
@@ -87,13 +113,13 @@ describe('PetriNetRegionsService', () => {
               {
                 incoming: [
                   {
-                    transitionId: 'd',
+                    transitionLabel: 'd',
                     weight: 1,
                   },
                 ],
                 outgoing: [
                   {
-                    transitionId: 'c',
+                    transitionLabel: 'c',
                     weight: 1,
                   },
                 ],
@@ -106,12 +132,6 @@ describe('PetriNetRegionsService', () => {
           {
             place: 'p1',
             reduceTokensTo: 1,
-            tooManyTokens: 1,
-            type: 'warning',
-          },
-          {
-            place: 'p3',
-            reduceTokensTo: 0,
             tooManyTokens: 1,
             type: 'warning',
           },

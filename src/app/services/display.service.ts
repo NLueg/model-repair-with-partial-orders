@@ -1,8 +1,14 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, map, Observable, shareReplay, Subject } from 'rxjs';
+import {
+  BehaviorSubject,
+  map,
+  Observable,
+  ReplaySubject,
+  shareReplay,
+  Subject,
+} from 'rxjs';
 
 import { Coordinates } from '../classes/diagram/coordinates';
-import { getEmptyNet } from '../classes/diagram/functions/net-helper.fn';
 import { PartialOrder } from '../classes/diagram/partial-order';
 import { isNetEmpty, PetriNet } from '../classes/diagram/petri-net';
 
@@ -17,8 +23,7 @@ export class DisplayService {
   private reset$: BehaviorSubject<Coordinates>;
 
   constructor() {
-    const net = getEmptyNet();
-    this.petriNet$ = new BehaviorSubject<PetriNet>(net);
+    this.petriNet$ = new ReplaySubject<PetriNet>(1);
     this.partialOrders$ = new BehaviorSubject<PartialOrder[] | null>(null);
     this.currentErrors$ = new BehaviorSubject<Set<string>>(new Set());
 

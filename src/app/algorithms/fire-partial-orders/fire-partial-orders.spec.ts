@@ -12,7 +12,25 @@ describe('fire partial orders', () => {
       parsedPartialOrder
     ).getInvalidPlaces();
 
-    expect(result).toEqual([]);
+    expect(result).toEqual([
+      {
+        invalidArcs: [
+          {
+            breakpoints: [],
+            source: 'p7',
+            target: 'd',
+            weight: 1,
+          },
+          {
+            breakpoints: [],
+            source: 'd',
+            target: 'p7',
+            weight: 1,
+          },
+        ],
+        placeId: 'p7',
+      },
+    ]);
   });
 
   it('should fire partial orders for invalid', () => {
@@ -21,6 +39,53 @@ describe('fire partial orders', () => {
       parsedInvalidPartialOrder
     ).getInvalidPlaces();
 
-    expect(result).toEqual(['p5', 'p7']);
+    expect(result).toEqual([
+      {
+        invalidArcs: [
+          {
+            breakpoints: [],
+            source: 'p5',
+            target: 'a',
+            weight: 1,
+          },
+          {
+            breakpoints: [],
+            source: 'c',
+            target: 'p5',
+            weight: 1,
+          },
+        ],
+        placeId: 'p5',
+      },
+      {
+        invalidArcs: [
+          {
+            breakpoints: [],
+            source: 'p7',
+            target: 'd',
+            weight: 1,
+          },
+          {
+            breakpoints: [],
+            source: 'p7',
+            target: 'd',
+            weight: 1,
+          },
+          {
+            breakpoints: [],
+            source: 'c',
+            target: 'p7',
+            weight: 1,
+          },
+          {
+            breakpoints: [],
+            source: 'd',
+            target: 'p7',
+            weight: 1,
+          },
+        ],
+        placeId: 'p7',
+      },
+    ]);
   });
 });

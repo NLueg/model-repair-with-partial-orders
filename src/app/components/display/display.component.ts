@@ -1,4 +1,5 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
+import { MatButton } from '@angular/material/button';
 import {
   BehaviorSubject,
   map,
@@ -9,12 +10,18 @@ import {
   switchMap,
 } from 'rxjs';
 
-import { FirePartialOrder } from '../../algorithms/fire-partial-orders/fire-partial-order';
-import { PetriNetRegionsService } from '../../algorithms/regions/petri-net-regions.service';
+import {
+  FirePartialOrder,
+  FireResultPerPlace,
+} from '../../algorithms/fire-partial-orders/fire-partial-order';
+import { PetriNetSolutionService } from '../../algorithms/regions/petri-net-solution.service';
+import { Arc } from '../../classes/diagram/arc';
 import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../../services/display.service';
 import { LayoutResult, LayoutService } from '../../services/layout.service';
+import { NewTransitionSolution } from '../../services/repair/repair.model';
+import { RepairService } from '../../services/repair/repair.service';
 import { SvgService } from '../../services/svg/svg.service';
 import { CanvasComponent } from '../canvas/canvas.component';
 
@@ -31,16 +38,29 @@ export class DisplayComponent {
   invalidPlaceCount$: Subject<{ count: number } | null>;
 
   tracesCount$: Observable<number>;
+  transitionSolutions$: Observable<NewTransitionSolution[]>;
 
   constructor(
     private layoutService: LayoutService,
     private svgService: SvgService,
     private displayService: DisplayService,
-    private petriNetRegionsService: PetriNetRegionsService
+    private petriNetRegionsService: PetriNetSolutionService,
+    private repairService: RepairService
   ) {
     this.invalidPlaceCount$ = new BehaviorSubject<{ count: number } | null>(
       null
     );
+
+    this.transitionSolutions$ = repairService
+      .getSolutions$()
+      .pipe(
+        map(
+          (solutions) =>
+            solutions.filter(
+              (s) => s.type === 'newTransition'
+            ) as NewTransitionSolution[]
+        )
+      );
 
     this.tracesCount$ = this.displayService.getPartialOrders$().pipe(
       map((partialOrders) => partialOrders?.length ?? 0),
@@ -56,7 +76,9 @@ export class DisplayComponent {
               return of([]);
             }
 
-            const invalidPlaces: { [key: string]: number } = {};
+            const invalidPlaces: {
+              [key: string]: { count: number; blockedArcs: Arc[] };
+            } = {};
             for (let index = 0; index < partialOrders.length; index++) {
               const currentInvalid = this.firePartialOrder(
                 net,
@@ -64,10 +86,16 @@ export class DisplayComponent {
               );
 
               currentInvalid.forEach((place) => {
-                if (invalidPlaces[place] === undefined) {
-                  invalidPlaces[place] = 0;
+                if (invalidPlaces[place.placeId] === undefined) {
+                  invalidPlaces[place.placeId] = {
+                    count: 0,
+                    blockedArcs: [],
+                  };
                 }
-                invalidPlaces[place]++;
+                invalidPlaces[place.placeId].count++;
+                invalidPlaces[place.placeId].blockedArcs.push(
+                  ...place.invalidArcs
+                );
               });
             }
 
@@ -75,7 +103,7 @@ export class DisplayComponent {
               count: Object.keys(invalidPlaces).length,
             });
 
-            return this.petriNetRegionsService.computeRegions(
+            return this.petriNetRegionsService.computeSolutions(
               partialOrders,
               net,
               invalidPlaces
@@ -86,6 +114,9 @@ export class DisplayComponent {
               place.issueStatus = undefined;
             });
             for (const place of invalidPlaces) {
+              if (place.type === 'newTransition') {
+                continue;
+              }
               const foundPlace = net.places.find((p) => p.id === place.place);
               if (foundPlace) {
                 foundPlace.issueStatus = place.type;
@@ -101,7 +132,13 @@ export class DisplayComponent {
   private firePartialOrder(
     petriNet: PetriNet,
     partialOrder: PartialOrder
-  ): string[] {
+  ): FireResultPerPlace[] {
     return new FirePartialOrder(petriNet, partialOrder).getInvalidPlaces();
+  }
+
+  applySolution(solution: NewTransitionSolution, button: MatButton): void {
+    const domRect: DOMRect =
+      button._elementRef.nativeElement.getBoundingClientRect();
+    this.repairService.showRepairPopoverForSolution(domRect, solution);
   }
 }

@@ -3,6 +3,7 @@ import { Point } from '@angular/cdk/drag-drop';
 import { Arc } from './arc';
 
 export interface ConcreteElement {
+  type: string;
   id: string;
   x?: number;
   y?: number;

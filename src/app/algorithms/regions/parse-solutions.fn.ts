@@ -34,11 +34,12 @@ export type SinglePlaceParameter = {
   outgoing: ArcDefinition[];
 };
 
-type ArcDefinition = { transitionId: string; weight: number };
+type ArcDefinition = { transitionLabel: string; weight: number };
 
 export function parseSolution(
   placeSolutionList: ParsableSolutionsPerType[],
-  existingPlace: Place | undefined
+  existingPlace: Place | undefined,
+  idTransitionToLabel: { [key: string]: string }
 ): AutoRepairWithSolutionType[] {
   const returnList: (AutoRepairWithSolutionType | null)[] = placeSolutionList
     .map((parsableSolutionsPerType) => {
@@ -68,7 +69,8 @@ export function parseSolution(
         return {
           ...checkPlaceAndReturnMarkingIfEquals(
             mergeAllDuplicatePlaces(singlePlaceSolution),
-            existingPlace
+            existingPlace,
+            idTransitionToLabel
           ),
           repairType: parsableSolutionsPerType.type,
         };
@@ -80,8 +82,8 @@ export function parseSolution(
         singlePlaceSolution.incoming.length > 1
           ? singlePlaceSolution.incoming.every(
               (incoming) =>
-                incoming.transitionId ===
-                singlePlaceSolution.incoming[0].transitionId
+                incoming.transitionLabel ===
+                singlePlaceSolution.incoming[0].transitionLabel
             )
           : false;
       if (
@@ -106,8 +108,8 @@ export function parseSolution(
           singlePlaceSolution.outgoing.length > 1
             ? singlePlaceSolution.outgoing.every(
                 (incoming) =>
-                  incoming.transitionId ===
-                  singlePlaceSolution.outgoing[0].transitionId
+                  incoming.transitionLabel ===
+                  singlePlaceSolution.outgoing[0].transitionLabel
               )
             : false;
 
@@ -147,7 +149,8 @@ export function parseSolution(
         return {
           ...checkPlaceAndReturnMarkingIfEquals(
             mergeAllDuplicatePlaces(repair),
-            existingPlace
+            existingPlace,
+            idTransitionToLabel
           ),
           repairType: parsableSolutionsPerType.type,
         };
@@ -168,13 +171,13 @@ export function parseSolution(
 function generateRepairForMultipleSolutions(
   placeSolutions: ParsableSolution[][]
 ): SinglePlaceParameter[] {
-  const initialPlaces = placeSolutions.map((placeSolution) => {
+  return placeSolutions.map((placeSolution) => {
     return {
       incoming: placeSolution
         .map((place) => {
           if (place.type === 'incoming-arc') {
             return {
-              transitionId: place.incoming,
+              transitionLabel: place.incoming,
               weight: place.marking,
             };
           }
@@ -185,7 +188,7 @@ function generateRepairForMultipleSolutions(
         .map((place) => {
           if (place.type === 'outgoing-arc') {
             return {
-              transitionId: place.outgoing,
+              transitionLabel: place.outgoing,
               weight: place.marking,
             };
           }
@@ -201,15 +204,12 @@ function generateRepairForMultipleSolutions(
       ),
     };
   });
-
-  // TODO: How to merge them together?
-
-  return initialPlaces;
 }
 
 function checkPlaceAndReturnMarkingIfEquals(
   solution: AutoRepair,
-  existingPlace: Place | undefined
+  existingPlace: Place | undefined,
+  idTransitionToLabel: { [key: string]: string }
 ): AutoRepair {
   if (
     solution.type === 'marking' ||
@@ -223,7 +223,8 @@ function checkPlaceAndReturnMarkingIfEquals(
   const incomingEquals = existingPlace.incomingArcs.every((arc) =>
     solution.incoming.some(
       (incoming) =>
-        incoming.transitionId === arc.source && incoming.weight === arc.weight
+        incoming.transitionLabel === idTransitionToLabel[arc.source] &&
+        incoming.weight === arc.weight
     )
   );
   if (!incomingEquals) {
@@ -233,7 +234,8 @@ function checkPlaceAndReturnMarkingIfEquals(
   const outgoingEquals = existingPlace.outgoingArcs.every((arc) =>
     solution.outgoing.some(
       (incoming) =>
-        incoming.transitionId === arc.target && incoming.weight === arc.weight
+        incoming.transitionLabel === idTransitionToLabel[arc.target] &&
+        incoming.weight === arc.weight
     )
   );
   if (!outgoingEquals) {
@@ -261,7 +263,7 @@ function mergeAllDuplicatePlaces<T extends SinglePlaceParameter>(
 function reduceArcDefinition(arcDefinition: ArcDefinition[]): ArcDefinition[] {
   return arcDefinition.reduce((acc: ArcDefinition[], arcDefinition) => {
     const foundArc = acc.find(
-      (arc) => arc.transitionId === arcDefinition.transitionId
+      (arc) => arc.transitionLabel === arcDefinition.transitionLabel
     );
     if (!foundArc) {
       acc.push(arcDefinition);
@@ -300,7 +302,10 @@ function getSinglePlaceSolution(
             acc = {
               type: 'modify-place',
               incoming: [
-                { transitionId: solution.incoming, weight: solution.marking },
+                {
+                  transitionLabel: solution.incoming,
+                  weight: solution.marking,
+                },
               ],
               outgoing: [],
             };
@@ -311,7 +316,7 @@ function getSinglePlaceSolution(
                   type: 'modify-place',
                   incoming: [
                     {
-                      transitionId: solution.incoming,
+                      transitionLabel: solution.incoming,
                       weight: solution.marking,
                     },
                   ],
@@ -321,7 +326,7 @@ function getSinglePlaceSolution(
                 break;
               case 'modify-place':
                 acc.incoming.push({
-                  transitionId: solution.incoming,
+                  transitionLabel: solution.incoming,
                   weight: solution.marking,
                 });
                 break;
@@ -334,7 +339,10 @@ function getSinglePlaceSolution(
               type: 'modify-place',
               incoming: [],
               outgoing: [
-                { transitionId: solution.outgoing, weight: solution.marking },
+                {
+                  transitionLabel: solution.outgoing,
+                  weight: solution.marking,
+                },
               ],
             };
           } else {
@@ -345,7 +353,7 @@ function getSinglePlaceSolution(
                   incoming: [],
                   outgoing: [
                     {
-                      transitionId: solution.outgoing,
+                      transitionLabel: solution.outgoing,
                       weight: solution.marking,
                     },
                   ],
@@ -354,7 +362,7 @@ function getSinglePlaceSolution(
                 break;
               case 'modify-place':
                 acc.outgoing.push({
-                  transitionId: solution.outgoing,
+                  transitionLabel: solution.outgoing,
                   weight: solution.marking,
                 });
                 break;

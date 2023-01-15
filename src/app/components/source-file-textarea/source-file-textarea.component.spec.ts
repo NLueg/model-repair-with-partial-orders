@@ -13,7 +13,8 @@ describe('SourceFileTextareaComponent', () => {
   let fixture: ComponentFixture<SourceFileTextareaComponent>;
 
   const mockUploadService = {
-    getUpload$: () => of(undefined),
+    getLogUpload$: () => of(undefined),
+    getNetUpload$: () => of(undefined),
   };
 
   const petriNet: PetriNet = {

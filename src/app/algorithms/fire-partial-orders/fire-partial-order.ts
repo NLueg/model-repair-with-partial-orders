@@ -15,23 +15,11 @@ import {
 } from '../../classes/diagram/transition';
 import { MaxFlowPreflowN3 } from './max-flow-preflow-n3';
 
-export class ValidationResult {
-  public valid: boolean;
-  public phase: ValidationPhase;
-
-  constructor(valid: boolean, phase: ValidationPhase) {
-    this.valid = valid;
-    this.phase = phase;
-  }
-}
-
-export enum ValidationPhase {
-  FLOW = 'flow',
-  FORWARDS = 'forwards',
-  BACKWARDS = 'backwards',
-}
+export type FireResultPerPlace = { placeId: string; invalidArcs: Arc[] };
 
 type InnerFireResult = { branchPlaces: string[] };
+
+type ValidPlacesType = Array<true | Arc[]>;
 
 export class FirePartialOrder {
   private readonly idToEventMap = new Map<string, EventItem>();
@@ -55,7 +43,7 @@ export class FirePartialOrder {
    * Fires the partial order in the net and returns the ids of invalid places.
    * @returns The ids of invalid places.
    */
-  getInvalidPlaces(): string[] {
+  getInvalidPlaces(): FireResultPerPlace[] {
     this.buildExtensionForPartialOrder();
 
     const totalOrder = this.buildTotalOrder(this.partialOrder);
@@ -66,7 +54,9 @@ export class FirePartialOrder {
       initialEvent.localMarking![i] = this.petriNet.places[i].marking;
     }
 
-    const validPlaces = new Array(this.petriNet.places.length).fill(true);
+    const validPlaces: ValidPlacesType = new Array(
+      this.petriNet.places.length
+    ).fill(true);
     const notValidPlaces = new Array(this.petriNet.places.length).fill(false);
 
     const forwardResult = this.fireForwards([...totalOrder], validPlaces);
@@ -92,14 +82,14 @@ export class FirePartialOrder {
       backwardsFireQueue.push(totalOrder[i]);
     }
 
-    const backwardsValidPlaces = new Array(this.petriNet.places.length).fill(
-      true
-    );
+    const backwardsValidPlaces: ValidPlacesType = new Array(
+      this.petriNet.places.length
+    ).fill(true);
 
     // Is the final marking > 0 ?
     for (let i = 0; i < this.petriNet.places.length; i++) {
       if (finalEvent.localMarking![i] < 0) {
-        backwardsValidPlaces[i] = false;
+        backwardsValidPlaces[i] = [];
       }
     }
 
@@ -121,31 +111,27 @@ export class FirePartialOrder {
       }
     }
 
-    /**
-     * return this.petriNet.places.map((p, i) => {
-     *       if (validPlaces[i]) {
-     *         return new ValidationResult(true, ValidationPhase.FORWARDS);
-     *       } else if (backwardsValidPlaces[i]) {
-     *         return new ValidationResult(true, ValidationPhase.BACKWARDS);
-     *       } else if (flow[i]) {
-     *         return new ValidationResult(true, ValidationPhase.FLOW);
-     *       } else if (notValidPlaces[i]) {
-     *         return new ValidationResult(false, ValidationPhase.FORWARDS);
-     *       } else {
-     *         return new ValidationResult(false, ValidationPhase.FLOW);
-     *       }
-     *     });
-     */
-
     return this.petriNet.places
-      .filter((p, i) => {
-        if (validPlaces[i]) {
-          return false;
-        } else if (backwardsValidPlaces[i]) {
-          return false;
-        } else return !flow[i];
+      .map((p, i) => {
+        if (validPlaces[i] === true) {
+          return null;
+        } else if (backwardsValidPlaces[i] === true) {
+          return null;
+        } else if (flow[i]) {
+          return null;
+        }
+
+        let list = validPlaces[i] as Arc[];
+        if (Array.isArray(backwardsValidPlaces[i])) {
+          list = list.concat(backwardsValidPlaces[i] as Arc[]);
+        }
+
+        return {
+          placeId: p.id,
+          invalidArcs: list,
+        };
       })
-      .map((p) => p.id);
+      .filter((p) => p !== null) as { placeId: string; invalidArcs: Arc[] }[];
   }
 
   /**
@@ -185,7 +171,7 @@ export class FirePartialOrder {
 
   private fireForwards(
     queue: Array<EventItem>,
-    validPlaces: Array<boolean>
+    validPlaces: ValidPlacesType
   ): InnerFireResult {
     return this.fire(
       queue,
@@ -198,7 +184,7 @@ export class FirePartialOrder {
     );
   }
 
-  private fireBackwards(queue: Array<EventItem>, validPlaces: Array<boolean>) {
+  private fireBackwards(queue: Array<EventItem>, validPlaces: ValidPlacesType) {
     this.fire(
       queue,
       validPlaces,
@@ -212,7 +198,7 @@ export class FirePartialOrder {
 
   private fire(
     eventQueue: Array<EventItem>,
-    validPlaces: Array<boolean>,
+    validPlaces: ValidPlacesType,
     preArcs: (t: Transition) => Array<Arc>,
     prePlace: (a: Arc) => Place | undefined,
     postArcs: (t: Transition) => Array<Arc>,
@@ -236,7 +222,11 @@ export class FirePartialOrder {
           event.localMarking![pIndex] =
             event.localMarking![pIndex] - arc.weight;
           if (event.localMarking![pIndex] < 0) {
-            validPlaces[pIndex] = false;
+            if (!Array.isArray(validPlaces[pIndex])) {
+              validPlaces[pIndex] = [arc];
+            } else {
+              (validPlaces[pIndex] as Array<Arc>).push(arc);
+            }
           }
         }
 

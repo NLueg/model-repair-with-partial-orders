@@ -1,5 +1,5 @@
 import { OverlayRef } from '@angular/cdk/overlay';
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit } from '@angular/core';
 
 import { SolutionType } from '../../algorithms/regions/ilp-solver/solver-classes';
 import {
@@ -29,6 +29,8 @@ export class RepairMenuComponent implements OnInit {
 
   infoHeader = '';
 
+  applySolution = new EventEmitter<void>();
+
   constructor(private netCommandService: NetCommandService) {}
 
   ngOnInit(): void {
@@ -54,6 +56,17 @@ export class RepairMenuComponent implements OnInit {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(this.placeSolution.invalidTraceCount / this.partialOrderCount);
+    if (this.placeSolution.type === 'newTransition') {
+      this.infoHeader = `The transition ${this.placeSolution.missingTransition} is missing for ${this.placeSolution.invalidTraceCount} (${percentage}) traces.`;
+      this.shownTextsForSolutions = this.placeSolution.solutions.map(
+        (solution) => ({
+          text: generateTextForAutoRepair(solution),
+          solution,
+        })
+      );
+      return;
+    }
+
     this.infoHeader = `The place cannot fire for ${this.placeSolution.invalidTraceCount} (${percentage}) traces.<br/>`;
 
     if (this.placeSolution.missingTokens) {
@@ -74,9 +87,20 @@ export class RepairMenuComponent implements OnInit {
   }
 
   useSolution(solution: AutoRepair): void {
-    this.netCommandService
-      .repairNet(this.placeSolution.place, solution)
-      .subscribe(() => this.overlayRef?.dispose());
+    this.applySolution.next();
+
+    if (this.placeSolution.type === 'newTransition') {
+      this.netCommandService
+        .repairNetForNewTransition(
+          this.placeSolution.missingTransition,
+          solution
+        )
+        .subscribe(() => this.overlayRef?.dispose());
+    } else {
+      this.netCommandService
+        .repairNet(this.placeSolution.place, solution)
+        .subscribe(() => this.overlayRef?.dispose());
+    }
   }
 }
 
@@ -134,6 +158,7 @@ const solutionTypeToText: { [key in SolutionType]: string } = {
   sameIncoming: 'Same incoming weights',
   sameOutgoing: 'Same outgoing weights',
   unbounded: 'New place',
+  multiplePlaces: 'Multiple places',
 };
 
 function generateBaseText(type: SolutionType): string {
@@ -149,25 +174,25 @@ function tooltipForSinglePlaceParameter(
       ? `• incoming: ${solution.incoming
           .map((arc) =>
             arc.weight > 1
-              ? `${arc.transitionId} (${arc.weight})`
-              : arc.transitionId
+              ? `${arc.transitionLabel} (${arc.weight})`
+              : arc.transitionLabel
           )
-          .join(', ')}`
+          .join(', ')} \n`
       : '';
   const outgoingString =
     solution.outgoing.length > 0
       ? `• outgoing: ${solution.outgoing
           .map((arc) =>
             arc.weight > 1
-              ? `${arc.transitionId} (${arc.weight})`
-              : arc.transitionId
+              ? `${arc.transitionLabel} (${arc.weight})`
+              : arc.transitionLabel
           )
-          .join(', ')}`
+          .join(', ')} \n`
       : '';
 
   return `
-  ${incomingString}
-  ${outgoingString}
-  • marking: ${solution.newMarking ? solution.newMarking : '0'}
+  ${incomingString}${outgoingString}• marking: ${
+    solution.newMarking ? solution.newMarking : '0'
+  }
   `.trim();
 }

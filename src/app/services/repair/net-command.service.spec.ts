@@ -89,12 +89,12 @@ p6 f 3`);
       .repairNet('p2', {
         type: 'modify-place',
         incoming: [
-          { transitionId: 'd', weight: 5 },
-          { transitionId: 'f', weight: 6 },
+          { transitionLabel: 'd', weight: 5 },
+          { transitionLabel: 'f', weight: 6 },
         ],
         outgoing: [
-          { transitionId: 'a', weight: 8 },
-          { transitionId: 'b', weight: 9 },
+          { transitionLabel: 'a', weight: 8 },
+          { transitionLabel: 'b', weight: 9 },
         ],
         newMarking: 42,
       })
@@ -146,19 +146,19 @@ p2 b 9`);
         places: [
           {
             incoming: [
-              { transitionId: 'd', weight: 5 },
-              { transitionId: 'f', weight: 6 },
+              { transitionLabel: 'd', weight: 5 },
+              { transitionLabel: 'f', weight: 6 },
             ],
             outgoing: [
-              { transitionId: 'a', weight: 8 },
-              { transitionId: 'b', weight: 9 },
+              { transitionLabel: 'a', weight: 8 },
+              { transitionLabel: 'b', weight: 9 },
             ],
           },
           {
-            incoming: [{ transitionId: 'e', weight: 5 }],
+            incoming: [{ transitionLabel: 'e', weight: 5 }],
             outgoing: [
-              { transitionId: 'a', weight: 8 },
-              { transitionId: 'c', weight: 9 },
+              { transitionLabel: 'a', weight: 8 },
+              { transitionLabel: 'c', weight: 9 },
             ],
           },
         ],

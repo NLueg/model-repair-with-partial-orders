@@ -8,7 +8,7 @@ describe('parseSolution', () => {
   it('should return an empty array if no solutions are provided', () => {
     const parameter: ParsableSolutionsPerType[] = [];
 
-    const actual = parseSolution(parameter, undefined);
+    const actual = parseSolution(parameter, undefined, {});
 
     const expected: AutoRepairWithSolutionType[] = [];
     expect(actual).toEqual(expected);
@@ -29,7 +29,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter, undefined);
+    const actual = parseSolution(parameter, undefined, {});
 
     const expected: AutoRepairWithSolutionType[] = [
       {
@@ -57,13 +57,13 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter, undefined);
+    const actual = parseSolution(parameter, undefined, {});
 
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'modify-place',
         repairType: 'unbounded',
-        incoming: [{ transitionId: 't1', weight: 3 }],
+        incoming: [{ transitionLabel: 't1', weight: 3 }],
         outgoing: [],
       },
     ];
@@ -86,14 +86,14 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter, undefined);
+    const actual = parseSolution(parameter, undefined, {});
 
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'modify-place',
         repairType: 'unbounded',
         incoming: [],
-        outgoing: [{ transitionId: 't1', weight: 3 }],
+        outgoing: [{ transitionLabel: 't1', weight: 3 }],
       },
     ];
     expect(actual).toEqual(expected);
@@ -120,14 +120,14 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter, undefined);
+    const actual = parseSolution(parameter, undefined, {});
 
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'modify-place',
         repairType: 'unbounded',
-        incoming: [{ transitionId: 't1', weight: 3 }],
-        outgoing: [{ transitionId: 't1', weight: 3 }],
+        incoming: [{ transitionLabel: 't1', weight: 3 }],
+        outgoing: [{ transitionLabel: 't1', weight: 3 }],
       },
     ];
     expect(actual).toEqual(expected);
@@ -159,14 +159,14 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter, undefined);
+    const actual = parseSolution(parameter, undefined, {});
 
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'modify-place',
         repairType: 'unbounded',
-        incoming: [{ transitionId: 't1', weight: 3 }],
-        outgoing: [{ transitionId: 't1', weight: 6 }],
+        incoming: [{ transitionLabel: 't1', weight: 3 }],
+        outgoing: [{ transitionLabel: 't1', weight: 6 }],
       },
     ];
     expect(actual).toEqual(expected);
@@ -202,15 +202,15 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter, undefined);
+    const actual = parseSolution(parameter, undefined, {});
 
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'modify-place',
         repairType: 'unbounded',
         newMarking: 10,
-        incoming: [{ transitionId: 't1', weight: 6 }],
-        outgoing: [{ transitionId: 't1', weight: 3 }],
+        incoming: [{ transitionLabel: 't1', weight: 6 }],
+        outgoing: [{ transitionLabel: 't1', weight: 3 }],
       },
     ];
     expect(actual).toEqual(expected);
@@ -247,7 +247,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter, undefined);
+    const actual = parseSolution(parameter, undefined, {});
 
     const expected: AutoRepairWithSolutionType[] = [
       {
@@ -255,12 +255,12 @@ describe('parseSolution', () => {
         repairType: 'unbounded',
         places: [
           {
-            incoming: [{ transitionId: 't1', weight: 3 }],
-            outgoing: [{ transitionId: 't1', weight: 3 }],
+            incoming: [{ transitionLabel: 't1', weight: 3 }],
+            outgoing: [{ transitionLabel: 't1', weight: 3 }],
           },
           {
-            incoming: [{ transitionId: 't1', weight: 3 }],
-            outgoing: [{ transitionId: 't2', weight: 3 }],
+            incoming: [{ transitionLabel: 't1', weight: 3 }],
+            outgoing: [{ transitionLabel: 't2', weight: 3 }],
           },
         ],
       },
@@ -300,7 +300,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter, undefined);
+    const actual = parseSolution(parameter, undefined, {});
 
     const expected: AutoRepairWithSolutionType[] = [
       {
@@ -308,12 +308,12 @@ describe('parseSolution', () => {
         repairType: 'unbounded',
         places: [
           {
-            incoming: [{ transitionId: 't1', weight: 3 }],
-            outgoing: [{ transitionId: 't1', weight: 3 }],
+            incoming: [{ transitionLabel: 't1', weight: 3 }],
+            outgoing: [{ transitionLabel: 't1', weight: 3 }],
           },
           {
-            incoming: [{ transitionId: 't2', weight: 3 }],
-            outgoing: [{ transitionId: 't1', weight: 3 }],
+            incoming: [{ transitionLabel: 't2', weight: 3 }],
+            outgoing: [{ transitionLabel: 't1', weight: 3 }],
           },
         ],
       },
@@ -358,16 +358,16 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter, undefined);
+    const actual = parseSolution(parameter, undefined, {});
 
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'modify-place',
         repairType: 'unbounded',
-        incoming: [{ transitionId: 't1', weight: 9 }],
+        incoming: [{ transitionLabel: 't1', weight: 9 }],
         outgoing: [
-          { transitionId: 't1', weight: 3 },
-          { transitionId: 't2', weight: 3 },
+          { transitionLabel: 't1', weight: 3 },
+          { transitionLabel: 't2', weight: 3 },
         ],
       },
     ];
@@ -411,16 +411,16 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter, undefined);
+    const actual = parseSolution(parameter, undefined, {});
 
     const expected: AutoRepairWithSolutionType[] = [
       {
         repairType: 'unbounded',
         incoming: [
-          { transitionId: 't1', weight: 3 },
-          { transitionId: 't2', weight: 3 },
+          { transitionLabel: 't1', weight: 3 },
+          { transitionLabel: 't2', weight: 3 },
         ],
-        outgoing: [{ transitionId: 't1', weight: 9 }],
+        outgoing: [{ transitionLabel: 't1', weight: 9 }],
         type: 'modify-place',
       },
     ];
@@ -435,7 +435,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter, undefined);
+    const actual = parseSolution(parameter, undefined, {});
 
     const expected: AutoRepairWithSolutionType[] = [];
     expect(actual).toEqual(expected);
@@ -518,7 +518,7 @@ describe('parseSolution', () => {
       },
     ];
 
-    const actual = parseSolution(parameter, undefined);
+    const actual = parseSolution(parameter, undefined, {});
 
     const expected: AutoRepairWithSolutionType[] = [
       {
@@ -526,17 +526,17 @@ describe('parseSolution', () => {
           {
             incoming: [
               {
-                transitionId: 'a',
+                transitionLabel: 'a',
                 weight: 1,
               },
               {
-                transitionId: 'x',
+                transitionLabel: 'x',
                 weight: 1,
               },
             ],
             outgoing: [
               {
-                transitionId: 'b',
+                transitionLabel: 'b',
                 weight: 1,
               },
             ],
@@ -544,17 +544,17 @@ describe('parseSolution', () => {
           {
             incoming: [
               {
-                transitionId: 'a',
+                transitionLabel: 'a',
                 weight: 1,
               },
               {
-                transitionId: 'x',
+                transitionLabel: 'x',
                 weight: 1,
               },
             ],
             outgoing: [
               {
-                transitionId: 'b',
+                transitionLabel: 'b',
                 weight: 1,
               },
             ],
@@ -562,17 +562,17 @@ describe('parseSolution', () => {
           {
             incoming: [
               {
-                transitionId: 'a',
+                transitionLabel: 'a',
                 weight: 1,
               },
               {
-                transitionId: 'x',
+                transitionLabel: 'x',
                 weight: 1,
               },
             ],
             outgoing: [
               {
-                transitionId: 'c',
+                transitionLabel: 'c',
                 weight: 1,
               },
             ],
@@ -580,17 +580,17 @@ describe('parseSolution', () => {
           {
             incoming: [
               {
-                transitionId: 'a',
+                transitionLabel: 'a',
                 weight: 1,
               },
               {
-                transitionId: 'x',
+                transitionLabel: 'x',
                 weight: 1,
               },
             ],
             outgoing: [
               {
-                transitionId: 'c',
+                transitionLabel: 'c',
                 weight: 1,
               },
             ],

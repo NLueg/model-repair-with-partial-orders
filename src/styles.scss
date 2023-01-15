@@ -11,20 +11,13 @@ body {
 }
 
 svg foreignObject {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    font-size: 0.8em;
+    font-size: 0.9em;
     text-align: center;
     word-break: break-word;
     pointer-events: none;
 
     span {
         display: -webkit-box;
-        max-width: 100px;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
@@ -77,12 +70,20 @@ svg foreignObject {
 circle.place.place--invalid {
   cursor: pointer;
   color: var(--error-color);
+  stroke: var(--error-color);
 }
 
 circle.place.place--warning {
   cursor: pointer;
   color: var(--warn-color);
+  stroke: var(--error-color);
 }
+
+.new-svg-element {
+  color: var(--success-color);
+  stroke: var(--success-color);
+}
+
 
 .current-overlay {
   background: var(--fancy-grey);
@@ -115,7 +116,12 @@ circle.place.place--warning {
 }
 
 .mat-tooltip.repair-menu-tooltip {
-  font-size: 1rem;
+  font-size: 0.9rem;
+  max-width: 400px !important;
+}
+
+.mat-form-field-flex {
+  min-height: 400px;
 }
 
 .mat-form-field-flex {
