@@ -12,7 +12,25 @@ describe('fire partial orders', () => {
       parsedPartialOrder
     ).getInvalidPlaces();
 
-    expect(result).toEqual([]);
+    expect(result).toEqual([
+      {
+        invalidArcs: [
+          {
+            breakpoints: [],
+            source: 'p7',
+            target: 'd',
+            weight: 1,
+          },
+          {
+            breakpoints: [],
+            source: 'd',
+            target: 'p7',
+            weight: 1,
+          },
+        ],
+        placeId: 'p7',
+      },
+    ]);
   });
 
   it('should fire partial orders for invalid', () => {

@@ -15,6 +15,7 @@ import { RepairService } from '../../services/repair/repair.service';
 import { IlpSolver, SolutionGeneratorType } from './ilp-solver/ilp-solver';
 import { ProblemSolution, VariableType } from './ilp-solver/solver-classes';
 import { AutoRepairForSinglePlace, parseSolution } from './parse-solutions.fn';
+import { removeDuplicatePlaces } from './remove-duplicate-places.fn';
 
 const createGlpk: Promise<() => Promise<GLPK>> = import('glpk.js').then(
   (glpk) => (glpk as any).default
@@ -100,7 +101,7 @@ export class PetriNetSolutionService {
                     : undefined;
 
                 const parsedSolutions = parseSolution(
-                  this.handleSolutions(solutions, solver),
+                  handleSolutions(solutions, solver),
                   existingPlace,
                   idToTransitionLabelMap
                 );
@@ -164,70 +165,53 @@ export class PetriNetSolutionService {
       })
     );
   }
+}
 
-  private handleSolutions(
-    solutions: ProblemSolution[],
-    solver: IlpSolver
-  ): ParsableSolutionsPerType[] {
-    const solutionsWithMaybeDuplicates = solutions
-      .map((solution) => ({
-        type: solution.type,
-        solutionParts: solution.solutions.map((singleSolution) =>
-          Object.entries(singleSolution)
-            .filter(
-              ([variable, value]) =>
-                value != 0 &&
-                solver.getInverseVariableMapping(variable) !== null
-            )
-            .map(([variable, value]) => {
-              const decoded = solver.getInverseVariableMapping(variable)!;
+export function handleSolutions(
+  solutions: ProblemSolution[],
+  solver: IlpSolver
+): ParsableSolutionsPerType[] {
+  const solutionsWithMaybeDuplicates = solutions.map((solution) => ({
+    type: solution.type,
+    solutionParts: solution.solutions.map((singleSolution) =>
+      Object.entries(singleSolution)
+        .filter(
+          ([variable, value]) =>
+            value != 0 && solver.getInverseVariableMapping(variable) !== null
+        )
+        .map(([variable, value]) => {
+          const decoded = solver.getInverseVariableMapping(variable)!;
 
-              let parsableSolution: ParsableSolution;
-              switch (decoded.type) {
-                case VariableType.INITIAL_MARKING:
-                  parsableSolution = {
-                    type: 'increase-marking',
-                    newMarking: value,
-                  };
-                  break;
-                case VariableType.INCOMING_TRANSITION_WEIGHT:
-                  parsableSolution = {
-                    type: 'incoming-arc',
-                    incoming: decoded.label,
-                    marking: value,
-                  };
-                  break;
-                case VariableType.OUTGOING_TRANSITION_WEIGHT:
-                  parsableSolution = {
-                    type: 'outgoing-arc',
-                    outgoing: decoded.label,
-                    marking: value,
-                  };
-              }
-
-              return parsableSolution;
-            })
-        ),
-      }))
-      .filter((solution) => {
-        if (solution.solutionParts.length === 0) {
-          return false;
-        }
-        solution.solutionParts = solution.solutionParts.filter(
-          (value, index) => {
-            const stringifiedValue = JSON.stringify(value);
-            return (
-              index ===
-              solution.solutionParts.findIndex(
-                (obj) => JSON.stringify(obj) === stringifiedValue
-              )
-            );
+          let parsableSolution: ParsableSolution;
+          switch (decoded.type) {
+            case VariableType.INITIAL_MARKING:
+              parsableSolution = {
+                type: 'increase-marking',
+                newMarking: value,
+              };
+              break;
+            case VariableType.INCOMING_TRANSITION_WEIGHT:
+              parsableSolution = {
+                type: 'incoming-arc',
+                incoming: decoded.label,
+                marking: value,
+              };
+              break;
+            case VariableType.OUTGOING_TRANSITION_WEIGHT:
+              parsableSolution = {
+                type: 'outgoing-arc',
+                outgoing: decoded.label,
+                marking: value,
+              };
           }
-        );
-        return true;
-      });
 
-    return solutionsWithMaybeDuplicates.filter((value, index) => {
+          return parsableSolution;
+        })
+    ),
+  }));
+
+  return removeDuplicatePlaces(solutionsWithMaybeDuplicates).filter(
+    (value, index) => {
       const stringifiedValue = JSON.stringify(value.solutionParts);
       return (
         index ===
@@ -235,8 +219,8 @@ export class PetriNetSolutionService {
           (obj) => JSON.stringify(obj.solutionParts) === stringifiedValue
         )
       );
-    });
-  }
+    }
+  );
 }
 
 /**
