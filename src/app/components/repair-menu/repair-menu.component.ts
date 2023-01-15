@@ -55,7 +55,9 @@ export class RepairMenuComponent implements OnInit {
       style: 'percent',
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
-    }).format(this.placeSolution.invalidTraceCount / this.partialOrderCount).replace(' ', '');
+    })
+      .format(this.placeSolution.invalidTraceCount / this.partialOrderCount)
+      .replace(' ', '');
     if (this.placeSolution.type === 'newTransition') {
       this.infoHeader = `The transition ${this.placeSolution.missingTransition} is missing for ${this.placeSolution.invalidTraceCount} (${percentage}) traces.`;
       this.shownTextsForSolutions = this.placeSolution.solutions.map(
