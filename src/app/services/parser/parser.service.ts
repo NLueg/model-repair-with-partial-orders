@@ -96,7 +96,7 @@ export class ParserService {
           } else {
             errors.add(`The log contains invalid parts`);
             this.toastr.error(
-              `The log contains invalid parts`,
+              `The log contains invalid parts. '${trimmedLine}' is not a valid attribute`,
               `Unable to parse log`
             );
             return [];
@@ -120,7 +120,7 @@ export class ParserService {
           } else {
             errors.add(`The log contains invalid parts`);
             this.toastr.error(
-              `The log contains invalid parts`,
+              `The log contains invalid parts. '${trimmedLine}' is not a valid attribute`,
               `Unable to parse log`
             );
             return [];
@@ -206,9 +206,12 @@ export class ParserService {
       returnList.push(currentPartialOrder);
     }
 
-    if (returnList.length === 0) {
+    if (returnList.length === 0 && errors.size === 0) {
       errors.add(`No parsable traces where found`);
-      this.toastr.error(`No parsable traces where found in the log`, 'Error');
+      this.toastr.error(
+        `No parsable traces where found in the log`,
+        'No traces found'
+      );
     }
     return returnList;
   }

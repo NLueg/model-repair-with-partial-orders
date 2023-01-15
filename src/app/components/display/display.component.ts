@@ -73,6 +73,7 @@ export class DisplayComponent {
         this.displayService.getPartialOrders$().pipe(
           switchMap((partialOrders) => {
             if (!partialOrders || partialOrders.length === 0) {
+              this.repairService.saveNewSolutions([], 0);
               return of([]);
             }
 
