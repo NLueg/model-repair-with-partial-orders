@@ -120,7 +120,9 @@ export class PetriNetSolutionService {
                         type: 'error',
                         place: place.placeId,
                         solutions: parsedSolutions,
-                        missingTokens: missingTokens ?? 0,
+                        missingTokens:
+                          missingTokens ??
+                          generateMarkingDifference(existingPlace),
                         invalidTraceCount: invalidPlaces[place.placeId].count,
                       }
                     : {
