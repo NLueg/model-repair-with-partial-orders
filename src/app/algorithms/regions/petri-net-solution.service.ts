@@ -122,7 +122,7 @@ export class PetriNetSolutionService {
                         solutions: parsedSolutions,
                         missingTokens:
                           missingTokens ??
-                          generateMarkingDifference(existingPlace),
+                          generateMarkingDifference(existingPlace) * -1,
                         invalidTraceCount: invalidPlaces[place.placeId].count,
                       }
                     : {
