@@ -101,7 +101,7 @@
             buttonText="Upload petri net"
             buttonIcon="upload"
             [styleClass]="
-              (isCurrentRunEmpty$ | async) ? undefined : 'color_success'
+              (isCurrentNetEmpty$ | async) ? undefined : 'color_success'
             "
             (buttonAction)="openFileSelector('petri-net')"
             (dropAction)="dropFiles($event, 'petri-net')"
@@ -134,21 +134,23 @@
         </ng-template>
       </main>
 
-      <app-template-button
-        class="margin-spaces"
-        buttonText="Download example"
-        buttonIcon="star"
-        styleClass="color_primary"
-        (buttonAction)="downloadExample()"
-      ></app-template-button>
+      <div class="empty-button-list">
+        <app-template-button
+          class="margin-spaces"
+          buttonText="Download example"
+          buttonIcon="star"
+          styleClass="color_primary"
+          (buttonAction)="downloadExample()"
+        ></app-template-button>
 
-      <app-template-button
-        class="margin-spaces"
-        buttonText="Download colloquium example"
-        buttonIcon="star"
-        styleClass="color_primary"
-        (buttonAction)="downloadColloquiumExample()"
-      ></app-template-button>
+        <app-template-button
+          class="margin-spaces"
+          buttonText="Download colloquium example"
+          buttonIcon="star"
+          styleClass="color_primary"
+          (buttonAction)="downloadColloquiumExample()"
+        ></app-template-button>
+      </div>
     </ng-container>
   </ng-container>
 

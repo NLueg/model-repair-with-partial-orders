@@ -33,7 +33,7 @@ export class AppComponent implements OnInit {
       .getPartialOrders$()
       .pipe(map((pos) => ({ count: pos?.length ?? 0 })));
 
-    this.isCurrentRunEmpty$ = displayService.isCurrentNetEmpty$();
+    this.isCurrentNetEmpty$ = displayService.isCurrentNetEmpty$();
   }
 
   resetSvgPositioning(): void {
