@@ -31,6 +31,10 @@
         }
     }
 
+    ::ng-deep .mat-form-field-flex {
+        min-height: 400px;
+    }
+
     .resolve-button {
         position: absolute;
         right: 0;
