@@ -16,6 +16,9 @@ import { UploadService } from '../../services/upload/upload.service';
 
 type Valid = 'error' | 'warn' | 'success';
 
+const emptyContent =
+  '.type pn\n' + '.transitions\n\n' + '.places\n\n' + '.arcs\n';
+
 @Component({
   selector: 'app-source-file-textarea',
   templateUrl: './source-file-textarea.component.html',
@@ -47,7 +50,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     private uploadService: UploadService
   ) {
     this.logTextarea = new FormControl<string | null>(null);
-    this.petriNetTextarea = new FormControl<string | null>(null);
+    this.petriNetTextarea = new FormControl<string>(emptyContent);
 
     this.isCurrentNetEmpty$ = this.displayService
       .isCurrentNetEmpty$()
@@ -93,7 +96,7 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     newSource: string | null,
     type: 'net' | 'po'
   ): void {
-    if (newSource === null) {
+    if (newSource === null || newSource === emptyContent) {
       return;
     }
 

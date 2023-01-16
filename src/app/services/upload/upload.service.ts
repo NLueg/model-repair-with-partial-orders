@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
-import { BehaviorSubject, Observable, ReplaySubject, Subject } from 'rxjs';
+import { Observable, ReplaySubject, Subject } from 'rxjs';
 
 import { netTypeKey } from '../parser/parsing-constants';
 import { getRunTextFromPnml } from './pnml/pnml-to-run.fn';
@@ -23,7 +23,7 @@ export class UploadService {
   private currentLogUpload$: Subject<string>;
 
   constructor(private toastr: ToastrService) {
-    this.currentNetUpload$ = new BehaviorSubject(emptyContent);
+    this.currentNetUpload$ = new ReplaySubject<string>(1);
     this.currentLogUpload$ = new ReplaySubject<string>(1);
   }
 

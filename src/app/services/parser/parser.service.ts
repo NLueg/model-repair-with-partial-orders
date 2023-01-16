@@ -389,10 +389,10 @@ export class ParserService {
     }
 
     if (petriNet.arcs.length === 0 && petriNet.transitions.length === 0) {
-      errors.add(`File does not contain events and arcs`);
+      errors.add(`Petri net does not contain events and arcs`);
       this.toastr.error(
-        `File does not contain events and arcs`,
-        `Unable to parse file`
+        `Petri net does not contain events and arcs`,
+        `Unable to parse petri net`
       );
       return null;
     }
