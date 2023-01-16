@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
-import { Observable, ReplaySubject, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, ReplaySubject, Subject } from 'rxjs';
 
 import { netTypeKey } from '../parser/parsing-constants';
 import { getRunTextFromPnml } from './pnml/pnml-to-run.fn';
@@ -12,6 +12,9 @@ const allowedExtensions: { [key in StructureType]: string[] } = {
   log: ['txt', 'log'],
 };
 
+const emptyContent =
+  '.type pn\n' + '.transitions\n\n' + '.places\n\n' + '.arcs\n';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -20,7 +23,7 @@ export class UploadService {
   private currentLogUpload$: Subject<string>;
 
   constructor(private toastr: ToastrService) {
-    this.currentNetUpload$ = new ReplaySubject<string>(1);
+    this.currentNetUpload$ = new BehaviorSubject(emptyContent);
     this.currentLogUpload$ = new ReplaySubject<string>(1);
   }
 

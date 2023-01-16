@@ -16,9 +16,6 @@ import { UploadService } from '../../services/upload/upload.service';
 
 type Valid = 'error' | 'warn' | 'success';
 
-const emptyContent =
-  '.type pn\n' + '.transitions\n\n' + '.places\n\n' + '.arcs\n';
-
 @Component({
   selector: 'app-source-file-textarea',
   templateUrl: './source-file-textarea.component.html',
