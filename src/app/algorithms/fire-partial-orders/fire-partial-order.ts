@@ -15,11 +15,9 @@ import {
 } from '../../classes/diagram/transition';
 import { MaxFlowPreflowN3 } from './max-flow-preflow-n3';
 
-export type FireResultPerPlace = { placeId: string; invalidArcs: Arc[] };
-
 type InnerFireResult = { branchPlaces: string[] };
 
-type ValidPlacesType = Array<true | Arc[]>;
+type ValidPlacesType = Array<boolean>;
 
 export class FirePartialOrder {
   private readonly idToEventMap = new Map<string, EventItem>();
@@ -43,7 +41,7 @@ export class FirePartialOrder {
    * Fires the partial order in the net and returns the ids of invalid places.
    * @returns The ids of invalid places.
    */
-  getInvalidPlaces(): FireResultPerPlace[] {
+  getInvalidPlaces(): string[] {
     this.buildExtensionForPartialOrder();
 
     const totalOrder = this.buildTotalOrder(this.partialOrder);
@@ -89,7 +87,7 @@ export class FirePartialOrder {
     // Is the final marking > 0 ?
     for (let i = 0; i < this.petriNet.places.length; i++) {
       if (finalEvent.localMarking![i] < 0) {
-        backwardsValidPlaces[i] = [];
+        backwardsValidPlaces[i] = false;
       }
     }
 
@@ -112,26 +110,14 @@ export class FirePartialOrder {
     }
 
     return this.petriNet.places
-      .map((p, i) => {
-        if (validPlaces[i] === true) {
-          return null;
-        } else if (backwardsValidPlaces[i] === true) {
-          return null;
-        } else if (flow[i]) {
-          return null;
-        }
-
-        let list = validPlaces[i] as Arc[];
-        if (Array.isArray(backwardsValidPlaces[i])) {
-          list = list.concat(backwardsValidPlaces[i] as Arc[]);
-        }
-
-        return {
-          placeId: p.id,
-          invalidArcs: list,
-        };
+      .filter((p, i) => {
+        if (validPlaces[i]) {
+          return false;
+        } else if (backwardsValidPlaces[i]) {
+          return false;
+        } else return !flow[i];
       })
-      .filter((p) => p !== null) as { placeId: string; invalidArcs: Arc[] }[];
+      .map((p) => p.id);
   }
 
   /**
@@ -222,11 +208,7 @@ export class FirePartialOrder {
           event.localMarking![pIndex] =
             event.localMarking![pIndex] - arc.weight;
           if (event.localMarking![pIndex] < 0) {
-            if (!Array.isArray(validPlaces[pIndex])) {
-              validPlaces[pIndex] = [arc];
-            } else {
-              (validPlaces[pIndex] as Array<Arc>).push(arc);
-            }
+            validPlaces[pIndex] = false;
           }
         }
 

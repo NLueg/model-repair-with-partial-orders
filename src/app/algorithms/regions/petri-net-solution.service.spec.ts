@@ -1,6 +1,5 @@
 import { TestBed } from '@angular/core/testing';
 
-import { Arc } from '../../classes/diagram/arc';
 import { RepairService } from '../../services/repair/repair.service';
 import {
   parsedInvalidPartialOrder,
@@ -25,12 +24,10 @@ describe('PetriNetSolutionService', () => {
   });
 
   it('should generate solutions', (done) => {
-    const arc: Arc[] = [];
-
     service
       .computeSolutions([parsedInvalidPartialOrder], parsedPetriNet, {
-        p5: { count: 1, blockedArcs: arc },
-        p7: { count: 1, blockedArcs: arc },
+        p5: 1,
+        p7: 1,
       })
       .subscribe((result) => {
         expect(result).toEqual([
@@ -41,7 +38,7 @@ describe('PetriNetSolutionService', () => {
             solutions: [
               {
                 newMarking: 2,
-                repairType: 'sameIncoming',
+                repairType: 'changeMarking',
                 type: 'marking',
               },
               {
@@ -53,8 +50,13 @@ describe('PetriNetSolutionService', () => {
                     weight: 1,
                   },
                 ],
-                repairType: 'sameOutgoing',
+                repairType: 'changeIncoming',
                 type: 'modify-place',
+              },
+              {
+                newMarking: 2,
+                repairType: 'multiplePlaces',
+                type: 'marking',
               },
             ],
             type: 'error',
@@ -66,7 +68,7 @@ describe('PetriNetSolutionService', () => {
             solutions: [
               {
                 newMarking: 2,
-                repairType: 'arcsSame',
+                repairType: 'changeMarking',
                 type: 'marking',
               },
               {
@@ -76,55 +78,111 @@ describe('PetriNetSolutionService', () => {
                     weight: 1,
                   },
                   {
-                    transitionLabel: 'c',
+                    transitionLabel: 'b',
                     weight: 1,
                   },
                 ],
+                newMarking: 1,
                 outgoing: [
+                  {
+                    transitionLabel: 'd',
+                    weight: 1,
+                  },
                   {
                     transitionLabel: 'c',
                     weight: 1,
                   },
                 ],
-                repairType: 'sameIncoming',
+                repairType: 'changeIncoming',
                 type: 'modify-place',
               },
               {
-                incoming: [
+                places: [
                   {
-                    transitionLabel: 'd',
-                    weight: 1,
+                    incoming: [
+                      {
+                        transitionLabel: 'd',
+                        weight: 1,
+                      },
+                      {
+                        transitionLabel: 'b',
+                        weight: 1,
+                      },
+                    ],
+                    newMarking: 1,
+                    outgoing: [
+                      {
+                        transitionLabel: 'd',
+                        weight: 1,
+                      },
+                      {
+                        transitionLabel: 'c',
+                        weight: 1,
+                      },
+                    ],
+                  },
+                  {
+                    incoming: [
+                      {
+                        transitionLabel: 'c',
+                        weight: 1,
+                      },
+                      {
+                        transitionLabel: 'b',
+                        weight: 1,
+                      },
+                    ],
+                    newMarking: 1,
+                    outgoing: [
+                      {
+                        transitionLabel: 'd',
+                        weight: 1,
+                      },
+                      {
+                        transitionLabel: 'e',
+                        weight: 1,
+                      },
+                    ],
+                  },
+                  {
+                    incoming: [
+                      {
+                        transitionLabel: 'd',
+                        weight: 1,
+                      },
+                    ],
+                    outgoing: [
+                      {
+                        transitionLabel: 'c',
+                        weight: 1,
+                      },
+                    ],
+                  },
+                  {
+                    incoming: [
+                      {
+                        transitionLabel: 'd',
+                        weight: 1,
+                      },
+                      {
+                        transitionLabel: 'c',
+                        weight: 1,
+                      },
+                    ],
+                    outgoing: [
+                      {
+                        transitionLabel: 'c',
+                        weight: 1,
+                      },
+                      {
+                        transitionLabel: 'e',
+                        weight: 1,
+                      },
+                    ],
                   },
                 ],
-                newMarking: 2,
-                outgoing: [
-                  {
-                    transitionLabel: 'd',
-                    weight: 1,
-                  },
-                  {
-                    transitionLabel: 'c',
-                    weight: 1,
-                  },
-                ],
-                repairType: 'sameOutgoing',
-                type: 'modify-place',
-              },
-              {
-                incoming: [
-                  {
-                    transitionLabel: 'd',
-                    weight: 1,
-                  },
-                ],
-                outgoing: [
-                  {
-                    transitionLabel: 'c',
-                    weight: 1,
-                  },
-                ],
-                repairType: 'unbounded',
-                type: 'modify-place',
+                repairType: 'multiplePlaces',
+                type: 'replace-place',
               },
             ],
             type: 'error',

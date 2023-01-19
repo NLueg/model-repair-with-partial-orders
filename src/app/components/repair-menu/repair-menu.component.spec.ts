@@ -22,7 +22,7 @@ describe('RepairMenuComponent', () => {
       solutions: [
         {
           type: 'marking',
-          repairType: 'unbounded',
+          repairType: 'multiplePlaces',
           newMarking: 1,
         },
       ],

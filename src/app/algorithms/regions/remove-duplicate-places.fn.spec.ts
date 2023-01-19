@@ -4,7 +4,7 @@ describe('remove-duplicate-place', () => {
   it('should return correct result', () => {
     const result = removeDuplicatePlaces([
       {
-        type: 'sameIncoming',
+        type: 'changeOutgoing',
         solutionParts: [
           [
             { type: 'incoming-arc', incoming: 'a', marking: 1 },
@@ -72,7 +72,7 @@ describe('remove-duplicate-place', () => {
             },
           ],
         ],
-        type: 'sameIncoming',
+        type: 'changeOutgoing',
       },
       {
         solutionParts: [

@@ -159,12 +159,12 @@ function handleModifyPlace(
   };
 }
 
+// TODO: Generate specific text for singular and plural
 const solutionTypeToText: { [key in SolutionType]: string } = {
-  arcsSame: 'Same arcs',
-  sameIncoming: 'Same incoming weights',
-  sameOutgoing: 'Same outgoing weights',
-  unbounded: 'New place',
-  multiplePlaces: 'Multiple places',
+  changeMarking: 'Add marking',
+  changeOutgoing: 'Change outgoing arcs',
+  changeIncoming: 'Change incoming arcs',
+  multiplePlaces: 'New place(s)',
 };
 
 function generateBaseText(type: SolutionType): string {

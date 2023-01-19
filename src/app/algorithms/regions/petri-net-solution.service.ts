@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { GLPK } from 'glpk.js';
 import { combineLatest, from, map, Observable, of, switchMap, tap } from 'rxjs';
 
-import { Arc } from '../../classes/diagram/arc';
 import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
 import { Place } from '../../classes/diagram/place';
@@ -30,17 +29,13 @@ export class PetriNetSolutionService {
   computeSolutions(
     partialOrders: PartialOrder[],
     petriNet: PetriNet,
-    invalidPlaces: { [key: string]: { count: number; blockedArcs: Arc[] } }
+    invalidPlaces: { [key: string]: number }
   ): Observable<PlaceSolution[]> {
     return from(createGlpk.then((create) => create())).pipe(
       switchMap((glpk) => {
-        const invalidModelList: SolutionGeneratorType[] = Object.entries(
+        const invalidPlaceList: SolutionGeneratorType[] = Object.keys(
           invalidPlaces
-        ).map(([place, object]) => ({
-          type: 'repair',
-          placeId: place,
-          ...object,
-        }));
+        ).map((place) => ({ type: 'repair', placeId: place }));
 
         const allNetLabels = new Set<string>(
           petriNet.transitions.map((t) => t.label)
@@ -59,13 +54,13 @@ export class PetriNetSolutionService {
           missingTransitions[event.label]++;
         }
 
-        invalidModelList.push(
+        invalidPlaceList.push(
           ...(Object.keys(missingTransitions).map((label) => ({
             type: 'transition',
             newTransition: label,
           })) as SolutionGeneratorType[])
         );
-        if (invalidModelList.length === 0) {
+        if (invalidPlaceList.length === 0) {
           return of([]);
         }
 
@@ -79,20 +74,15 @@ export class PetriNetSolutionService {
           {} as { [key: string]: string }
         );
 
-        const validPlaces = petriNet.places.filter(
-          (place) => !invalidPlaces[place.id]
-        );
-
         const solver = new IlpSolver(
           glpk,
           partialOrders,
           petriNet,
-          validPlaces,
           idToTransitionLabelMap
         );
 
         return combineLatest(
-          invalidModelList.map((place) =>
+          invalidPlaceList.map((place) =>
             solver.computeSolutions(place).pipe(
               map((solutions) => {
                 const existingPlace =
@@ -120,10 +110,8 @@ export class PetriNetSolutionService {
                         type: 'error',
                         place: place.placeId,
                         solutions: parsedSolutions,
-                        missingTokens:
-                          missingTokens ??
-                          generateMarkingDifference(existingPlace) * -1,
-                        invalidTraceCount: invalidPlaces[place.placeId].count,
+                        missingTokens,
+                        invalidTraceCount: invalidPlaces[place.placeId],
                       }
                     : {
                         type: 'newTransition',
@@ -175,41 +163,43 @@ export function handleSolutions(
 ): ParsableSolutionsPerType[] {
   const solutionsWithMaybeDuplicates = solutions.map((solution) => ({
     type: solution.type,
-    solutionParts: solution.solutions.map((singleSolution) =>
-      Object.entries(singleSolution)
-        .filter(
-          ([variable, value]) =>
-            value != 0 && solver.getInverseVariableMapping(variable) !== null
-        )
-        .map(([variable, value]) => {
-          const decoded = solver.getInverseVariableMapping(variable)!;
+    solutionParts: solution.solutions
+      .map((singleSolution) =>
+        Object.entries(singleSolution)
+          .filter(
+            ([variable, value]) =>
+              value != 0 && solver.getInverseVariableMapping(variable) !== null
+          )
+          .map(([variable, value]) => {
+            const decoded = solver.getInverseVariableMapping(variable)!;
 
-          let parsableSolution: ParsableSolution;
-          switch (decoded.type) {
-            case VariableType.INITIAL_MARKING:
-              parsableSolution = {
-                type: 'increase-marking',
-                newMarking: value,
-              };
-              break;
-            case VariableType.INCOMING_TRANSITION_WEIGHT:
-              parsableSolution = {
-                type: 'incoming-arc',
-                incoming: decoded.label,
-                marking: value,
-              };
-              break;
-            case VariableType.OUTGOING_TRANSITION_WEIGHT:
-              parsableSolution = {
-                type: 'outgoing-arc',
-                outgoing: decoded.label,
-                marking: value,
-              };
-          }
+            let parsableSolution: ParsableSolution;
+            switch (decoded.type) {
+              case VariableType.INITIAL_MARKING:
+                parsableSolution = {
+                  type: 'increase-marking',
+                  newMarking: value,
+                };
+                break;
+              case VariableType.INCOMING_TRANSITION_WEIGHT:
+                parsableSolution = {
+                  type: 'incoming-arc',
+                  incoming: decoded.label,
+                  marking: value,
+                };
+                break;
+              case VariableType.OUTGOING_TRANSITION_WEIGHT:
+                parsableSolution = {
+                  type: 'outgoing-arc',
+                  outgoing: decoded.label,
+                  marking: value,
+                };
+            }
 
-          return parsableSolution;
-        })
-    ),
+            return parsableSolution;
+          })
+      )
+      .filter((solution) => solution.length > 0),
   }));
 
   return removeDuplicatePlaces(solutionsWithMaybeDuplicates).filter(

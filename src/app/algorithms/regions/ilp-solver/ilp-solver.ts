@@ -5,13 +5,10 @@ import {
   concatMap,
   map,
   Observable,
-  of,
   ReplaySubject,
-  switchMap,
   toArray,
 } from 'rxjs';
 
-import { Arc } from '../../../classes/diagram/arc';
 import { PartialOrder } from '../../../classes/diagram/partial-order';
 import { PetriNet } from '../../../classes/diagram/petri-net';
 import { Place } from '../../../classes/diagram/place';
@@ -37,7 +34,6 @@ export type SolutionGeneratorType =
   | {
       type: 'repair';
       placeId: string;
-      blockedArcs: Arc[];
     }
   | { type: 'transition'; newTransition: string };
 
@@ -58,14 +54,12 @@ export class IlpSolver {
   private readonly directlyFollowsExtractor: DirectlyFollowsExtractor;
 
   private readonly baseIlp: LP;
-  private readonly baseConstraints: Array<SubjectTo>;
   private readonly pairs: Array<[first: string | undefined, second: string]>;
 
   constructor(
     private glpk: GLPK,
     private partialOrders: Array<PartialOrder>,
     private petriNet: PetriNet,
-    private validPlaces: Place[],
     private idToTransitionLabelMap: { [id: string]: string }
   ) {
     this.directlyFollowsExtractor = new DirectlyFollowsExtractor();
@@ -76,7 +70,6 @@ export class IlpSolver {
     this.inverseLabelVariableMapIngoing = new Map<string, string>();
     this.inverseLabelVariableMapOutgoing = new Map<string, string>();
 
-    this.baseConstraints = this.buildBasicIlpForPartialOrders(partialOrders);
     this.baseIlp = this.setUpBaseIlp();
     this.pairs = this.directlyFollowsExtractor.oneWayDirectlyFollows();
   }
@@ -93,16 +86,14 @@ export class IlpSolver {
       const pairs = this.gerPairsForMissingTransition(placeModel.newTransition);
       return combineLatest(
         pairs.map((pair) =>
-          this.solveILP(
-            this.populateIlpByCausalPairs(this.baseIlp, this.baseConstraints, [
-              pair,
-            ])
-          ).pipe(map((solution) => solution.solution))
+          this.solveILP(this.populateIlpByCausalPairs(this.baseIlp, pair)).pipe(
+            map((solution) => solution.solution)
+          )
         )
       ).pipe(
         map((solutions) => [
           {
-            type: 'unbounded',
+            type: 'multiplePlaces',
             solutions: solutions
               .filter(
                 (solution) => solution.result.status !== Solution.NO_SOLUTION
@@ -120,11 +111,7 @@ export class IlpSolver {
 
     return combineLatest(
       unhandledPairs.map((pair) =>
-        this.solveILP(
-          this.populateIlpByCausalPairs(this.baseIlp, this.baseConstraints, [
-            pair,
-          ])
-        ).pipe(
+        this.solveILP(this.populateIlpByCausalPairs(this.baseIlp, pair)).pipe(
           map((solution) => ({
             ilp: solution.ilp,
             solution: solution.solution,
@@ -134,81 +121,50 @@ export class IlpSolver {
       )
     ).pipe(
       concatMap(
-        (problem: (ProblemSolutionWithoutType & { type: SolutionType })[]) =>
-          this.solveILP(
-            this.populateIlpByCausalPairs(
-              this.baseIlp,
-              this.baseConstraints,
-              unhandledPairs
+        (
+          multiplePlaces: (ProblemSolutionWithoutType & {
+            type: SolutionType;
+          })[]
+        ) => {
+          const ilpsToSolve = [
+            {
+              type: 'changeMarking' as SolutionType,
+              ilp: this.populateIlpBySameWeights(this.baseIlp, invalidPlace!),
+            },
+            {
+              type: 'changeIncoming' as SolutionType,
+              ilp: this.populateIlpBySameOutgoingWeights(
+                this.baseIlp,
+                invalidPlace!
+              ),
+            },
+            {
+              type: 'changeOutgoing' as SolutionType,
+              ilp: this.populateIlpBySameIncomingWeights(
+                this.baseIlp,
+                invalidPlace!
+              ),
+            },
+          ];
+
+          return combineLatest(
+            ilpsToSolve.map((ilp) =>
+              this.solveILP(ilp.ilp).pipe(
+                map((solution) => ({
+                  ...solution,
+                  type: ilp.type,
+                }))
+              )
             )
-          ).pipe(
-            switchMap((solution) => {
-              const unboundSolution = {
-                type: 'unbounded' as SolutionType,
-                ilp: solution.ilp,
-                solution: solution.solution,
-              };
-
-              if (
-                !invalidPlace ||
-                solution.solution.result.status === Solution.NO_SOLUTION
-              ) {
-                return of([unboundSolution]);
-              }
-
-              const ilpsToSolve = [
-                {
-                  type: 'sameIncoming' as SolutionType,
-                  ilp: this.populateIlpBySameIncomingWeights(
-                    solution.ilp,
-                    invalidPlace
-                  ),
-                },
-                {
-                  type: 'sameOutgoing' as SolutionType,
-                  ilp: this.populateIlpBySameOutgoingWeights(
-                    solution.ilp,
-                    invalidPlace
-                  ),
-                },
-                {
-                  type: 'arcsSame' as SolutionType,
-                  ilp: this.populateIlpBySameWeights(
-                    solution.ilp,
-                    invalidPlace
-                  ),
-                },
-              ].filter((ilp) => !!ilp.ilp) as {
-                type: SolutionType;
-                ilp: LP;
-              }[];
-
-              if (ilpsToSolve.length === 0) {
-                return of([unboundSolution]);
-              }
-
-              return combineLatest(
-                ilpsToSolve.map((ilp) =>
-                  this.solveILP(ilp.ilp).pipe(
-                    map((solution) => ({
-                      ...solution,
-                      type: ilp.type,
-                    }))
-                  )
-                )
-              ).pipe(
-                map((solutions) => [unboundSolution, ...solutions, ...problem])
-              );
-            })
-          )
+          ).pipe(map((solutions) => [...solutions, ...multiplePlaces]));
+        }
       ),
       toArray(),
       map((placeSolutions) => {
         const typeToSolution: { [key in SolutionType]: Vars[] } = {
-          unbounded: [],
-          sameOutgoing: [],
-          sameIncoming: [],
-          arcsSame: [],
+          changeIncoming: [],
+          changeOutgoing: [],
+          changeMarking: [],
           multiplePlaces: [],
         };
 
@@ -229,10 +185,9 @@ export class IlpSolver {
       }),
       map((foundSolutions) => {
         const typeOrder: SolutionType[] = [
-          'arcsSame',
-          'sameIncoming',
-          'sameOutgoing',
-          'unbounded',
+          'changeMarking',
+          'changeOutgoing',
+          'changeIncoming',
           'multiplePlaces',
         ];
 
@@ -289,39 +244,35 @@ export class IlpSolver {
 
   private populateIlpByCausalPairs(
     baseIlp: LP,
-    baseConstraints: Array<SubjectTo>,
-    causalPair: Array<[string | undefined, string]>
+    causalPair: [string | undefined, string]
   ): LP {
     const result = Object.assign({}, baseIlp);
-    result.subjectTo = [...baseConstraints];
 
-    causalPair.forEach(([source, target]) => {
-      if (source) {
-        result.subjectTo = result.subjectTo.concat(
-          this.greaterEqualThan(
-            this.variable(
-              this.transitionVariableName(
-                source,
-                VariableName.OUTGOING_ARC_WEIGHT_PREFIX
-              )
-            ),
-            1
-          ).constraints
-        );
-      }
-
+    if (causalPair[0]) {
       result.subjectTo = result.subjectTo.concat(
         this.greaterEqualThan(
           this.variable(
             this.transitionVariableName(
-              target,
+              causalPair[0],
               VariableName.INGOING_ARC_WEIGHT_PREFIX
             )
           ),
           1
         ).constraints
       );
-    });
+    }
+
+    result.subjectTo = result.subjectTo.concat(
+      this.greaterEqualThan(
+        this.variable(
+          this.transitionVariableName(
+            causalPair[1],
+            VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+          )
+        ),
+        1
+      ).constraints
+    );
 
     return result;
   }
@@ -380,7 +331,7 @@ export class IlpSolver {
           return this.variable(v, 1);
         }),
       },
-      subjectTo: [],
+      subjectTo: this.buildBasicIlpForPartialOrders(this.partialOrders),
       generals,
     };
   }
@@ -404,7 +355,7 @@ export class IlpSolver {
       this.variable(
         this.transitionVariableName(
           event.label!,
-          VariableName.INGOING_ARC_WEIGHT_PREFIX
+          VariableName.OUTGOING_ARC_WEIGHT_PREFIX
         ),
         -1
       )
@@ -429,7 +380,7 @@ export class IlpSolver {
       this.variable(
         this.transitionVariableName(
           event.label!,
-          VariableName.INGOING_ARC_WEIGHT_PREFIX
+          VariableName.OUTGOING_ARC_WEIGHT_PREFIX
         ),
         -1
       )
@@ -438,7 +389,7 @@ export class IlpSolver {
       this.variable(
         this.transitionVariableName(
           event.label!,
-          VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+          VariableName.INGOING_ARC_WEIGHT_PREFIX
         )
       )
     );
@@ -463,16 +414,34 @@ export class IlpSolver {
   private populateIlpBySameIncomingWeights(
     baseIlp: LP,
     existingPlace: Place
-  ): LP | null {
+  ): LP {
     const result = clonedeep(baseIlp);
     this.addConstraintsForSameIncomingWeights(existingPlace, result);
+
+    // Don't remove arcs to transitions that are connected with outgoing arcs
+    if (existingPlace.outgoingArcs.length > 0) {
+      existingPlace.outgoingArcs.forEach((arc) => {
+        result.subjectTo = result.subjectTo.concat(
+          this.equal(
+            this.variable(
+              this.transitionVariableName(
+                this.idToTransitionLabelMap[arc.target],
+                VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+              )
+            ),
+            arc.weight
+          ).constraints
+        );
+      });
+    }
+
     return result;
   }
 
   private populateIlpBySameOutgoingWeights(
     baseIlp: LP,
     existingPlace: Place
-  ): LP | null {
+  ): LP {
     const result = clonedeep(baseIlp);
     this.addConstraintsForSameOutgoingWeights(existingPlace, result);
     return result;
@@ -496,42 +465,7 @@ export class IlpSolver {
         handledTransitions.add(transitionLabel);
 
         result.subjectTo = result.subjectTo.concat(
-          this.greaterEqualThan(
-            this.variable(
-              this.transitionVariableName(
-                transitionLabel,
-                VariableName.INGOING_ARC_WEIGHT_PREFIX
-              )
-            ),
-            arc.weight
-          ).constraints
-        );
-      });
-      result.subjectTo = result.subjectTo.concat(
-        this.getRulesForNoOtherArcs(
-          Array.from(handledTransitions),
-          VariableName.OUTGOING_ARC_WEIGHT_PREFIX
-        )
-      );
-    } else {
-      result.subjectTo = result.subjectTo.concat(
-        this.getRulesForNoArcs(VariableName.INGOING_ARC_WEIGHT_PREFIX)
-      );
-    }
-  }
-
-  private addConstraintsForSameIncomingWeights(
-    existingPlace: Place,
-    result: LP
-  ) {
-    if (existingPlace.incomingArcs.length > 0) {
-      const handledTransitions = new Set<string>();
-      existingPlace.incomingArcs.forEach((arc) => {
-        const transitionLabel = this.idToTransitionLabelMap[arc.source];
-        handledTransitions.add(transitionLabel);
-
-        result.subjectTo = result.subjectTo.concat(
-          this.greaterEqualThan(
+          this.equal(
             this.variable(
               this.transitionVariableName(
                 transitionLabel,
@@ -555,10 +489,45 @@ export class IlpSolver {
     }
   }
 
+  private addConstraintsForSameIncomingWeights(
+    existingPlace: Place,
+    result: LP
+  ) {
+    if (existingPlace.incomingArcs.length > 0) {
+      const handledTransitions = new Set<string>();
+      existingPlace.incomingArcs.forEach((arc) => {
+        const transitionLabel = this.idToTransitionLabelMap[arc.source];
+        handledTransitions.add(transitionLabel);
+
+        result.subjectTo = result.subjectTo.concat(
+          this.equal(
+            this.variable(
+              this.transitionVariableName(
+                transitionLabel,
+                VariableName.INGOING_ARC_WEIGHT_PREFIX
+              )
+            ),
+            arc.weight
+          ).constraints
+        );
+      });
+      result.subjectTo = result.subjectTo.concat(
+        this.getRulesForNoOtherArcs(
+          Array.from(handledTransitions),
+          VariableName.INGOING_ARC_WEIGHT_PREFIX
+        )
+      );
+    } else {
+      result.subjectTo = result.subjectTo.concat(
+        this.getRulesForNoArcs(VariableName.INGOING_ARC_WEIGHT_PREFIX)
+      );
+    }
+  }
+
   private getRulesForNoArcs(
     variableName:
-      | VariableName.INGOING_ARC_WEIGHT_PREFIX
       | VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+      | VariableName.INGOING_ARC_WEIGHT_PREFIX
   ): Array<SubjectTo> {
     return this.petriNet.transitions.flatMap(
       (transition) =>
@@ -574,8 +543,8 @@ export class IlpSolver {
   private getRulesForNoOtherArcs(
     ignoredTransitions: Array<string>,
     variableName:
-      | VariableName.INGOING_ARC_WEIGHT_PREFIX
       | VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+      | VariableName.INGOING_ARC_WEIGHT_PREFIX
   ): Array<SubjectTo> {
     return this.petriNet.transitions
       .filter((transition) => !ignoredTransitions.includes(transition.label))
@@ -596,7 +565,7 @@ export class IlpSolver {
         label: VariableName.INITIAL_MARKING,
         type: VariableType.INITIAL_MARKING,
       };
-    } else if (variable.startsWith(VariableName.INGOING_ARC_WEIGHT_PREFIX)) {
+    } else if (variable.startsWith(VariableName.OUTGOING_ARC_WEIGHT_PREFIX)) {
       const label = this.inverseLabelVariableMapIngoing.get(variable);
       if (label === undefined) {
         throw new Error(
@@ -607,7 +576,7 @@ export class IlpSolver {
         label,
         type: VariableType.OUTGOING_TRANSITION_WEIGHT,
       };
-    } else if (variable.startsWith(VariableName.OUTGOING_ARC_WEIGHT_PREFIX)) {
+    } else if (variable.startsWith(VariableName.INGOING_ARC_WEIGHT_PREFIX)) {
       const label = this.inverseLabelVariableMapOutgoing.get(variable);
       if (label === undefined) {
         throw new Error(
@@ -647,11 +616,11 @@ export class IlpSolver {
   protected transitionVariableName(
     label: string,
     prefix:
-      | VariableName.OUTGOING_ARC_WEIGHT_PREFIX
       | VariableName.INGOING_ARC_WEIGHT_PREFIX
+      | VariableName.OUTGOING_ARC_WEIGHT_PREFIX
   ): string {
     let map, inverseMap;
-    if (prefix === VariableName.INGOING_ARC_WEIGHT_PREFIX) {
+    if (prefix === VariableName.OUTGOING_ARC_WEIGHT_PREFIX) {
       map = this.labelVariableMapIngoing;
       inverseMap = this.inverseLabelVariableMapIngoing;
     } else {

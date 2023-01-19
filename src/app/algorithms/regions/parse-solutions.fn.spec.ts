@@ -17,7 +17,7 @@ describe('parseSolution', () => {
   it('should return marking for increase-marking', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
-        type: 'unbounded',
+        type: 'multiplePlaces',
         solutionParts: [
           [
             {
@@ -34,7 +34,7 @@ describe('parseSolution', () => {
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'marking',
-        repairType: 'unbounded',
+        repairType: 'multiplePlaces',
         newMarking: 10,
       },
     ];
@@ -44,7 +44,7 @@ describe('parseSolution', () => {
   it('should return modify place for single incoming arc', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
-        type: 'unbounded',
+        type: 'multiplePlaces',
         solutionParts: [
           [
             {
@@ -62,7 +62,7 @@ describe('parseSolution', () => {
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'modify-place',
-        repairType: 'unbounded',
+        repairType: 'multiplePlaces',
         incoming: [{ transitionLabel: 't1', weight: 3 }],
         outgoing: [],
       },
@@ -73,7 +73,7 @@ describe('parseSolution', () => {
   it('should return modify place for single outgoing arc', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
-        type: 'unbounded',
+        type: 'multiplePlaces',
         solutionParts: [
           [
             {
@@ -91,7 +91,7 @@ describe('parseSolution', () => {
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'modify-place',
-        repairType: 'unbounded',
+        repairType: 'multiplePlaces',
         incoming: [],
         outgoing: [{ transitionLabel: 't1', weight: 3 }],
       },
@@ -102,7 +102,7 @@ describe('parseSolution', () => {
   it('should return modify place for single incoming and outgoing arc', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
-        type: 'unbounded',
+        type: 'multiplePlaces',
         solutionParts: [
           [
             {
@@ -125,7 +125,7 @@ describe('parseSolution', () => {
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'modify-place',
-        repairType: 'unbounded',
+        repairType: 'multiplePlaces',
         incoming: [{ transitionLabel: 't1', weight: 3 }],
         outgoing: [{ transitionLabel: 't1', weight: 3 }],
       },
@@ -136,7 +136,7 @@ describe('parseSolution', () => {
   it('should return modify place for single incoming and multiple outgoing arc', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
-        type: 'unbounded',
+        type: 'multiplePlaces',
         solutionParts: [
           [
             {
@@ -164,7 +164,7 @@ describe('parseSolution', () => {
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'modify-place',
-        repairType: 'unbounded',
+        repairType: 'multiplePlaces',
         incoming: [{ transitionLabel: 't1', weight: 3 }],
         outgoing: [{ transitionLabel: 't1', weight: 6 }],
       },
@@ -175,7 +175,7 @@ describe('parseSolution', () => {
   it('should return modify place for multiple incoming and single outgoing arc', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
-        type: 'unbounded',
+        type: 'multiplePlaces',
         solutionParts: [
           [
             {
@@ -207,7 +207,7 @@ describe('parseSolution', () => {
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'modify-place',
-        repairType: 'unbounded',
+        repairType: 'multiplePlaces',
         newMarking: 10,
         incoming: [{ transitionLabel: 't1', weight: 6 }],
         outgoing: [{ transitionLabel: 't1', weight: 3 }],
@@ -219,7 +219,7 @@ describe('parseSolution', () => {
   it('should return replace place for multiple incoming and outgoing arc', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
-        type: 'unbounded',
+        type: 'multiplePlaces',
         solutionParts: [
           [
             {
@@ -252,7 +252,7 @@ describe('parseSolution', () => {
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'replace-place',
-        repairType: 'unbounded',
+        repairType: 'multiplePlaces',
         places: [
           {
             incoming: [{ transitionLabel: 't1', weight: 3 }],
@@ -272,7 +272,7 @@ describe('parseSolution', () => {
   it('should return replace state for outgoing arcs the same', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
-        type: 'unbounded',
+        type: 'multiplePlaces',
         solutionParts: [
           [
             {
@@ -305,7 +305,7 @@ describe('parseSolution', () => {
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'replace-place',
-        repairType: 'unbounded',
+        repairType: 'multiplePlaces',
         places: [
           {
             incoming: [{ transitionLabel: 't1', weight: 3 }],
@@ -325,7 +325,7 @@ describe('parseSolution', () => {
   it('should merge everything together if too same incoming elements', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
-        type: 'unbounded',
+        type: 'multiplePlaces',
         solutionParts: [
           [
             {
@@ -363,7 +363,7 @@ describe('parseSolution', () => {
     const expected: AutoRepairWithSolutionType[] = [
       {
         type: 'modify-place',
-        repairType: 'unbounded',
+        repairType: 'multiplePlaces',
         incoming: [{ transitionLabel: 't1', weight: 9 }],
         outgoing: [
           { transitionLabel: 't1', weight: 3 },
@@ -378,7 +378,7 @@ describe('parseSolution', () => {
   it('should merge everything together if same outgoing elements', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
-        type: 'unbounded',
+        type: 'multiplePlaces',
         solutionParts: [
           [
             {
@@ -415,7 +415,7 @@ describe('parseSolution', () => {
 
     const expected: AutoRepairWithSolutionType[] = [
       {
-        repairType: 'unbounded',
+        repairType: 'multiplePlaces',
         incoming: [
           { transitionLabel: 't1', weight: 3 },
           { transitionLabel: 't2', weight: 3 },
@@ -430,7 +430,7 @@ describe('parseSolution', () => {
   it('should should return empty list for no solution parts', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
-        type: 'arcsSame',
+        type: 'changeMarking',
         solutionParts: [],
       },
     ];
@@ -444,7 +444,7 @@ describe('parseSolution', () => {
   it('should generate replace-place for example by kovar', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
-        type: 'arcsSame',
+        type: 'changeMarking',
         solutionParts: [
           [
             {
@@ -596,7 +596,7 @@ describe('parseSolution', () => {
             ],
           },
         ],
-        repairType: 'arcsSame',
+        repairType: 'changeMarking',
         type: 'replace-place',
       },
     ];

@@ -31,10 +31,9 @@ export interface SolutionVariable {
 }
 
 export type SolutionType =
-  | 'unbounded'
-  | 'sameIncoming'
-  | 'sameOutgoing'
-  | 'arcsSame'
+  | 'changeOutgoing'
+  | 'changeIncoming'
+  | 'changeMarking'
   | 'multiplePlaces';
 
 export interface ProblemSolutionWithoutType {
@@ -51,6 +50,6 @@ export interface ProblemSolution {
 
 export enum VariableName {
   INITIAL_MARKING = 'm0',
-  OUTGOING_ARC_WEIGHT_PREFIX = 'out',
   INGOING_ARC_WEIGHT_PREFIX = 'in',
+  OUTGOING_ARC_WEIGHT_PREFIX = 'out',
 }
