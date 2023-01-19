@@ -42,12 +42,6 @@ export type SolutionGeneratorType =
   | { type: 'transition'; newTransition: string };
 
 export class IlpSolver {
-  // k and K defined as per https://blog.adamfurmanek.pl/2015/09/12/ilp-part-4/
-  // for some reason k = 2^19 while not large enough to cause precision problems in either doubles or integers
-  // has caused the iterative algorithm to loop indefinitely, presumably because of some precision error in the implementation of the solver
-  private readonly k = (1 << 10) - 1; // 2^10 - 1
-  private readonly K = 2 * this.k + 1;
-
   private readonly PO_ARC_SEPARATOR = '_';
   private readonly FINAL_MARKING = 'mf';
 
@@ -94,18 +88,35 @@ export class IlpSolver {
   computeSolutions(
     placeModel: SolutionGeneratorType
   ): Observable<ProblemSolution[]> {
-    const invalidPlace =
-      placeModel.type === 'repair'
-        ? this.petriNet.places.find((p) => p.id === placeModel.placeId)
-        : undefined;
+    // Generate place for missing transition
+    if (placeModel.type === 'transition') {
+      const pairs = this.gerPairsForMissingTransition(placeModel.newTransition);
+      return combineLatest(
+        pairs.map((pair) =>
+          this.solveILP(
+            this.populateIlpByCausalPairs(this.baseIlp, this.baseConstraints, [
+              pair,
+            ])
+          ).pipe(map((solution) => solution.solution))
+        )
+      ).pipe(
+        map((solutions) => [
+          {
+            type: 'unbounded',
+            solutions: solutions
+              .filter(
+                (solution) => solution.result.status !== Solution.NO_SOLUTION
+              )
+              .map((solution) => solution.result.vars),
+          },
+        ])
+      );
+    }
 
-    const unhandledPairs =
-      placeModel.type === 'repair'
-        ? this.getUnhandledPairs(
-            invalidPlace,
-            placeModel.type === 'repair' ? placeModel.blockedArcs : []
-          )
-        : this.gerPairsForMissingTransition(placeModel.newTransition);
+    const invalidPlace = this.petriNet.places.find(
+      (p) => p.id === placeModel.placeId
+    );
+    const unhandledPairs = this.getUnhandledPairs(invalidPlace!);
 
     return combineLatest(
       unhandledPairs.map((pair) =>
@@ -244,54 +255,24 @@ export class IlpSolver {
    * Filters the initial pairs by only returning the relevant pairs for the current place.
    */
   private getUnhandledPairs(
-    invalidPlace: Place | undefined,
-    blockedArcs: Arc[]
+    invalidPlace: Place
   ): Array<[first: string | undefined, second: string]> {
-    const blockedTargets = blockedArcs.map(
-      (arc) => this.idToTransitionLabelMap[arc.target]
-    );
-    let pairsThatNeedsToBeHandled = this.pairs.filter(([_, target]) =>
-      invalidPlace!.outgoingArcs.find(
-        (arc) => this.idToTransitionLabelMap[arc.target] === target
-      )
-    );
-
-    if (pairsThatNeedsToBeHandled.length === 0) {
-      pairsThatNeedsToBeHandled = this.pairs.filter(([_, target]) =>
-        blockedTargets.includes(target)
-      );
-    }
-
-    // If this is a starting place or we have no pairs to handle
-    const invalidPlaceShouldJustReceiveMarking =
-      invalidPlace &&
-      (invalidPlace.incomingArcs.length === 0 ||
-        pairsThatNeedsToBeHandled.length === 0);
-    if (invalidPlaceShouldJustReceiveMarking) {
-      const pairsToGenerate =
-        blockedArcs.length > 0 ? blockedArcs : invalidPlace.outgoingArcs;
-
-      // Only the target transitions can be a problem!
-      return pairsToGenerate.map((outgoing) => [
-        undefined,
-        this.idToTransitionLabelMap[outgoing.target],
-      ]);
-    }
-
-    return pairsThatNeedsToBeHandled.filter(
-      ([source, target]) =>
-        !this.validPlaces.some(
-          (p) =>
-            p.incomingArcs.some(
-              (incoming) =>
-                this.idToTransitionLabelMap[incoming.source] === source
-            ) &&
-            p.outgoingArcs.some(
-              (outgoing) =>
-                this.idToTransitionLabelMap[outgoing.target] === target
-            )
-        )
-    );
+    return invalidPlace.outgoingArcs.flatMap((outgoingArc) => {
+      if (invalidPlace.incomingArcs.length === 0) {
+        return [
+          [undefined, this.idToTransitionLabelMap[outgoingArc.target]] as [
+            first: string | undefined,
+            second: string
+          ],
+        ];
+      }
+      return invalidPlace.incomingArcs.map((incomingArc) => {
+        return [
+          this.idToTransitionLabelMap[incomingArc.source],
+          this.idToTransitionLabelMap[outgoingArc.target],
+        ] as [first: string, second: string];
+      });
+    });
   }
 
   private gerPairsForMissingTransition(
@@ -375,8 +356,8 @@ export class IlpSolver {
         console.debug(`___ Start Event ${e.id} ___`);
         baseIlpConstraints.push(...this.firingRule(e, i, partialOrders[i]));
         baseIlpConstraints.push(...this.tokenFlow(e, i));
-        console.debug(`________________________`);
       }
+      console.debug(`________________________`);
       baseIlpConstraints.push(...this.initialMarking(events, i));
     }
 
@@ -497,10 +478,7 @@ export class IlpSolver {
     return result;
   }
 
-  private populateIlpBySameWeights(
-    baseIlp: LP,
-    existingPlace: Place
-  ): LP | null {
+  private populateIlpBySameWeights(baseIlp: LP, existingPlace: Place): LP {
     const result = clonedeep(baseIlp);
     this.addConstraintsForSameIncomingWeights(existingPlace, result);
     this.addConstraintsForSameOutgoingWeights(existingPlace, result);
