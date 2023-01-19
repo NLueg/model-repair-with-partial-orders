@@ -113,7 +113,7 @@ export class RepairMenuComponent implements OnInit {
 function generateTextForAutoRepair(
   solution: AutoRepairWithSolutionType
 ): LabelWithTooltip {
-  const baseText = generateBaseText(solution.repairType);
+  const baseText = generateBaseText(solution);
 
   if (solution.type === 'replace-place') {
     return {
@@ -153,22 +153,24 @@ function handleModifyPlace(
 
   return {
     label: `${generateBaseText(
-      solution.repairType
+      solution
     )}Update place to have ${incomingText}${andText}${outgoingText} arcs${markingText}`,
     tooltip: tooltipForSinglePlaceParameter(solution),
   };
 }
 
-// TODO: Generate specific text for singular and plural
 const solutionTypeToText: { [key in SolutionType]: string } = {
   changeMarking: 'Add marking',
   changeOutgoing: 'Change outgoing arcs',
   changeIncoming: 'Change incoming arcs',
-  multiplePlaces: 'New place(s)',
+  multiplePlaces: 'Generate new place',
 };
 
-function generateBaseText(type: SolutionType): string {
-  const text = solutionTypeToText[type];
+function generateBaseText(solution: AutoRepairWithSolutionType): string {
+  let text = solutionTypeToText[solution.repairType];
+  if (solution.type === 'replace-place' && solution.places.length > 1) {
+    text = `Split in multiple places`;
+  }
   return `<b>${text}</b>:<br/>`;
 }
 
