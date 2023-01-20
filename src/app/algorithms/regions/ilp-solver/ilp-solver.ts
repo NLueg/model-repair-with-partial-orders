@@ -56,6 +56,10 @@ export class IlpSolver {
   private readonly baseIlp: LP;
   private readonly pairs: Array<[first: string | undefined, second: string]>;
 
+  private constraintsForNewTransitions: {
+    [transition: string]: Array<SubjectTo>;
+  } = {};
+
   constructor(
     private glpk: GLPK,
     private partialOrders: Array<PartialOrder>,
@@ -86,9 +90,13 @@ export class IlpSolver {
       const pairs = this.gerPairsForMissingTransition(placeModel.newTransition);
       return combineLatest(
         pairs.map((pair) =>
-          this.solveILP(this.populateIlpByCausalPairs(this.baseIlp, pair)).pipe(
-            map((solution) => solution.solution)
-          )
+          this.solveILP(
+            this.populateIlpByCausalPairs(
+              this.baseIlp,
+              pair,
+              this.constraintsForNewTransitions[pair[1]]
+            )
+          ).pipe(map((solution) => solution.solution))
         )
       ).pipe(
         map((solutions) => [
@@ -244,9 +252,13 @@ export class IlpSolver {
 
   private populateIlpByCausalPairs(
     baseIlp: LP,
-    causalPair: [string | undefined, string]
+    causalPair: [string | undefined, string],
+    additionalConstraints?: SubjectTo[]
   ): LP {
     const result = Object.assign({}, baseIlp);
+    if (additionalConstraints) {
+      result.subjectTo = [...result.subjectTo, ...additionalConstraints];
+    }
 
     if (causalPair[0]) {
       result.subjectTo = result.subjectTo.concat(
@@ -304,11 +316,19 @@ export class IlpSolver {
     for (let i = 0; i < partialOrders.length; i++) {
       const events = partialOrders[i].events;
       for (const e of events) {
-        console.debug(`___ Start Event ${e.id} ___`);
-        baseIlpConstraints.push(...this.firingRule(e, i, partialOrders[i]));
-        baseIlpConstraints.push(...this.tokenFlow(e, i));
+        console.debug(`--- Start Event ${e.id} ---`);
+
+        if (!this.petriNet.transitions.find((t) => e.label === t.label)) {
+          this.constraintsForNewTransitions[e.label] = [
+            ...this.firingRule(e, i, partialOrders[i]),
+            ...this.tokenFlow(e, i),
+          ];
+        } else {
+          baseIlpConstraints.push(...this.firingRule(e, i, partialOrders[i]));
+          baseIlpConstraints.push(...this.tokenFlow(e, i));
+        }
       }
-      console.debug(`________________________`);
+      console.debug(`------------------------`);
       baseIlpConstraints.push(...this.initialMarking(events, i));
     }
 
@@ -316,23 +336,20 @@ export class IlpSolver {
   }
 
   private setUpBaseIlp(): LP {
-    const generals = Array.from(this.poVariableNames);
-    generals.push(VariableName.INITIAL_MARKING);
-
-    const allVariables = Array.from(this.allVariables);
-    allVariables.push(VariableName.INITIAL_MARKING);
+    const variablesToMinimize = Array.from(this.poVariableNames);
+    variablesToMinimize.push(VariableName.INITIAL_MARKING);
 
     return {
       name: 'ilp',
       objective: {
         name: 'goal',
         direction: Goal.MINIMUM,
-        vars: allVariables.map((v) => {
+        vars: variablesToMinimize.map((v) => {
           return this.variable(v, 1);
         }),
       },
       subjectTo: this.buildBasicIlpForPartialOrders(this.partialOrders),
-      generals,
+      generals: Array.from(this.allVariables),
     };
   }
 
