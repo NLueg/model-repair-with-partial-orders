@@ -460,6 +460,14 @@ export class IlpSolver {
     existingPlace: Place
   ): LP {
     const result = clonedeep(baseIlp);
+
+    // Don't add incoming arcs if there is no incoming arc
+    if (existingPlace.incomingArcs.length === 0) {
+      result.subjectTo = result.subjectTo.concat(
+        this.getRulesForNoArcs(VariableName.INGOING_ARC_WEIGHT_PREFIX)
+      );
+    }
+
     this.addConstraintsForSameOutgoingWeights(existingPlace, result);
     return result;
   }
