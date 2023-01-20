@@ -42,6 +42,11 @@ describe('PetriNetSolutionService', () => {
                 type: 'marking',
               },
               {
+                newMarking: 2,
+                repairType: 'changeOutgoing',
+                type: 'marking',
+              },
+              {
                 incoming: [],
                 newMarking: 2,
                 outgoing: [
@@ -52,11 +57,6 @@ describe('PetriNetSolutionService', () => {
                 ],
                 repairType: 'changeIncoming',
                 type: 'modify-place',
-              },
-              {
-                newMarking: 2,
-                repairType: 'multiplePlaces',
-                type: 'marking',
               },
             ],
             type: 'error',
@@ -72,13 +72,14 @@ describe('PetriNetSolutionService', () => {
                 type: 'marking',
               },
               {
+                newMarking: 2,
+                repairType: 'changeOutgoing',
+                type: 'marking',
+              },
+              {
                 incoming: [
                   {
-                    transitionLabel: 'd',
-                    weight: 1,
-                  },
-                  {
-                    transitionLabel: 'b',
+                    transitionLabel: 'a',
                     weight: 1,
                   },
                 ],
