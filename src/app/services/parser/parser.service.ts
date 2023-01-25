@@ -49,7 +49,7 @@ export class ParserService {
   private readonly placeRegex = /^(\S*)\s*(\d*)$/;
   private readonly arcRegex = /^(\S*)\s*(\S*)\s*(\d*)$/;
 
-  private readonly logEventRegex = /^(\S+)\s*(\S+)\s*(\S+)\s*(\S*)$/;
+  private readonly logEventRegex = /^(\S+)\s*(\S+)\s*(\S+)\s*(.*)$/;
 
   parsePartialOrders(content: string, errors: Set<string>): PartialOrder[] {
     const contentLines = content.split('\n');
