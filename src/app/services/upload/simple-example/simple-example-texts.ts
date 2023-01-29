@@ -55,13 +55,15 @@ follows[]
 export const colloquiumNet = `.type pn
 .transitions
 rp Reise_planen
+op Optionen_prüfen
 fs Flug_suchen
 hs Hotel_suchen
 fb Flug_buchen
 hb Hotel_buchen
-us Unterlagen_speichern
+ud Unterlagen_drucken
 .places
-p1 1
+p0 1
+p1 0
 p2 0
 p3 0
 p4 0
@@ -70,20 +72,22 @@ p6 0
 p7 0
 p8 0
 .arcs
-p1 rp
-rp p2
-rp p3
-p2 fs
+p0 rp
+rp p1
+p1 op
+op p2
+op p3
 p3 hs
-hs p4
-p4 hb
-hb p5
-fs p6
-p6 fb
-fb p7
-p5 us
-p7 us
-us p8
+hs p5
+p5 hb
+hb p7
+p7 ud
+ud p8
+p2 fs
+fs p4
+p4 fb
+fb p6
+p6 ud
 `;
 
 export const colloquiumLog = `.type log
@@ -94,21 +98,24 @@ event-id
 follows[]
 .events
 1 Reise_planen a
+1 Optionen_prüfen a_
 1 Flug_suchen b
 1 Flug_buchen c
 1 Hotel_suchen d
 1 Hotel_buchen e
-1 Unterlagen_speichern f
+1 Unterlagen_drucken f
 2 Reise_planen a
+2 Optionen_prüfen a_
 2 Flug_buchen b
 2 Hotel_suchen c
 2 Hotel_buchen d
-2 Unterlagen_speichern e
+2 Unterlagen_drucken e
 3 Reise_planen a
+3 Optionen_prüfen a_
 3 Flug_suchen b
 3 Flug_buchen c
 3 Hotel_suchen d
 3 Frühstück_buchen e
 3 Hotel_buchen f
-3 Unterlagen_speichern g
+3 Unterlagen_drucken g
 `;
