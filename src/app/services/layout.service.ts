@@ -414,16 +414,22 @@ export class LayoutService {
   ): Connection[] {
     const outgoings = new Array<Connection>();
 
+    if (layerInfo.layers.length <= layerInfo.layerIndex - 1) {
+      return outgoings;
+    }
+
     arcs.forEach((arc) => {
       let targetPos: number | undefined;
+
+      const relevantLayer = layerInfo.layers[layerInfo.layerIndex + 1];
+
       if (arc.breakpoints.length > 0) {
-        targetPos = layerInfo.layers[layerInfo.layerIndex + 1].indexOf(
-          arc.breakpoints[0]
-        );
+        targetPos = relevantLayer?.indexOf(arc.breakpoints[0]) ?? 0;
       } else {
-        targetPos = layerInfo.layers[layerInfo.layerIndex + 1].findIndex(
-          (layer) => 'id' in layer && layer.id === arc.target
-        );
+        targetPos =
+          relevantLayer?.findIndex(
+            (layer) => 'id' in layer && layer.id === arc.target
+          ) ?? 0;
       }
 
       if (targetPos >= 0)

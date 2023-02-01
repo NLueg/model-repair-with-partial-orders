@@ -102,7 +102,7 @@ export class RepairService {
     }
 
     const solutionsForPlace = this.solutions.find(
-      (s) => s.type === 'error' && s.place === place
+      (s) => s.type !== 'newTransition' && s.place === place
     );
     this.showRepairPopoverForSolution(ref, solutionsForPlace);
   }

@@ -34,6 +34,7 @@ export class RepairMenuComponent implements OnInit {
   constructor(private netCommandService: NetCommandService) {}
 
   ngOnInit(): void {
+    console.log(this.placeSolution);
     if (this.placeSolution.type === 'warning') {
       this.infoHeader = `The place has ${this.placeSolution.tooManyTokens} too many tokens`;
       this.shownTextsForSolutions = [
@@ -60,11 +61,8 @@ export class RepairMenuComponent implements OnInit {
       .replace(' ', '');
     if (this.placeSolution.type === 'newTransition') {
       this.infoHeader = `The transition ${this.placeSolution.missingTransition} is missing for ${this.placeSolution.invalidTraceCount} (${percentage}) traces.`;
-      this.shownTextsForSolutions = this.placeSolution.solutions.map(
-        (solution) => ({
-          text: generateTextForAutoRepair(solution),
-          solution,
-        })
+      this.shownTextsForSolutions = this.generateSolutionToDisplay(
+        this.placeSolution.solutions
       );
       return;
     }
@@ -83,10 +81,7 @@ export class RepairMenuComponent implements OnInit {
     if (!solutions) {
       console.error('No solution found!');
     } else {
-      this.shownTextsForSolutions = solutions.map((solution) => ({
-        text: generateTextForAutoRepair(solution),
-        solution,
-      }));
+      this.shownTextsForSolutions = this.generateSolutionToDisplay(solutions);
     }
 
     this.infoHeader += 'Choose a solution to repair the place:';
@@ -107,6 +102,28 @@ export class RepairMenuComponent implements OnInit {
         .repairNet(this.placeSolution.place, solution)
         .subscribe(() => this.overlayRef?.dispose());
     }
+  }
+
+  private generateSolutionToDisplay(
+    solutions: AutoRepairWithSolutionType[]
+  ): { text: LabelWithTooltip; solution: AutoRepair }[] {
+    const orderToDisplay: SolutionType[] = [
+      'changeOutgoing',
+      'changeIncoming',
+      'multiplePlaces',
+      'changeMarking',
+    ];
+
+    return solutions
+      .sort(
+        (a, b) =>
+          orderToDisplay.indexOf(a.repairType) -
+          orderToDisplay.indexOf(b.repairType)
+      )
+      .map((solution) => ({
+        text: generateTextForAutoRepair(solution),
+        solution,
+      }));
   }
 }
 

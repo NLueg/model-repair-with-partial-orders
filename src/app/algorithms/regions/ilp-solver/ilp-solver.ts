@@ -5,6 +5,7 @@ import {
   concatMap,
   map,
   Observable,
+  of,
   ReplaySubject,
   toArray,
 } from 'rxjs';
@@ -32,7 +33,7 @@ import { Constraint, Goal, MessageLevel, Solution } from './solver-constants';
 
 export type SolutionGeneratorType =
   | {
-      type: 'repair';
+      type: 'repair' | 'warning';
       placeId: string;
     }
   | { type: 'transition'; newTransition: string };
@@ -112,9 +113,33 @@ export class IlpSolver {
       );
     }
 
+    // Calculate how many tokens are required for current place
     const invalidPlace = this.petriNet.places.find(
       (p) => p.id === placeModel.placeId
     );
+    if (placeModel.type === 'warning') {
+      const changeMarkingSolution = this.populateIlpBySameWeights(
+        this.baseIlp,
+        invalidPlace!
+      );
+      if (!invalidPlace) {
+        return of([]);
+      }
+
+      return this.solveILP(changeMarkingSolution).pipe(
+        map((solution) => {
+          if (solution.solution.result.status === Solution.NO_SOLUTION) {
+            return [];
+          }
+          const problemSolution: ProblemSolution = {
+            type: 'changeMarking',
+            solutions: [solution.solution.result.vars],
+          };
+          return [problemSolution];
+        })
+      );
+    }
+
     const unhandledPairs = this.getUnhandledPairs(invalidPlace!);
 
     return combineLatest(
@@ -172,8 +197,8 @@ export class IlpSolver {
         const typeToSolution: { [key in SolutionType]: Vars[] } = {
           changeIncoming: [],
           changeOutgoing: [],
-          changeMarking: [],
           multiplePlaces: [],
+          changeMarking: [],
         };
 
         placeSolutions.forEach((placeSolution) => {
@@ -191,27 +216,33 @@ export class IlpSolver {
             solutions,
           }));
       }),
-      map((foundSolutions) => {
-        const typeOrder: SolutionType[] = [
-          'changeMarking',
-          'changeOutgoing',
-          'changeIncoming',
-          'multiplePlaces',
-        ];
-
-        return foundSolutions
-          .sort((a, b) => typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type))
-          .filter((value, index) => {
-            const _value = JSON.stringify(value.solutions);
-            return (
-              index ===
-              foundSolutions.findIndex((obj) => {
-                return JSON.stringify(obj.solutions) === _value;
-              })
-            );
-          });
-      })
+      map((foundSolutions) =>
+        this.filterSolutionsInSpecificOrder(foundSolutions)
+      )
     );
+  }
+
+  private filterSolutionsInSpecificOrder(
+    foundSolutions: { type: SolutionType; solutions: Vars[] }[]
+  ) {
+    const order: SolutionType[] = [
+      'changeMarking',
+      'changeOutgoing',
+      'changeIncoming',
+      'multiplePlaces',
+    ];
+
+    return foundSolutions
+      .sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type))
+      .filter((value, index) => {
+        const _value = JSON.stringify(value.solutions);
+        return (
+          index ===
+          foundSolutions.findIndex((obj) => {
+            return JSON.stringify(obj.solutions) === _value;
+          })
+        );
+      });
   }
 
   /**

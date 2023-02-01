@@ -4,7 +4,6 @@ import { combineLatest, from, map, Observable, of, switchMap, tap } from 'rxjs';
 
 import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
-import { Place } from '../../classes/diagram/place';
 import {
   ParsableSolution,
   ParsableSolutionsPerType,
@@ -12,7 +11,11 @@ import {
 } from '../../services/repair/repair.model';
 import { RepairService } from '../../services/repair/repair.service';
 import { IlpSolver, SolutionGeneratorType } from './ilp-solver/ilp-solver';
-import { ProblemSolution, VariableType } from './ilp-solver/solver-classes';
+import {
+  ProblemSolution,
+  VariableName,
+  VariableType,
+} from './ilp-solver/solver-classes';
 import { AutoRepairForSinglePlace, parseSolution } from './parse-solutions.fn';
 import { removeDuplicatePlaces } from './remove-duplicate-places.fn';
 
@@ -54,6 +57,21 @@ export class PetriNetSolutionService {
           missingTransitions[event.label]++;
         }
 
+        const potentialValidPlaces = petriNet.places.filter(
+          (place) =>
+            place.marking > 0 &&
+            !invalidPlaceList.find(
+              (repairType) =>
+                repairType.type === 'repair' && repairType.placeId === place.id
+            )
+        );
+        for (const potentialValidPlace of potentialValidPlaces) {
+          invalidPlaceList.push({
+            type: 'warning',
+            placeId: potentialValidPlace.id,
+          });
+        }
+
         invalidPlaceList.push(
           ...(Object.keys(missingTransitions).map((label) => ({
             type: 'transition',
@@ -86,9 +104,28 @@ export class PetriNetSolutionService {
             solver.computeSolutions(place).pipe(
               map((solutions) => {
                 const existingPlace =
-                  place.type === 'repair'
+                  place.type === 'repair' || place.type === 'warning'
                     ? petriNet.places.find((p) => p.id === place.placeId)
                     : undefined;
+
+                if (place.type === 'warning') {
+                  const requiredMarking = solutions.flatMap((solution) =>
+                    solution.solutions.map(
+                      (solution) => solution[VariableName.INITIAL_MARKING]
+                    )
+                  );
+                  const maximumRequiredMarking = Math.max(...requiredMarking);
+                  if (maximumRequiredMarking < existingPlace!.marking) {
+                    return {
+                      type: 'warning',
+                      place: place.placeId,
+                      reduceTokensTo: maximumRequiredMarking,
+                      tooManyTokens:
+                        existingPlace!.marking - maximumRequiredMarking,
+                    };
+                  }
+                  return undefined;
+                }
 
                 const parsedSolutions = parseSolution(
                   handleSolutions(solutions, solver),
@@ -104,55 +141,36 @@ export class PetriNetSolutionService {
                     ? newTokens.newMarking - existingPlace.marking
                     : undefined;
 
-                const placeSolution: PlaceSolution =
-                  place.type === 'repair'
-                    ? {
-                        type: 'error',
-                        place: place.placeId,
-                        solutions: parsedSolutions,
-                        missingTokens,
-                        invalidTraceCount: invalidPlaces[place.placeId],
-                      }
-                    : {
-                        type: 'newTransition',
-                        missingTransition: place.newTransition,
-                        solutions: parsedSolutions,
-                        invalidTraceCount:
-                          missingTransitions[place.newTransition],
-                      };
-                return placeSolution;
+                switch (place.type) {
+                  case 'repair':
+                    return {
+                      type: 'error',
+                      place: place.placeId,
+                      solutions: parsedSolutions,
+                      missingTokens,
+                      invalidTraceCount: invalidPlaces[place.placeId],
+                    } as PlaceSolution;
+                  case 'transition':
+                    return {
+                      type: 'newTransition',
+                      missingTransition: place.newTransition,
+                      solutions: parsedSolutions,
+                      invalidTraceCount:
+                        missingTransitions[place.newTransition],
+                    } as PlaceSolution;
+                }
               })
             )
           )
         );
       }),
-      tap((solutions) => {
-        const unhandledPlaces = petriNet.places.filter(
-          (place) =>
-            !solutions.find(
-              (solution) =>
-                solution.type === 'error' && solution.place === place.id
-            )
-        );
-        for (const unhandledPlace of unhandledPlaces) {
-          const markingDifference = generateMarkingDifference(unhandledPlace);
-          if (
-            markingDifference > 0 &&
-            unhandledPlace.marking - markingDifference >= 0
-          ) {
-            const placeSolution: PlaceSolution = {
-              type: 'warning',
-              place: unhandledPlace.id,
-              tooManyTokens: markingDifference,
-              reduceTokensTo: unhandledPlace.marking - markingDifference,
-            };
-            solutions.push(placeSolution as any);
-          }
-        }
-
-        console.log('Generated solutions', solutions);
-        this.repairService.saveNewSolutions(solutions, partialOrders.length);
-      })
+      map(
+        (solutions) =>
+          solutions.filter((solution) => !!solution) as PlaceSolution[]
+      ),
+      tap((solutions) =>
+        this.repairService.saveNewSolutions(solutions, partialOrders.length)
+      )
     );
   }
 }
@@ -213,23 +231,4 @@ export function handleSolutions(
       );
     }
   );
-}
-
-/**
- * Current marking - outgoing
- * We don't take ingoing marking into account as we don't know if everything fires.
- * So this might be valid.
- * @param place
- */
-function generateMarkingDifference(place?: Place): number {
-  if (!place) {
-    return 0;
-  }
-
-  const outgoingMarking = place.outgoingArcs.reduce(
-    (sum, arc) => sum + arc.weight,
-    0
-  );
-
-  return place.marking - outgoingMarking;
 }
