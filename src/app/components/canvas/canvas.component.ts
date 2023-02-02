@@ -17,7 +17,7 @@ import {
 } from 'rxjs';
 
 import { DisplayService } from '../../services/display.service';
-import { LayoutResult } from '../../services/layout.service';
+import { LayoutResult } from '../../services/layout/layout.service';
 import { SvgService } from '../../services/svg/svg.service';
 import { bindEventsForNet } from './bind-events.fn';
 

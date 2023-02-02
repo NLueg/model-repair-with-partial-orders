@@ -15,7 +15,10 @@ import { PetriNetSolutionService } from '../../algorithms/regions/petri-net-solu
 import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../../services/display.service';
-import { LayoutResult, LayoutService } from '../../services/layout.service';
+import {
+  LayoutResult,
+  LayoutService,
+} from '../../services/layout/layout.service';
 import { NewTransitionSolution } from '../../services/repair/repair.model';
 import { RepairService } from '../../services/repair/repair.service';
 import { SvgService } from '../../services/svg/svg.service';

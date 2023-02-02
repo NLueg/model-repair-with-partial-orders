@@ -1,21 +1,19 @@
 export const simpleExamplePetriNet = `.type pn
 .transitions
-a a
 b b
 c c
 d d
 .places
-p1 0
 p2 0
 p3 0
 .arcs
-p1 a
-a p2
 p2 c
 p2 b
 b p3
 c p3
-p3 d
+p2 d
+b d
+c d
 `;
 
 export const simpleExampleLog = `.type log

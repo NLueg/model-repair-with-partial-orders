@@ -188,12 +188,6 @@ describe('PetriNetSolutionService', () => {
             ],
             type: 'error',
           },
-          {
-            place: 'p1',
-            reduceTokensTo: 1,
-            tooManyTokens: 1,
-            type: 'warning',
-          },
         ]);
         done();
       });

@@ -34,7 +34,6 @@ export class RepairMenuComponent implements OnInit {
   constructor(private netCommandService: NetCommandService) {}
 
   ngOnInit(): void {
-    console.log(this.placeSolution);
     if (this.placeSolution.type === 'warning') {
       this.infoHeader = `The place has ${this.placeSolution.tooManyTokens} too many tokens`;
       this.shownTextsForSolutions = [
