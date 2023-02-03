@@ -68,26 +68,28 @@ export class UploadService {
       this.toastr.error("Couldn't find any valid file");
       return;
     }
-    if (filteredFiles.length > 1) {
-      this.toastr.warning('Only the first file will be used');
-    } else {
+
+    filteredFiles.forEach((file) => {
+      const reader = new FileReader();
+      const fileExtension = getExtensionForFileName(file.name);
+
+      reader.onload = () => {
+        let content: string = reader.result as string;
+
+        if (fileExtension?.toLowerCase() === 'pnml') {
+          content = getRunTextFromPnml(content);
+        }
+        this.processNewSource(content);
+      };
+
+      reader.readAsText(file);
+    });
+
+    if (filteredFiles.length === 1) {
       this.toastr.success(`Processed file`);
+    } else {
+      this.toastr.success(`Processed files`);
     }
-
-    const file = filteredFiles[0];
-    const reader = new FileReader();
-    const fileExtension = getExtensionForFileName(file.name);
-
-    reader.onload = () => {
-      let content: string = reader.result as string;
-
-      if (fileExtension?.toLowerCase() === 'pnml') {
-        content = getRunTextFromPnml(content);
-      }
-      this.processNewSource(content);
-    };
-
-    reader.readAsText(file);
   }
 
   private processNewSource(newSource: string): void {

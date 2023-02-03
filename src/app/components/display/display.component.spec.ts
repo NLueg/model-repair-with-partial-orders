@@ -3,7 +3,7 @@ import { of } from 'rxjs';
 
 import { PetriNetSolutionService } from '../../algorithms/regions/petri-net-solution.service';
 import { DisplayService } from '../../services/display.service';
-import { LayoutService } from '../../services/layout.service';
+import { LayoutService } from '../../services/layout/layout.service';
 import { RepairService } from '../../services/repair/repair.service';
 import { SvgService } from '../../services/svg/svg.service';
 import { parsedPetriNet } from '../../services/upload/example-file-parsed';
