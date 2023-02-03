@@ -60,7 +60,7 @@ export class LayoutService {
     for (const layer of originalLayeredNodes) {
       maxNodesPerLayer = Math.max(maxNodesPerLayer, layer.length);
     }
-    this.minimizeCrossing(net, originalLayeredNodes);
+    // this.minimizeCrossing(net, originalLayeredNodes);
 
     let maxX = 0;
     let maxY = 0;
@@ -218,23 +218,39 @@ export class LayoutService {
   }
 
   private addBreakpoints(
-    nodes: Array<Array<ConcreteElement>>,
+    layers: Array<Array<ConcreteElement>>,
     nodeLayer: Map<string, number>
   ) {
-    for (let layerI = 0; layerI < nodes.length; layerI++) {
-      for (const node of nodes[layerI]) {
+    for (let currentLayer = 0; currentLayer < layers.length; currentLayer++) {
+      for (const node of layers[currentLayer]) {
         if (!(node as any)?.outgoingArcs) {
           continue;
         }
 
         for (const arc of (node as ConcreteElementWithArcs).outgoingArcs) {
-          const destinationLayer = nodeLayer.get(arc.target) as number;
-          const diff = destinationLayer - layerI;
+          const targetLayer = nodeLayer.get(arc.target) as number;
+          const diff = targetLayer - currentLayer;
           if (Math.abs(diff) == 1) {
             continue;
           }
+
+          const innerTargetLayer = layers
+            .flatMap((nodeLayer) =>
+              nodeLayer.findIndex((elem) => elem.id === arc.target)
+            )
+            .find((index) => index != -1);
+          const innerSourceLayer = layers
+            .flatMap((nodeLayer) =>
+              nodeLayer.findIndex((elem) => elem.id === arc.source)
+            )
+            .find((index) => index != -1);
+
           const change = Math.sign(diff);
-          for (let i = layerI + change; i != destinationLayer; i += change) {
+          for (
+            let i = currentLayer + change;
+            i != targetLayer;
+            i = i + change
+          ) {
             // this ID calculation does not guarantee a unique ID, which could be a problem in the future
             const breakpoint: Breakpoint = {
               type: 'breakpoint',
@@ -243,12 +259,58 @@ export class LayoutService {
               y: 0,
               arc,
             };
-            nodes[i].push(breakpoint);
+            layers[i].splice(
+              this.getIndexInCurrentLayer(
+                layers,
+                layers[i],
+                targetLayer,
+                currentLayer,
+                innerTargetLayer ?? 0,
+                innerSourceLayer ?? 0
+              ),
+              0,
+              breakpoint
+            );
             arc.breakpoints.push(breakpoint);
           }
         }
       }
     }
+  }
+
+  private getIndexInCurrentLayer(
+    layers: Array<Array<ConcreteElement>>,
+    layerForInsertion: ConcreteElement[],
+    targetLayer: number,
+    sourceLayer: number,
+    innerTargetLayer: number,
+    innerSourceLayer: number
+  ): number {
+    const targetLayerLength = layers[targetLayer].length;
+    const sourceLayerLength = layers[sourceLayer].length;
+
+    const targetIsAtEnd = targetLayerLength - 1 === innerTargetLayer;
+    const sourceIsAtEnd = sourceLayerLength - 1 === innerSourceLayer;
+    if (targetIsAtEnd && sourceIsAtEnd) {
+      return layerForInsertion.length;
+    }
+
+    if (innerTargetLayer === innerSourceLayer) {
+      return innerTargetLayer;
+    }
+
+    const targetIsInCenterPosition =
+      getHalfValue(targetLayerLength) === innerTargetLayer;
+    const sourceIsInCenterPosition =
+      getHalfValue(sourceLayerLength) === innerSourceLayer;
+    if (targetIsInCenterPosition && sourceIsInCenterPosition) {
+      return getHalfValue(layerForInsertion.length);
+    }
+
+    return Math.min(
+      innerTargetLayer ?? layers.length - 1,
+      innerSourceLayer ?? layers.length - 1
+    );
   }
 
   /**
@@ -270,4 +332,11 @@ export class LayoutService {
       layer.push(...newLayer);
     });
   }
+}
+
+function getHalfValue(value: number): number {
+  if (value === 1) {
+    return 0;
+  }
+  return Math.floor(value / 2);
 }
