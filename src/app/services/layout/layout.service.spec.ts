@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
+import { parsedPetriNet } from '../upload/example-file-parsed';
 import { LayoutService } from './layout.service';
-import { parsedPetriNet } from './upload/example-file-parsed';
 
 describe('LayoutService', () => {
   let service: LayoutService;

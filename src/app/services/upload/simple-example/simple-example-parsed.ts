@@ -4,18 +4,6 @@ export const parsedSimpleExamplePetriNet = {
   arcs: [
     {
       breakpoints: [],
-      source: 'p1',
-      target: 'a',
-      weight: 1,
-    },
-    {
-      breakpoints: [],
-      source: 'a',
-      target: 'p2',
-      weight: 1,
-    },
-    {
-      breakpoints: [],
       source: 'p2',
       target: 'c',
       weight: 1,
@@ -40,36 +28,27 @@ export const parsedSimpleExamplePetriNet = {
     },
     {
       breakpoints: [],
-      source: 'p3',
+      source: 'p2',
+      target: 'd',
+      weight: 1,
+    },
+    {
+      breakpoints: [],
+      source: 'b',
+      target: 'd',
+      weight: 1,
+    },
+    {
+      breakpoints: [],
+      source: 'c',
       target: 'd',
       weight: 1,
     },
   ],
   places: [
     {
-      id: 'p1',
-      incomingArcs: [],
-      marking: 0,
-      outgoingArcs: [
-        {
-          breakpoints: [],
-          source: 'p1',
-          target: 'a',
-          weight: 1,
-        },
-      ],
-      type: 'place',
-    },
-    {
       id: 'p2',
-      incomingArcs: [
-        {
-          breakpoints: [],
-          source: 'a',
-          target: 'p2',
-          weight: 1,
-        },
-      ],
+      incomingArcs: [],
       marking: 0,
       outgoingArcs: [
         {
@@ -82,6 +61,12 @@ export const parsedSimpleExamplePetriNet = {
           breakpoints: [],
           source: 'p2',
           target: 'b',
+          weight: 1,
+        },
+        {
+          breakpoints: [],
+          source: 'p2',
+          target: 'd',
           weight: 1,
         },
       ],
@@ -104,39 +89,11 @@ export const parsedSimpleExamplePetriNet = {
         },
       ],
       marking: 0,
-      outgoingArcs: [
-        {
-          breakpoints: [],
-          source: 'p3',
-          target: 'd',
-          weight: 1,
-        },
-      ],
+      outgoingArcs: [],
       type: 'place',
     },
   ],
   transitions: [
-    {
-      id: 'a',
-      incomingArcs: [
-        {
-          breakpoints: [],
-          source: 'p1',
-          target: 'a',
-          weight: 1,
-        },
-      ],
-      label: 'a',
-      outgoingArcs: [
-        {
-          breakpoints: [],
-          source: 'a',
-          target: 'p2',
-          weight: 1,
-        },
-      ],
-      type: 'transition',
-    },
     {
       id: 'b',
       incomingArcs: [
@@ -153,6 +110,12 @@ export const parsedSimpleExamplePetriNet = {
           breakpoints: [],
           source: 'b',
           target: 'p3',
+          weight: 1,
+        },
+        {
+          breakpoints: [],
+          source: 'b',
+          target: 'd',
           weight: 1,
         },
       ],
@@ -176,6 +139,12 @@ export const parsedSimpleExamplePetriNet = {
           target: 'p3',
           weight: 1,
         },
+        {
+          breakpoints: [],
+          source: 'c',
+          target: 'd',
+          weight: 1,
+        },
       ],
       type: 'transition',
     },
@@ -184,7 +153,19 @@ export const parsedSimpleExamplePetriNet = {
       incomingArcs: [
         {
           breakpoints: [],
-          source: 'p3',
+          source: 'p2',
+          target: 'd',
+          weight: 1,
+        },
+        {
+          breakpoints: [],
+          source: 'b',
+          target: 'd',
+          weight: 1,
+        },
+        {
+          breakpoints: [],
+          source: 'c',
           target: 'd',
           weight: 1,
         },

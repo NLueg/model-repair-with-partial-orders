@@ -1,25 +1,9 @@
-import { TestBed } from '@angular/core/testing';
-
 import { parsedPetriNet } from '../../upload/example-file-parsed';
-import { PetriNetToPnmlService } from './petri-net-to-pnml.service';
+import { convertPetriNetToPnml } from './petri-net-to-pnml.service';
 
-describe('PetriNetToPnmlService', () => {
-  let service: PetriNetToPnmlService;
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(PetriNetToPnmlService);
-  });
-
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
+describe('PetriNetToPnml', () => {
   it('should parse example run to pnml', () => {
-    const result = service.convertPetriNetToPnml(
-      `my name.pnml`,
-      parsedPetriNet
-    );
+    const result = convertPetriNetToPnml(`my name.pnml`, parsedPetriNet);
 
     expect(result).toEqual(parsedPnml);
   });
@@ -116,7 +100,7 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                          <position x="0" y="0"/>
                     </graphics>
                     <initialMarking>
-                         <text>1</text>
+                         <text>2</text>
                     </initialMarking>
                </place>
                <place id="p2">
@@ -144,7 +128,7 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                          <position x="0" y="0"/>
                     </graphics>
                     <initialMarking>
-                         <text>0</text>
+                         <text>1</text>
                     </initialMarking>
                </place>
                <place id="p4">
@@ -158,7 +142,7 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                          <position x="0" y="0"/>
                     </graphics>
                     <initialMarking>
-                         <text>0</text>
+                         <text>2</text>
                     </initialMarking>
                </place>
                <place id="p5">
@@ -172,7 +156,7 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                          <position x="0" y="0"/>
                     </graphics>
                     <initialMarking>
-                         <text>0</text>
+                         <text>1</text>
                     </initialMarking>
                </place>
                <place id="p6">
@@ -200,7 +184,7 @@ const parsedPnml = `<?xml version="1.0" encoding="UTF-8"?>
                          <position x="0" y="0"/>
                     </graphics>
                     <initialMarking>
-                         <text>0</text>
+                         <text>1</text>
                     </initialMarking>
                </place>
                <arc id="A"

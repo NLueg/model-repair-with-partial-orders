@@ -1,5 +1,3 @@
-import { Injectable } from '@angular/core';
-
 import { PetriNet } from '../../../classes/diagram/petri-net';
 import { Place } from '../../../classes/diagram/place';
 import { Transition } from '../../../classes/diagram/transition';
@@ -8,19 +6,18 @@ const encoding = '<?xml version="1.0" encoding="UTF-8"?>\n';
 
 const transitionDimension = 40;
 
-@Injectable({
-  providedIn: 'root',
-})
-export class PetriNetToPnmlService {
-  convertPetriNetToPnml(name: string, petriNet: PetriNet): string {
-    const transitionText = petriNet.transitions
-      .map((element) => parseTransition(element))
-      .join(`\n`);
+export function convertPetriNetToPnml(
+  name: string,
+  petriNet: PetriNet
+): string {
+  const transitionText = petriNet.transitions
+    .map((element) => parseTransition(element))
+    .join(`\n`);
 
-    const placesText = parsePlaces(petriNet.places);
-    const arcsText = parseArcs(petriNet);
+  const placesText = parsePlaces(petriNet.places);
+  const arcsText = parseArcs(petriNet);
 
-    return `${encoding}
+  return `${encoding}
 <pnml>
      <net id="" type="http://www.pnml.org/version-2009/grammar/ptnet">
           <name>
@@ -30,7 +27,6 @@ export class PetriNetToPnmlService {
           </page>
      </net>
 </pnml>`;
-  }
 }
 
 function parseTransition(transition: Transition): string {
@@ -54,7 +50,7 @@ function parseTransition(transition: Transition): string {
 
 function parsePlaces(places: Place[]): string {
   return places
-    .map((place, index) => {
+    .map((place) => {
       return `               <place id="${place.id}">
                     <name>
                          <text>${place.id}</text>
@@ -68,7 +64,7 @@ function parsePlaces(places: Place[]): string {
                          <position x="${place.x ?? 0}" y="${place.y ?? 0}"/>
                     </graphics>
                     <initialMarking>
-                         <text>${index === 0 ? 1 : 0}</text>
+                         <text>${place.marking}</text>
                     </initialMarking>
                </place>`;
     })

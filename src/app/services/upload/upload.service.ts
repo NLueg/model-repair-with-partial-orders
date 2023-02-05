@@ -4,16 +4,14 @@ import { Observable, ReplaySubject, Subject } from 'rxjs';
 
 import { netTypeKey } from '../parser/parsing-constants';
 import { getRunTextFromPnml } from './pnml/pnml-to-run.fn';
+import { parseXesFileToCustomLogFormat } from './xes/xes-parser';
 
 export type StructureType = 'petri-net' | 'log';
 
 const allowedExtensions: { [key in StructureType]: string[] } = {
   'petri-net': ['pn', 'pnml'],
-  log: ['txt', 'log'],
+  log: ['txt', 'log', 'xes'],
 };
-
-const emptyContent =
-  '.type pn\n' + '.transitions\n\n' + '.places\n\n' + '.arcs\n';
 
 @Injectable({
   providedIn: 'root',
@@ -78,6 +76,9 @@ export class UploadService {
 
         if (fileExtension?.toLowerCase() === 'pnml') {
           content = getRunTextFromPnml(content);
+        }
+        if (fileExtension?.toLowerCase() === 'xes') {
+          content = parseXesFileToCustomLogFormat(content);
         }
         this.processNewSource(content);
       };

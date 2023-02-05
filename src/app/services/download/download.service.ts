@@ -5,7 +5,7 @@ import { PetriNet } from '../../classes/diagram/petri-net';
 import { DownloadFormat } from '../../components/download/download.const';
 import { DisplayService } from '../display.service';
 import { generateTextFromNet } from '../parser/net-to-text.func';
-import { PetriNetToPnmlService } from './run-to-pnml/petri-net-to-pnml.service';
+import { convertPetriNetToPnml } from './run-to-pnml/petri-net-to-pnml.service';
 
 @Injectable({
   providedIn: 'root',
@@ -13,10 +13,7 @@ import { PetriNetToPnmlService } from './run-to-pnml/petri-net-to-pnml.service';
 export class DownloadService implements OnDestroy {
   private _download$: Subject<string>;
 
-  constructor(
-    private displayService: DisplayService,
-    private runToPnmlService: PetriNetToPnmlService
-  ) {
+  constructor(private displayService: DisplayService) {
     this._download$ = new Subject<string>();
   }
 
@@ -32,7 +29,7 @@ export class DownloadService implements OnDestroy {
         const fileEnding = getFileEndingForFormat(fileFormat);
         const fileName = name
           ? `${name}.${fileEnding}`
-          : `${Date.now()}_run.${fileEnding}`;
+          : `${Date.now()}_net.${fileEnding}`;
 
         this.downloadRun(fileName, fileFormat, run);
       });
@@ -46,7 +43,7 @@ export class DownloadService implements OnDestroy {
     const fileContent =
       fileFormat === 'pn'
         ? generateTextFromNet(petriNet)
-        : this.runToPnmlService.convertPetriNetToPnml(name, petriNet);
+        : convertPetriNetToPnml(name, petriNet);
 
     const downloadLink: HTMLAnchorElement = document.createElement('a');
     downloadLink.download = name;

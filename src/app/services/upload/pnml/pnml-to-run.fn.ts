@@ -1,22 +1,14 @@
-import { X2jOptionsOptional, XMLParser } from 'fast-xml-parser';
-
 import {
   arcsAttribute,
   netTypeKey,
   placesAttribute,
   transitionsAttribute,
 } from '../../parser/parsing-constants';
+import { parseXml } from '../xml-parser.fn';
 import { PnmlPage, PnmlWrapper } from './pnml.type';
 
 export function getRunTextFromPnml(xmlContent: string): string {
-  const options: X2jOptionsOptional = {
-    attributeNamePrefix: '',
-    ignoreAttributes: false,
-    allowBooleanAttributes: true,
-  };
-  const parser = new XMLParser(options);
-
-  const pnml: PnmlWrapper = parser.parse(xmlContent);
+  const pnml: PnmlWrapper = parseXml(xmlContent);
   const page: PnmlPage = pnml.pnml.net.page ?? pnml.pnml.net;
 
   const lines = [netTypeKey];
