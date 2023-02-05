@@ -20,7 +20,14 @@ export function parseXesFileToCustomLogFormat(xmlContent: string): string {
     const traceId =
       trace.string.find((s) => s.key === 'concept:name')?.value ?? i;
 
-    for (let j = 0; j < trace.event.length; j++) {
+    const filteredEvents = trace.event.filter((event) => {
+      const lifecycle = event.string.find(
+        (s) => s.key === 'lifecycle:transition'
+      );
+      return lifecycle === undefined || lifecycle.value === 'complete';
+    });
+
+    for (let j = 0; j < filteredEvents.length; j++) {
       const event = trace.event[j];
       const eventName = event.string.find(
         (s) => s.key === 'concept:name'
