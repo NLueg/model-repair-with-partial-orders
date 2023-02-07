@@ -9,6 +9,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -58,6 +59,7 @@ import { TemplateButtonComponent } from './components/template-button/template-b
     FormsModule,
     MatDialogModule,
     OverlayModule,
+    MatProgressSpinnerModule,
   ],
   bootstrap: [AppComponent],
 })

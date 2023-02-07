@@ -16,7 +16,6 @@ import {
   switchMap,
 } from 'rxjs';
 
-import { DisplayService } from '../../services/display.service';
 import { LayoutResult } from '../../services/layout/layout.service';
 import { SvgService } from '../../services/svg/svg.service';
 import { bindEventsForNet } from './bind-events.fn';
@@ -47,10 +46,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
   private kill$?: Subject<void>;
 
-  constructor(
-    private svgService: SvgService,
-    private displayService: DisplayService
-  ) {
+  constructor(private svgService: SvgService) {
     this.mouseMoved$ = new Subject<MouseEvent>();
     this.mouseUp$ = new Subject<MouseEvent>();
   }

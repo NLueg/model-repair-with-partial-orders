@@ -15,7 +15,10 @@
   <ng-container *ngIf="partialOrderCount$ | async as partialOrderCount">
     <div [style.display]="hasPartialOrders ? 'block' : 'none'">
       <main>
-        <app-display class="padding full-size"></app-display>
+        <app-display
+          class="padding full-size"
+          [resetSvgPosition]="resetPositioningSubject"
+        ></app-display>
 
         <div class="button-bar">
           <div class="button-bar__group">
@@ -68,9 +71,7 @@
           (dropAction)="dropFiles($event, undefined)"
         ></app-template-button>
 
-        <app-source-file-textarea
-          [resetEvent]="resetPositioningSubject.asObservable()"
-        ></app-source-file-textarea>
+        <app-source-file-textarea></app-source-file-textarea>
 
         <app-download></app-download>
       </div>

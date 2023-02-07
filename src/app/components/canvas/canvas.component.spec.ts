@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DisplayService } from '../../services/display.service';
 import { SvgService } from '../../services/svg/svg.service';
 import { CanvasComponent } from './canvas.component';
 
@@ -11,10 +10,7 @@ describe('CanvasComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [CanvasComponent],
-      providers: [
-        { provide: SvgService, useValue: {} },
-        { provide: DisplayService, useValue: {} },
-      ],
+      providers: [{ provide: SvgService, useValue: {} }],
     }).compileComponents();
   });
 
