@@ -23,7 +23,10 @@ import {
   LayoutResult,
   LayoutService,
 } from '../../services/layout/layout.service';
-import { NewTransitionSolution } from '../../services/repair/repair.model';
+import {
+  NewTransitionSolution,
+  PlaceSolution,
+} from '../../services/repair/repair.model';
 import { RepairService } from '../../services/repair/repair.service';
 import { SvgService } from '../../services/svg/svg.service';
 import { CanvasComponent } from '../canvas/canvas.component';
@@ -39,7 +42,7 @@ export class DisplayComponent implements OnInit {
 
   computingSolutions = false;
 
-  layoutResult$?: Observable<LayoutResult>;
+  layoutResult$?: Observable<LayoutResult & { renderChanges: boolean }>;
   @ViewChild('canvas') canvas: CanvasComponent | undefined;
   @ViewChild('svg_wrapper') svgWrapper: ElementRef<HTMLElement> | undefined;
 
@@ -84,7 +87,7 @@ export class DisplayComponent implements OnInit {
           switchMap((partialOrders) => {
             if (!partialOrders || partialOrders.length === 0) {
               this.repairService.saveNewSolutions([], 0);
-              return of([]);
+              return of({ solutions: [], renderChanges: true });
             }
 
             const invalidPlaces: {
@@ -124,10 +127,17 @@ export class DisplayComponent implements OnInit {
               .computeSolutions(partialOrders, net, invalidPlaces)
               .pipe(
                 tap(() => (this.computingSolutions = false)),
-                startWith([])
+                map((solutions) => ({
+                  solutions,
+                  renderChanges: false,
+                })),
+                startWith({
+                  solutions: [] as PlaceSolution[],
+                  renderChanges: false,
+                })
               );
           }),
-          map((solutions) => {
+          map(({ solutions, renderChanges }) => {
             for (const place of solutions) {
               if (place.type === 'newTransition') {
                 continue;
@@ -137,15 +147,16 @@ export class DisplayComponent implements OnInit {
                 foundPlace.issueStatus = place.type;
               }
             }
-            return net;
+            return { net, renderChanges };
           }),
-          switchMap((net) =>
-            this.resetSvgPosition
+          switchMap(({ net, renderChanges }) =>
+            (this.resetSvgPosition
               ? this.resetSvgPosition.pipe(
                   startWith(undefined),
                   map(() => this.layoutService.layout(clonedeep(net)))
                 )
               : of(this.layoutService.layout(clonedeep(net)))
+            ).pipe(map((result) => ({ ...result, renderChanges })))
           )
         )
       )

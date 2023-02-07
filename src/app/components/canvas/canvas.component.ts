@@ -29,7 +29,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
   @ViewChild('drawingArea') drawingArea: ElementRef<SVGElement> | undefined;
 
   @Input()
-  layoutResult$?: Observable<LayoutResult>;
+  layoutResult$?: Observable<LayoutResult & { renderChanges: boolean }>;
 
   @Input()
   canvasHeight = 400;
@@ -58,7 +58,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.layoutResult$
       ?.pipe(
-        map(({ net, point }) => {
+        map(({ net, point, renderChanges }) => {
           let offset: Point;
 
           if (this.kill$) {
@@ -87,12 +87,16 @@ export class CanvasComponent implements OnInit, OnDestroy {
             offset = { x: 0, y: 0 };
           }
           this.offset = offset;
-          return net;
+          return { net, renderChanges };
         }),
-        switchMap((net) =>
+        switchMap(({ net, renderChanges }) =>
           this.redrewRequest$.pipe(
             map(() => {
-              return this.svgService.createNetElements(net, this.offset);
+              return this.svgService.createNetElements(
+                net,
+                this.offset,
+                renderChanges
+              );
             })
           )
         )

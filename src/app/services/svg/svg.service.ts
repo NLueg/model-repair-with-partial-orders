@@ -36,10 +36,15 @@ export class SvgService {
   private readonly ARC_WEIGHT_OFFSET_HORIZONTAL = 10;
 
   private lastElements: SVGElement[] = [];
+  private currentElements: SVGElement[] = [];
 
   constructor(private repairService: RepairService) {}
 
-  createNetElements(net: PetriNet, offset: Point): Array<SVGElement> {
+  createNetElements(
+    net: PetriNet,
+    offset: Point,
+    renderChanges: boolean
+  ): Array<SVGElement> {
     const result: Array<SVGElement> = [];
     for (const transition of net.transitions) {
       result.push(...this.createTransitionElement(transition, offset));
@@ -74,7 +79,12 @@ export class SvgService {
         element.appendChild(titleEl);
       });
     }
-    this.lastElements = result;
+
+    if (renderChanges) {
+      this.lastElements = this.currentElements;
+      this.currentElements = result;
+    }
+
     return result;
   }
 
