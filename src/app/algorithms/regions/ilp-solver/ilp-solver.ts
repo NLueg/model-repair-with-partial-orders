@@ -391,7 +391,7 @@ export class IlpSolver {
   ): Array<SubjectTo> {
     const variables =
       event.previousEvents.length === 0
-        ? [this.variable(this.getPoEventId(event.id, i))]
+        ? [this.variable(this.getStartOfPoEventId(event.id, i))]
         : [];
 
     for (const pre of event.previousEvents) {
@@ -418,7 +418,7 @@ export class IlpSolver {
   private tokenFlow(event: EventItem, i: number): Array<SubjectTo> {
     const variables =
       event.previousEvents.length === 0
-        ? [this.variable(this.getPoEventId(event.id, i))]
+        ? [this.variable(this.getStartOfPoEventId(event.id, i))]
         : [];
 
     for (const pre of event.previousEvents) {
@@ -458,7 +458,7 @@ export class IlpSolver {
   ): Array<SubjectTo> {
     const variables = events
       .filter((e) => e.previousEvents.length === 0)
-      .map((e) => this.variable(this.getPoEventId(e.id, i), -1));
+      .map((e) => this.variable(this.getStartOfPoEventId(e.id, i), -1));
     variables.push(this.variable(VariableName.INITIAL_MARKING));
     return this.equal(variables, 0).constraints;
   }
@@ -657,6 +657,12 @@ export class IlpSolver {
 
   private getPoEventId(id: string, i: number): string {
     const d = `${i}${this.PO_ARC_SEPARATOR}${id}`;
+    this.poVariableNames.add(d);
+    return d;
+  }
+
+  private getStartOfPoEventId(id: string, i: number) {
+    const d = `${i}${this.PO_ARC_SEPARATOR}${VariableName.INITIAL_MARKING}${this.PO_ARC_SEPARATOR}${id}`;
     this.poVariableNames.add(d);
     return d;
   }

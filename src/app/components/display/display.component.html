@@ -21,7 +21,7 @@
 
   <div [style.opacity]="computingSolutions ? 1 : 0" class="solutions-loading">
     <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
-    Computing solutions!
+    Computing solutions ...
   </div>
 
   <ng-container *ngIf="transitionSolutions$ | async as transitionSolutions">
