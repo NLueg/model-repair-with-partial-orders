@@ -7,6 +7,7 @@ import {
   addEventItem,
   addPlace,
   addTransition,
+  generateEventItem,
   getElementsWithArcs,
   setRefs,
 } from '../../classes/diagram/functions/net-helper.fn';
@@ -157,15 +158,7 @@ export class ParserService {
             }
 
             const id = eventId ?? conceptName;
-            const newEvent: EventItem = {
-              id,
-              label: conceptName,
-              type: 'event',
-              incomingArcs: [],
-              outgoingArcs: [],
-              nextEvents: [],
-              previousEvents: [],
-            };
+            const newEvent: EventItem = generateEventItem(id, conceptName);
             if (!addEventItem(currentPartialOrder, newEvent)) {
               this.toastr.warning(
                 `Log contains duplicate transitions`,

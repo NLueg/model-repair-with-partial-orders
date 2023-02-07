@@ -18,6 +18,18 @@ export function addTransition(
   return true;
 }
 
+export function generateEventItem(id: string, label?: string): EventItem {
+  return {
+    id,
+    label: label ?? id,
+    type: 'event',
+    incomingArcs: [],
+    outgoingArcs: [],
+    nextEvents: [],
+    previousEvents: [],
+  };
+}
+
 export function addEventItem(
   partialOrder: PartialOrder | undefined,
   element: EventItem

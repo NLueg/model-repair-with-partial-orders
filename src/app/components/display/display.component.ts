@@ -1,19 +1,23 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { MatButton } from '@angular/material/button';
+import clonedeep from 'lodash.clonedeep';
 import {
   BehaviorSubject,
   map,
   Observable,
   of,
   shareReplay,
+  startWith,
   Subject,
   switchMap,
+  tap,
 } from 'rxjs';
 
 import { FirePartialOrder } from '../../algorithms/fire-partial-orders/fire-partial-order';
 import { PetriNetSolutionService } from '../../algorithms/regions/petri-net-solution.service';
 import { PartialOrder } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
+import { Place } from '../../classes/diagram/place';
 import { DisplayService } from '../../services/display.service';
 import {
   LayoutResult,
@@ -29,8 +33,13 @@ import { CanvasComponent } from '../canvas/canvas.component';
   templateUrl: './display.component.html',
   styleUrls: ['./display.component.scss'],
 })
-export class DisplayComponent {
-  layoutResult$: Observable<LayoutResult>;
+export class DisplayComponent implements OnInit {
+  @Input()
+  resetSvgPosition?: Observable<void>;
+
+  computingSolutions = false;
+
+  layoutResult$?: Observable<LayoutResult>;
   @ViewChild('canvas') canvas: CanvasComponent | undefined;
   @ViewChild('svg_wrapper') svgWrapper: ElementRef<HTMLElement> | undefined;
 
@@ -65,11 +74,13 @@ export class DisplayComponent {
       map((partialOrders) => partialOrders?.length ?? 0),
       shareReplay(1)
     );
+  }
 
+  ngOnInit(): void {
     this.layoutResult$ = this.displayService.getPetriNet$().pipe(
-      map((currentRun) => this.layoutService.layout(currentRun)),
-      switchMap(({ net, point }) =>
+      switchMap((net) =>
         this.displayService.getPartialOrders$().pipe(
+          startWith([]),
           switchMap((partialOrders) => {
             if (!partialOrders || partialOrders.length === 0) {
               this.repairService.saveNewSolutions([], 0);
@@ -93,21 +104,31 @@ export class DisplayComponent {
               });
             }
 
+            const placeIds = Object.keys(invalidPlaces);
             this.invalidPlaceCount$.next({
-              count: Object.keys(invalidPlaces).length,
+              count: placeIds.length,
             });
 
-            return this.petriNetRegionsService.computeSolutions(
-              partialOrders,
-              net,
-              invalidPlaces
+            const places: Place[] = net.places.filter((place) =>
+              placeIds.includes(place.id)
             );
-          }),
-          map((invalidPlaces) => {
             net.places.forEach((place) => {
               place.issueStatus = undefined;
             });
-            for (const place of invalidPlaces) {
+            places.forEach((invalidPlace) => {
+              invalidPlace.issueStatus = 'error';
+            });
+
+            this.computingSolutions = true;
+            return this.petriNetRegionsService
+              .computeSolutions(partialOrders, net, invalidPlaces)
+              .pipe(
+                tap(() => (this.computingSolutions = false)),
+                startWith([])
+              );
+          }),
+          map((solutions) => {
+            for (const place of solutions) {
               if (place.type === 'newTransition') {
                 continue;
               }
@@ -116,8 +137,16 @@ export class DisplayComponent {
                 foundPlace.issueStatus = place.type;
               }
             }
-            return { net, point };
-          })
+            return net;
+          }),
+          switchMap((net) =>
+            this.resetSvgPosition
+              ? this.resetSvgPosition.pipe(
+                  startWith(undefined),
+                  map(() => this.layoutService.layout(clonedeep(net)))
+                )
+              : of(this.layoutService.layout(clonedeep(net)))
+          )
         )
       )
     );

@@ -38,4 +38,19 @@
       margin: 4px 0;
     }
   }
+
+  .solutions-loading {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+
+    ::ng-deep mat-progress-spinner {
+      margin-bottom: 4px;
+
+      &, svg {
+        height: 50px !important;
+        width: 50px !important;
+      }
+    }
+  }
 }

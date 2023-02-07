@@ -19,6 +19,11 @@
     </div>
   </div>
 
+  <div *ngIf="computingSolutions" class="solutions-loading">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    Computing solutions!
+  </div>
+
   <ng-container *ngIf="transitionSolutions$ | async as transitionSolutions">
     <div class="inner-container" *ngIf="tracesCount$ | async as tracesCount">
       {{ tracesCount }} traces loaded
