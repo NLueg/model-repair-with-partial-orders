@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import {
   combineLatest,
@@ -13,7 +13,6 @@ import { isNetEmpty, PetriNet } from '../../classes/diagram/petri-net';
 import { DisplayService } from '../../services/display.service';
 import { ParserService } from '../../services/parser/parser.service';
 import { UploadService } from '../../services/upload/upload.service';
-import { xesExpectedResult } from '../../services/upload/xes/xes-.example';
 
 type Valid = 'error' | 'warn' | 'success';
 
@@ -25,7 +24,7 @@ const emptyContent =
   templateUrl: './source-file-textarea.component.html',
   styleUrls: ['./source-file-textarea.component.scss'],
 })
-export class SourceFileTextareaComponent implements OnDestroy, OnInit {
+export class SourceFileTextareaComponent implements OnDestroy {
   @Input() events: Observable<void> | undefined;
   private _sub: Subscription;
   private _fileSub: Subscription;
@@ -76,50 +75,6 @@ export class SourceFileTextareaComponent implements OnDestroy, OnInit {
     ]).subscribe(([petriNet, errors]) => {
       this.updateValidationForNet(petriNet, errors);
     });
-  }
-
-  ngOnInit(): void {
-    this.logTextarea.setValue(xesExpectedResult);
-
-    this.petriNetTextarea.setValue(`.type pn
-.transitions
-Register Register
-Analyze_Defect Analyze_Defect
-Inform_User Inform_User
-Repair_(Complex) Repair_(Complex)
-Test_Repair Test_Repair
-Archive_Repair Archive_Repair
-Repair_(Simple) Repair_(Simple)
-Restart_Repair Restart_Repair
-.places
-p0 0
-p1 1
-p2 0
-p3 0
-p4 0
-p5 0
-p6 0
-p7 0
-.arcs
-Archive_Repair p0
-p1 Register
-Register p2
-p2 Analyze_Defect
-Analyze_Defect p3
-p3 Repair_(Complex)
-p3 Repair_(Simple)
-Restart_Repair p3
-Test_Repair p4
-p4 Archive_Repair
-p4 Restart_Repair
-Repair_(Complex) p5
-p5 Test_Repair
-Repair_(Simple) p5
-Inform_User p6
-p6 Archive_Repair
-Analyze_Defect p7
-p7 Inform_User
-`);
   }
 
   ngOnDestroy(): void {

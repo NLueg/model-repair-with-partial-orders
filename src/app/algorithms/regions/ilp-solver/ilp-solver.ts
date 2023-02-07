@@ -389,7 +389,11 @@ export class IlpSolver {
     i: number,
     partialOrder: PartialOrder
   ): Array<SubjectTo> {
-    const variables = [this.variable(this.getPoEventId(event.id, i))];
+    const variables =
+      event.previousEvents.length === 0
+        ? [this.variable(this.getPoEventId(event.id, i))]
+        : [];
+
     for (const pre of event.previousEvents) {
       variables.push(this.variable(this.getPoArcId(pre, event.id, i)));
 
@@ -412,7 +416,11 @@ export class IlpSolver {
   }
 
   private tokenFlow(event: EventItem, i: number): Array<SubjectTo> {
-    const variables = [this.variable(this.getPoEventId(event.id, i))];
+    const variables =
+      event.previousEvents.length === 0
+        ? [this.variable(this.getPoEventId(event.id, i))]
+        : [];
+
     for (const pre of event.previousEvents) {
       variables.push(this.variable(this.getPoArcId(pre, event.id, i)));
     }
@@ -448,9 +456,9 @@ export class IlpSolver {
     events: Array<EventItem>,
     i: number
   ): Array<SubjectTo> {
-    const variables = events.map((e) =>
-      this.variable(this.getPoEventId(e.id, i), -1)
-    );
+    const variables = events
+      .filter((e) => e.previousEvents.length === 0)
+      .map((e) => this.variable(this.getPoEventId(e.id, i), -1));
     variables.push(this.variable(VariableName.INITIAL_MARKING));
     return this.equal(variables, 0).constraints;
   }
