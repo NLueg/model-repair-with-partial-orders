@@ -324,7 +324,7 @@ export class IlpSolver {
     const result$ = new ReplaySubject<ProblemSolutionWithoutType>(1);
 
     const result = this.glpk.solve(ilp, {
-      msglev: MessageLevel.ERROR,
+      msglev: MessageLevel.ALL,
     });
 
     // Hack for testing :/
@@ -343,6 +343,15 @@ export class IlpSolver {
     partialOrders: Array<PartialOrder>
   ): Array<SubjectTo> {
     const baseIlpConstraints: Array<SubjectTo> = [];
+
+    /* const traverser = new TraceMultisetEquivalentStateTraverser();
+    traverser.traverseMultisetEquivalentStates(
+      partialOrders,
+      (prefix, step) => {
+        console.log(prefix);
+        baseIlpConstraints.push(...this.firingRule(prefix, step));
+      }
+    ); */
 
     for (let i = 0; i < partialOrders.length; i++) {
       const events = partialOrders[i].events;

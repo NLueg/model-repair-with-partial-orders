@@ -7,6 +7,7 @@ import {
   addEventItem,
   addPlace,
   addTransition,
+  generateEventItem,
   getElementsWithArcs,
   setRefs,
 } from '../../classes/diagram/functions/net-helper.fn';
@@ -62,11 +63,14 @@ export class ParserService {
     let followsIndex = 3;
     let attributesCounter = 1;
 
+    let currentCaseIsPartialOrdered = false;
     let currentCaseId: number | undefined;
 
     const returnList: PartialOrder[] = [];
     let currentPartialOrder: PartialOrder | undefined;
     let lastCaseId: string | undefined;
+
+    const totallyOrderedTraces: PartialOrder[] = [];
 
     for (const line of contentLines) {
       const trimmedLine = line.trim();
@@ -142,13 +146,21 @@ export class ParserService {
               .map((s) => s.trim())
               .filter((s) => !!s);
 
+            currentCaseIsPartialOrdered =
+              currentCaseIsPartialOrdered || follows.length > 0;
+
             if (currentCaseId !== caseId) {
               if (currentPartialOrder) {
-                determineInitialAndFinalEvents(currentPartialOrder);
-                returnList.push(currentPartialOrder);
+                if (currentCaseIsPartialOrdered) {
+                  determineInitialAndFinalEvents(currentPartialOrder);
+                  returnList.push(currentPartialOrder);
+                } else {
+                  totallyOrderedTraces.push(currentPartialOrder);
+                }
               }
 
               lastCaseId = undefined;
+              currentCaseIsPartialOrdered = false;
               currentCaseId = caseId;
               currentPartialOrder = {
                 arcs: [],
@@ -194,9 +206,15 @@ export class ParserService {
       }
     }
     if (currentPartialOrder) {
-      determineInitialAndFinalEvents(currentPartialOrder);
-      returnList.push(currentPartialOrder);
+      if (currentCaseIsPartialOrdered) {
+        determineInitialAndFinalEvents(currentPartialOrder);
+        returnList.push(currentPartialOrder);
+      } else {
+        totallyOrderedTraces.push(currentPartialOrder);
+      }
     }
+
+    returnList.push(...totallyOrderedTraces);
 
     if (returnList.length === 0 && errors.size === 0) {
       errors.add(`No parsable traces where found`);
