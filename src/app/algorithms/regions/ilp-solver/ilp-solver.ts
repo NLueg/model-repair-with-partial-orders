@@ -363,6 +363,8 @@ export class IlpSolver {
       baseIlpConstraints.push(...this.initialMarking(events, i));
     }
 
+    console.log(baseIlpConstraints);
+
     return baseIlpConstraints;
   }
 
