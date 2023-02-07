@@ -19,7 +19,7 @@
     </div>
   </div>
 
-  <div *ngIf="computingSolutions" class="solutions-loading">
+  <div [style.opacity]="computingSolutions ? 1 : 0" class="solutions-loading">
     <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
     Computing solutions!
   </div>
