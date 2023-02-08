@@ -50,7 +50,7 @@ export class ParserService {
   private readonly placeRegex = /^(\S*)\s*(\d*)$/;
   private readonly arcRegex = /^(\S*)\s*(\S*)\s*(\d*)$/;
 
-  private readonly logEventRegex = /^(\S+)\s*(\S+)\s*(\S+)\s*(.*)$/;
+  private readonly logEventRegex = /^(\S+)\s*(\S+)\s*(\S+)?\s*(.*)$/;
 
   parsePartialOrders(content: string, errors: Set<string>): PartialOrder[] {
     const contentLines = content.split('\n');
@@ -59,8 +59,8 @@ export class ParserService {
 
     let caseIdIndex = 0;
     let conceptNameIndex = 1;
-    let eventIdIndex = 2;
-    let followsIndex = 3;
+    let eventIdIndex = -1;
+    let followsIndex = -1;
     let attributesCounter = 1;
 
     let currentCaseId: number | undefined;
@@ -136,12 +136,20 @@ export class ParserService {
             const caseId = Number(match[caseIdIndex]);
             const conceptName = match[conceptNameIndex];
             const eventId = match[eventIdIndex];
-            const follows = match[followsIndex]
-              .replace('[', '')
-              .replace(']', '')
-              .split(',')
-              .map((s) => s.trim())
-              .filter((s) => !!s);
+
+            const isPartialOrder =
+              followsIndex !== -1 &&
+              match[followsIndex].includes('[') &&
+              match[followsIndex].includes(']');
+            const follows =
+              followsIndex === -1
+                ? []
+                : match[followsIndex]
+                    .replace('[', '')
+                    .replace(']', '')
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter((s) => !!s);
 
             if (currentCaseId !== caseId) {
               if (currentPartialOrder) {
@@ -157,35 +165,30 @@ export class ParserService {
               };
             }
 
-            const id = eventId ?? conceptName;
-            const newEvent: EventItem = generateEventItem(id, conceptName);
-            if (!addEventItem(currentPartialOrder, newEvent)) {
-              this.toastr.warning(
-                `Log contains duplicate transitions`,
-                `Duplicate transitions are ignored`
-              );
-            } else {
-              if (lastCaseId || follows.length > 0) {
-                if (follows.length === 0 && lastCaseId) {
+            const id = addEventItem(
+              currentPartialOrder,
+              generateEventItem(eventId ?? conceptName, conceptName)
+            );
+            if (lastCaseId || isPartialOrder) {
+              if (isPartialOrder) {
+                follows.forEach((follow) => {
                   this.addArcToPartialOrder(currentPartialOrder, {
                     target: id,
-                    source: lastCaseId,
+                    source: follow,
                     weight: 1,
                     breakpoints: [],
                   });
-                } else if (follows.length > 0) {
-                  follows.forEach((follow) => {
-                    this.addArcToPartialOrder(currentPartialOrder, {
-                      target: id,
-                      source: follow,
-                      weight: 1,
-                      breakpoints: [],
-                    });
-                  });
-                }
+                });
+              } else if (lastCaseId) {
+                this.addArcToPartialOrder(currentPartialOrder, {
+                  target: id,
+                  source: lastCaseId,
+                  weight: 1,
+                  breakpoints: [],
+                });
               }
-              lastCaseId = id;
             }
+            lastCaseId = id;
             break;
           } else {
             errors.add(`Unable to parse log`);
