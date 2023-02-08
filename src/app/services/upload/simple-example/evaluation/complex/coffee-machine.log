@@ -1,0 +1,23 @@
+.type log
+.attributes
+case-id
+concept:name
+event-id
+follows[]
+.events
+1 Kaffeebohnen_mahlen km []
+1 Kaffeemaschine_entriegeln ke []
+1 Wasser_mit_Glaskanne_holen wgh []
+1 Filter_leeren fl [ke]
+1 Filter_füllen ff [km, fl]
+1 Wasser_einfüllen we [wgh, ke]
+1 Kaffeekanne_auswaschen ka [ke]
+1 Zusammensetzen_und_starten e [ka, we, ff]
+2 Kaffeebohnen_mahlen km []
+2 Kaffeemaschine_entriegeln ke []
+2 Filter_leeren fl [ke]
+2 Filter_füllen ff [km, fl]
+2 Kaffeekanne_auswaschen ka [ke]
+2 Wasser_mit_Kaffeekanne_holen wkh [ka]
+2 Wasser_einfüllen we [wkh]
+2 Zusammensetzen_und_starten e [we, ff]

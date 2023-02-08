@@ -6,8 +6,18 @@ import { first, map, Observable, Subject } from 'rxjs';
 import { DisplayService } from './services/display.service';
 import { NetCommandService } from './services/repair/net-command.service';
 import {
-  colloquiumLog,
-  colloquiumNet,
+  andLog,
+  andPetriNet,
+  coffeeMachineLog,
+  coffeeMachineNet,
+  loopLog,
+  loopPetriNet,
+  repairExampleLog,
+  repairExampleNet,
+  skipLog,
+  skipNet,
+} from './services/upload/simple-example/evaluation/evaluation';
+import {
   simpleExampleLog,
   simpleExamplePetriNet,
 } from './services/upload/simple-example/simple-example-texts';
@@ -66,12 +76,31 @@ export class AppComponent implements OnInit {
     });
   }
 
-  downloadColloquiumExample(): void {
+  downloadEvaluationFiles(): void {
     const zip = new JSZip();
-    zip.file('colloquium-net.pn', colloquiumNet);
-    zip.file('colloquium-log.log', colloquiumLog);
+
+    const andFolder = zip.folder('1 - and');
+    andFolder?.file('and.log', andLog);
+    andFolder?.file('and.pn', andPetriNet);
+
+    const loopFolder = zip.folder('2 - loop');
+    loopFolder?.file('loop.log', loopLog);
+    loopFolder?.file('loop.pn', loopPetriNet);
+
+    const eventSkipFolder = zip.folder('3 - event-skip');
+    eventSkipFolder?.file('event-skip.log', skipLog);
+    eventSkipFolder?.file('event-skip.pn', skipNet);
+
+    const repairExample = zip.folder('4 - repair-example');
+    repairExample?.file('repair-example.log', repairExampleLog);
+    repairExample?.file('repair-example.pn', repairExampleNet);
+
+    const coffeeMachine = zip.folder('5 - coffee-machine');
+    coffeeMachine?.file('coffee-machine.log', coffeeMachineLog);
+    coffeeMachine?.file('coffee-machine.pn', coffeeMachineNet);
+
     zip.generateAsync({ type: 'blob' }).then((content) => {
-      saveAs(content, 'colloquium-example.zip');
+      saveAs(content, 'evaluation.zip');
     });
   }
 
