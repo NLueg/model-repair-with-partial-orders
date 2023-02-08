@@ -90,6 +90,7 @@ export class DisplayComponent implements OnInit {
               return of({ solutions: [], renderChanges: true });
             }
 
+            this.computingSolutions = true;
             const invalidPlaces: {
               [key: string]: number;
             } = {};
@@ -122,7 +123,6 @@ export class DisplayComponent implements OnInit {
               invalidPlace.issueStatus = 'error';
             });
 
-            this.computingSolutions = true;
             return this.petriNetRegionsService
               .computeSolutions(partialOrders, net, invalidPlaces)
               .pipe(

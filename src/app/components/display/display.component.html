@@ -19,7 +19,10 @@
     </div>
   </div>
 
-  <div [style.opacity]="computingSolutions ? 1 : 0" class="solutions-loading">
+  <div
+    [class.solutions-loading--visible]="computingSolutions"
+    class="solutions-loading"
+  >
     <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
     Computing solutions ...
   </div>

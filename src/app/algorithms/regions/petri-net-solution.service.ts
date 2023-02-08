@@ -27,6 +27,8 @@ const createGlpk: Promise<() => Promise<GLPK>> = import('glpk.js').then(
   providedIn: 'root',
 })
 export class PetriNetSolutionService {
+  private glpk$ = from(createGlpk.then((create) => create()));
+
   constructor(private repairService: RepairService) {}
 
   computeSolutions(
@@ -34,7 +36,7 @@ export class PetriNetSolutionService {
     petriNet: PetriNet,
     invalidPlaces: { [key: string]: number }
   ): Observable<PlaceSolution[]> {
-    return from(createGlpk.then((create) => create())).pipe(
+    return this.glpk$.pipe(
       switchMap((glpk) => {
         const invalidPlaceList: SolutionGeneratorType[] = Object.keys(
           invalidPlaces
