@@ -171,13 +171,6 @@ export class IlpSolver {
                 invalidPlace!
               ),
             },
-            {
-              type: 'changeOutgoing' as SolutionType,
-              ilp: this.populateIlpBySameIncomingWeights(
-                this.baseIlp,
-                invalidPlace!
-              ),
-            },
           ];
 
           return combineLatest(
@@ -195,10 +188,9 @@ export class IlpSolver {
       toArray(),
       map((placeSolutions) => {
         const typeToSolution: { [key in SolutionType]: Vars[] } = {
-          changeIncoming: [],
-          changeOutgoing: [],
-          multiplePlaces: [],
           changeMarking: [],
+          changeIncoming: [],
+          multiplePlaces: [],
         };
 
         placeSolutions.forEach((placeSolution) => {
@@ -227,7 +219,6 @@ export class IlpSolver {
   ) {
     const order: SolutionType[] = [
       'changeMarking',
-      'changeOutgoing',
       'changeIncoming',
       'multiplePlaces',
     ];
@@ -347,8 +338,6 @@ export class IlpSolver {
     for (let i = 0; i < partialOrders.length; i++) {
       const events = partialOrders[i].events;
       for (const e of events) {
-        console.debug(`--- Start Event ${e.id} ---`);
-
         if (!this.petriNet.transitions.find((t) => e.label === t.label)) {
           this.constraintsForNewTransitions[e.label] = [
             ...this.firingRule(e, i, partialOrders[i]),
@@ -359,12 +348,8 @@ export class IlpSolver {
           baseIlpConstraints.push(...this.tokenFlow(e, i));
         }
       }
-      console.debug(`------------------------`);
       baseIlpConstraints.push(...this.initialMarking(events, i));
     }
-
-    console.log(baseIlpConstraints);
-
     return baseIlpConstraints;
   }
 

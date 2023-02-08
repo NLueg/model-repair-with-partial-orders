@@ -27,7 +27,7 @@
     text-align: left;
     white-space: normal;
     line-height: normal;
-    min-height: 48px;
+    min-height: 38px;
     padding: var(--spaces) var(--spaces-x2);
 
     &:hover {
@@ -36,7 +36,7 @@
   }
 
   button[mat-button] {
-    font-weight: normal;
+    font-weight: 600;
   }
 
   .no-solution-text {

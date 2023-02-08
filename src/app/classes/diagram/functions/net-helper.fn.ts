@@ -33,14 +33,17 @@ export function generateEventItem(id: string, label?: string): EventItem {
 export function addEventItem(
   partialOrder: PartialOrder | undefined,
   element: EventItem
-): boolean {
+): string {
   const contained = partialOrder?.events.some((item) => item.id == element.id);
   if (contained) {
-    return false;
+    const countWithSameLabel = partialOrder?.events.filter(
+      (item) => item.label == element.label
+    );
+    element.id += countWithSameLabel?.length ?? 1;
   }
 
   partialOrder?.events.push(element);
-  return true;
+  return element.id;
 }
 
 export function addPlace(petriNet: PetriNet, place: Place): boolean {

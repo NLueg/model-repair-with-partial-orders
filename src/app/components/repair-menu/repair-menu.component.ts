@@ -107,10 +107,9 @@ export class RepairMenuComponent implements OnInit {
     solutions: AutoRepairWithSolutionType[]
   ): { text: LabelWithTooltip; solution: AutoRepair }[] {
     const orderToDisplay: SolutionType[] = [
-      'changeOutgoing',
+      'changeMarking',
       'changeIncoming',
       'multiplePlaces',
-      'changeMarking',
     ];
 
     return solutions
@@ -133,7 +132,7 @@ function generateTextForAutoRepair(
 
   if (solution.type === 'replace-place') {
     return {
-      label: `${baseText}Replace place with ${solution.places.length}`,
+      label: baseText,
       tooltip: solution.places
         .map(
           (place, index) => `
@@ -145,49 +144,29 @@ function generateTextForAutoRepair(
   }
   if (solution.type === 'marking') {
     return {
-      label: `${baseText}Change marking to ${solution.newMarking}`,
+      label: baseText,
       tooltip: `Change marking to ${solution.newMarking}`,
     };
   }
 
-  return handleModifyPlace(solution);
-}
-
-function handleModifyPlace(
-  solution: { type: 'modify-place' } & SinglePlaceParameter & {
-      repairType: SolutionType;
-    }
-): LabelWithTooltip {
-  const incomingText =
-    solution.incoming.length > 0 ? `${solution.incoming.length} incoming` : '';
-  const outgoingText =
-    solution.outgoing.length > 0 ? `${solution.outgoing.length} outgoing` : '';
-  const andText = incomingText && outgoingText ? ' and ' : '';
-  const markingText = solution.newMarking
-    ? ` with marking ${solution.newMarking}`
-    : '';
-
   return {
-    label: `${generateBaseText(
-      solution
-    )}Update place to have ${incomingText}${andText}${outgoingText} arcs${markingText}`,
+    label: baseText,
     tooltip: tooltipForSinglePlaceParameter(solution),
   };
 }
 
 const solutionTypeToText: { [key in SolutionType]: string } = {
   changeMarking: 'Add marking',
-  changeOutgoing: 'Change outgoing arcs',
-  changeIncoming: 'Change incoming arcs',
-  multiplePlaces: 'Generate new place',
+  changeIncoming: 'Add ingoing arcs',
+  multiplePlaces: 'Add minimal region',
 };
 
 function generateBaseText(solution: AutoRepairWithSolutionType): string {
   let text = solutionTypeToText[solution.repairType];
   if (solution.type === 'replace-place' && solution.places.length > 1) {
-    text = `Split in multiple places`;
+    text = `Add minimal regions`;
   }
-  return `<b>${text}</b>:<br/>`;
+  return text;
 }
 
 function tooltipForSinglePlaceParameter(

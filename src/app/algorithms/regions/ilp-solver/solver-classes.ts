@@ -31,7 +31,6 @@ export interface SolutionVariable {
 }
 
 export type SolutionType =
-  | 'changeOutgoing'
   | 'changeIncoming'
   | 'changeMarking'
   | 'multiplePlaces';
