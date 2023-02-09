@@ -502,6 +502,33 @@ export class IlpSolver {
     const result = clonedeep(baseIlp);
     this.addConstraintsForSameIncomingWeights(existingPlace, result);
     this.addConstraintsForSameOutgoingWeights(existingPlace, result);
+
+    Object.entries(this.constraintsForNewTransitions).forEach(
+      ([key, value]) => {
+        result.subjectTo = result.subjectTo.concat(
+          this.equal(
+            this.variable(
+              this.transitionVariableName(
+                key,
+                VariableName.OUTGOING_ARC_WEIGHT_PREFIX
+              )
+            ),
+            0
+          ).constraints,
+          this.equal(
+            this.variable(
+              this.transitionVariableName(
+                key,
+                VariableName.INGOING_ARC_WEIGHT_PREFIX
+              )
+            ),
+            0
+          ).constraints,
+          ...value
+        );
+      }
+    );
+
     return result;
   }
 
