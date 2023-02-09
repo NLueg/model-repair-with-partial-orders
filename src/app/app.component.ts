@@ -63,7 +63,7 @@ export class AppComponent implements OnInit {
   startEditing(count: number): void {
     if (count > 0) {
       this.hasPartialOrders = true;
-      this.resetSvgPositioning();
+      setTimeout(() => this.resetSvgPositioning());
     }
   }
 
