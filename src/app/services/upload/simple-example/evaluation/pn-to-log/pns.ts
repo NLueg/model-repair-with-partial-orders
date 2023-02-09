@@ -1,0 +1,495 @@
+export const pns = [
+  `.type pn
+.transitions
+t0 Register
+t1 Analyze_Defect
+t2 Repair_(Complex)
+t3 Test_Repair
+t4 Inform_User
+t5 Archive_Repair
+.places
+p0 0
+p1 0
+p2 0
+p3 0
+p5 0
+p6 0
+p10 0
+p11 0
+.arcs
+p0 t0
+t0 p1
+p1 t1
+t1 p2
+p2 t2
+t2 p3
+p3 t3
+t4 p5
+p5 t5
+t5 p6
+p10 t5
+t3 p10
+t1 p11
+p11 t4
+`,
+  `.type pn
+.transitions
+t0 Register
+t1 Analyze_Defect
+t2 Repair_(Simple)
+t3 Test_Repair
+t4 Inform_User
+t5 Archive_Repair
+.places
+p0 0
+p1 0
+p2 0
+p3 0
+p5 0
+p6 0
+p10 0
+p11 0
+.arcs
+p0 t0
+t0 p1
+p1 t1
+t1 p2
+p2 t2
+t2 p3
+p3 t3
+t4 p5
+p5 t5
+t5 p6
+p10 t5
+t3 p10
+t1 p11
+p11 t4
+`,
+  `.type pn
+.transitions
+t0 Register
+t1 Analyze_Defect
+t2 Repair_(Simple)
+t3 Test_Repair
+t4 Restart_Repair
+t5 Inform_User
+t6 Repair_(Simple)
+t7 Test_Repair
+t8 Archive_Repair
+.places
+p0 0
+p1 0
+p2 0
+p3 0
+p4 0
+p7 0
+p8 0
+p9 0
+p13 0
+p19 0
+p20 0
+.arcs
+p0 t0
+t0 p1
+p1 t1
+t1 p2
+p2 t2
+t2 p3
+p3 t3
+t3 p4
+p4 t4
+t6 p7
+p7 t7
+t7 p8
+p8 t8
+t8 p9
+p13 t6
+t4 p13
+p19 t8
+t5 p19
+t1 p20
+p20 t5
+`,
+  `.type pn
+.transitions
+t0 Register
+t1 Analyze_Defect
+t2 Repair_(Simple)
+t3 Inform_User
+t4 Test_Repair
+t5 Restart_Repair
+t6 Repair_(Simple)
+t7 Test_Repair
+t8 Restart_Repair
+t9 Repair_(Simple)
+t10 Test_Repair
+t11 Archive_Repair
+.places
+p0 0
+p1 0
+p2 0
+p5 0
+p6 0
+p7 0
+p8 0
+p9 0
+p10 0
+p11 0
+p12 0
+p15 0
+p16 0
+p30 0
+.arcs
+p0 t0
+t0 p1
+p1 t1
+t1 p2
+p2 t2
+t4 p5
+p5 t5
+t5 p6
+p6 t6
+t6 p7
+p7 t7
+t7 p8
+p8 t8
+t8 p9
+p9 t9
+t9 p10
+p10 t10
+t10 p11
+p11 t11
+t11 p12
+t1 p15
+p15 t3
+p16 t4
+t2 p16
+p30 t11
+t3 p30
+`,
+  `.type pn
+.transitions
+t0 Register
+t1 Analyze_Defect
+t2 Repair_(Complex)
+t3 Test_Repair
+t4 Inform_User
+t5 Restart_Repair
+t6 Repair_(Complex)
+t7 Test_Repair
+t8 Archive_Repair
+.places
+p0 0
+p1 0
+p2 0
+p3 0
+p6 0
+p7 0
+p8 0
+p9 0
+p13 0
+p16 0
+p21 0
+.arcs
+p0 t0
+t0 p1
+p1 t1
+t1 p2
+p2 t2
+t2 p3
+p3 t3
+t5 p6
+p6 t6
+t6 p7
+p7 t7
+t7 p8
+p8 t8
+t8 p9
+p13 t5
+t3 p13
+t1 p16
+p16 t4
+p21 t8
+t4 p21
+`,
+  `.type pn
+.transitions
+t0 Register
+t1 Analyze_Defect
+t2 Repair_(Simple)
+t3 Test_Repair
+t4 Restart_Repair
+t5 Inform_User
+t6 Repair_(Complex)
+t7 Test_Repair
+t8 Archive_Repair
+.places
+p0 0
+p1 0
+p2 0
+p3 0
+p4 0
+p7 0
+p8 0
+p9 0
+p13 0
+p19 0
+p20 0
+.arcs
+p0 t0
+t0 p1
+p1 t1
+t1 p2
+p2 t2
+t2 p3
+p3 t3
+t3 p4
+p4 t4
+t6 p7
+p7 t7
+t7 p8
+p8 t8
+t8 p9
+p13 t6
+t4 p13
+p19 t8
+t5 p19
+t1 p20
+p20 t5
+`,
+  `.type pn
+.transitions
+t0 Register
+t1 Analyze_Defect
+t2 Repair_(Complex)
+t3 Test_Repair
+t4 Inform_User
+t5 Restart_Repair
+t6 Repair_(Complex)
+t7 Test_Repair
+t8 Restart_Repair
+t9 Repair_(Complex)
+t10 Test_Repair
+t11 Archive_Repair
+.places
+p0 0
+p1 0
+p2 0
+p3 0
+p6 0
+p7 0
+p8 0
+p9 0
+p10 0
+p11 0
+p12 0
+p16 0
+p19 0
+p30 0
+.arcs
+p0 t0
+t0 p1
+p1 t1
+t1 p2
+p2 t2
+t2 p3
+p3 t3
+t5 p6
+p6 t6
+t6 p7
+p7 t7
+t7 p8
+p8 t8
+t8 p9
+p9 t9
+t9 p10
+p10 t10
+t10 p11
+p11 t11
+t11 p12
+p16 t5
+t3 p16
+t1 p19
+p19 t4
+p30 t11
+t4 p30
+`,
+  `.type pn
+.transitions
+t0 Register
+t1 Analyze_Defect
+t2 Repair_(Simple)
+t3 Test_Repair
+t4 Inform_User
+t5 Restart_Repair
+t6 Repair_(Simple)
+t7 Test_Repair
+t8 Restart_Repair
+t9 Repair_(Complex)
+t10 Test_Repair
+t11 Archive_Repair
+.places
+p0 0
+p1 0
+p2 0
+p3 0
+p6 0
+p7 0
+p8 0
+p9 0
+p10 0
+p11 0
+p12 0
+p16 0
+p19 0
+p30 0
+.arcs
+p0 t0
+t0 p1
+p1 t1
+t1 p2
+p2 t2
+t2 p3
+p3 t3
+t5 p6
+p6 t6
+t6 p7
+p7 t7
+t7 p8
+p8 t8
+t8 p9
+p9 t9
+t9 p10
+p10 t10
+t10 p11
+p11 t11
+t11 p12
+p16 t5
+t3 p16
+t1 p19
+p19 t4
+p30 t11
+t4 p30
+`,
+  `.type pn
+.transitions
+t0 Register
+t1 Analyze_Defect
+t2 Inform_User
+t3 Repair_(Complex)
+t4 Test_Repair
+t5 Restart_Repair
+t6 Repair_(Complex)
+t7 Test_Repair
+t8 Restart_Repair
+t9 Repair_(Complex)
+t10 Test_Repair
+t11 Restart_Repair
+t12 Repair_(Complex)
+t13 Test_Repair
+t14 Archive_Repair
+.places
+p0 0
+p1 0
+p2 0
+p4 0
+p5 0
+p6 0
+p7 0
+p8 0
+p9 0
+p10 0
+p11 0
+p12 0
+p13 0
+p14 0
+p15 0
+p18 0
+p39 0
+.arcs
+p0 t0
+t0 p1
+p1 t1
+t1 p2
+p2 t2
+t3 p4
+p4 t4
+t4 p5
+p5 t5
+t5 p6
+p6 t6
+t6 p7
+p7 t7
+t7 p8
+p8 t8
+t8 p9
+p9 t9
+t9 p10
+p10 t10
+t10 p11
+p11 t11
+t11 p12
+p12 t12
+t12 p13
+p13 t13
+t13 p14
+p14 t14
+t14 p15
+t1 p18
+p18 t3
+p39 t14
+t2 p39
+`,
+  `.type pn
+.transitions
+t0 Register
+t1 Analyze_Defect
+t2 Repair_(Simple)
+t3 Test_Repair
+t4 Restart_Repair
+t5 Repair_(Simple)
+t6 Test_Repair
+t7 Restart_Repair
+t8 Inform_User
+t9 Repair_(Simple)
+t10 Test_Repair
+.places
+p0 0
+p1 0
+p2 0
+p3 0
+p4 0
+p5 0
+p6 0
+p7 0
+p10 0
+p11 0
+p15 0
+p21 0
+p28 0
+.arcs
+p0 t0
+t0 p1
+p1 t1
+t1 p2
+p2 t2
+t2 p3
+p3 t3
+t3 p4
+p4 t4
+t4 p5
+p5 t5
+t5 p6
+p6 t6
+t6 p7
+p7 t7
+t9 p10
+p10 t10
+t10 p11
+p15 t9
+t7 p15
+t8 p21
+t1 p28
+p28 t8
+`,
+];

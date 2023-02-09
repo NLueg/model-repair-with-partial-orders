@@ -1,0 +1,41 @@
+.type pn
+.transitions
+Register Register
+Analyze_Defect Analyze_Defect
+Inform_User Inform_User
+Repair_(Complex) Repair_(Complex)
+Test_Repair Test_Repair
+Archive_Repair Archive_Repair
+Repair_(Simple) Repair_(Simple)
+Restart_Repair Restart_Repair
+.places
+p0 1
+p1 0
+p2 0
+p3 0
+p4 0
+p5 0
+p6 0
+p7 0
+p8 0
+.arcs
+p0 Register
+Archive_Repair p1
+Register p2
+p2 Analyze_Defect
+Analyze_Defect p3
+p3 Inform_User
+Test_Repair p4
+p4 Archive_Repair
+p4 Restart_Repair
+Repair_(Complex) p5
+p5 Test_Repair
+Repair_(Simple) p5
+Analyze_Defect p6
+p6 Repair_(Complex)
+p6 Repair_(Simple)
+Restart_Repair p6
+Analyze_Defect p7
+p7 Restart_Repair
+Inform_User p8
+p8 Archive_Repair

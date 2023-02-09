@@ -17,11 +17,7 @@ import {
 } from '../../classes/diagram/partial-order';
 import { PetriNet } from '../../classes/diagram/petri-net';
 import { Place } from '../../classes/diagram/place';
-import {
-  concatEvents,
-  EventItem,
-  Transition,
-} from '../../classes/diagram/transition';
+import { concatEvents, Transition } from '../../classes/diagram/transition';
 import {
   arcsAttribute,
   attributesAttribute,
@@ -414,22 +410,6 @@ export class ParserService {
       type: 'transition',
       incomingArcs: [],
       outgoingArcs: [],
-    };
-  }
-
-  private parseEventItem(trimmedLine: string): EventItem {
-    const match = this.transitionRegex.exec(trimmedLine);
-    const id = match ? match[1] : trimmedLine;
-    const label = match ? match[2] : trimmedLine;
-
-    return {
-      id,
-      label,
-      type: 'event',
-      incomingArcs: [],
-      outgoingArcs: [],
-      nextEvents: [],
-      previousEvents: [],
     };
   }
 
