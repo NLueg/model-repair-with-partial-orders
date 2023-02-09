@@ -56,6 +56,12 @@
     margin-bottom: var(--spaces);
   }
 
+  .toggle-section {
+    display: flex;
+    justify-content: center;
+    margin: var(--spaces) 0 var(--spaces-x2);
+  }
+
   .submit-button-row {
     display: flex;
     justify-content: center;

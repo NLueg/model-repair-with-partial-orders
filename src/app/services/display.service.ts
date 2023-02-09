@@ -21,6 +21,7 @@ export class DisplayService {
   private currentErrors$: Subject<Set<string>>;
   private partialOrders$: Subject<PartialOrder[] | null>;
 
+  private showSuggestions$ = new BehaviorSubject(false);
   private reset$: BehaviorSubject<Coordinates>;
 
   constructor() {
@@ -29,6 +30,14 @@ export class DisplayService {
     this.currentErrors$ = new BehaviorSubject<Set<string>>(new Set());
 
     this.reset$ = new BehaviorSubject<Coordinates>({ x: 0, y: 0 });
+  }
+
+  getShouldShowSuggestions(): Observable<boolean> {
+    return this.showSuggestions$.asObservable();
+  }
+
+  setShouldShowSuggestions(show: boolean): void {
+    this.showSuggestions$.next(show);
   }
 
   getCurrentErrors$(): Observable<Set<string>> {

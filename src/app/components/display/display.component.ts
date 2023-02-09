@@ -3,6 +3,7 @@ import { MatButton } from '@angular/material/button';
 import clonedeep from 'lodash.clonedeep';
 import {
   BehaviorSubject,
+  distinctUntilChanged,
   map,
   Observable,
   of,
@@ -51,6 +52,8 @@ export class DisplayComponent implements OnInit {
   tracesCount$: Observable<number>;
   transitionSolutions$: Observable<NewTransitionSolution[]>;
 
+  shouldShowSuggestions$: Observable<boolean>;
+
   constructor(
     private layoutService: LayoutService,
     private svgService: SvgService,
@@ -58,6 +61,10 @@ export class DisplayComponent implements OnInit {
     private petriNetRegionsService: PetriNetSolutionService,
     private repairService: RepairService
   ) {
+    this.shouldShowSuggestions$ = this.displayService
+      .getShouldShowSuggestions()
+      .pipe(distinctUntilChanged());
+
     this.invalidPlaceCount$ = new BehaviorSubject<{ count: number } | null>(
       null
     );
@@ -84,71 +91,88 @@ export class DisplayComponent implements OnInit {
       switchMap((net) =>
         this.displayService.getPartialOrders$().pipe(
           startWith([]),
-          switchMap((partialOrders) => {
-            if (!partialOrders || partialOrders.length === 0) {
-              this.repairService.saveNewSolutions([], 0);
-              return of({ solutions: [], renderChanges: true });
-            }
-
-            this.computingSolutions = true;
-            const invalidPlaces: {
-              [key: string]: number;
-            } = {};
-            for (let index = 0; index < partialOrders.length; index++) {
-              const currentInvalid = this.firePartialOrder(
-                net,
-                partialOrders[index]
-              );
-
-              currentInvalid.forEach((place) => {
-                if (invalidPlaces[place] === undefined) {
-                  invalidPlaces[place] = 0;
+          switchMap((partialOrders) =>
+            this.shouldShowSuggestions$.pipe(
+              switchMap((showSuggestions) => {
+                if (!showSuggestions) {
+                  net.places.forEach((place) => {
+                    place.issueStatus = undefined;
+                  });
+                  this.invalidPlaceCount$.next({
+                    count: 0,
+                  });
+                  this.repairService.saveNewSolutions([], 0);
+                  return of({ solutions: [], renderChanges: true });
                 }
-                invalidPlaces[place]++;
-              });
-            }
 
-            const placeIds = Object.keys(invalidPlaces);
-            this.invalidPlaceCount$.next({
-              count: placeIds.length,
-            });
+                if (!partialOrders || partialOrders.length === 0) {
+                  this.repairService.saveNewSolutions([], 0);
+                  return of({ solutions: [], renderChanges: true });
+                }
 
-            const places: Place[] = net.places.filter((place) =>
-              placeIds.includes(place.id)
-            );
-            net.places.forEach((place) => {
-              place.issueStatus = undefined;
-            });
-            places.forEach((invalidPlace) => {
-              invalidPlace.issueStatus = 'error';
-            });
+                this.computingSolutions = true;
+                const invalidPlaces: {
+                  [key: string]: number;
+                } = {};
+                for (let index = 0; index < partialOrders.length; index++) {
+                  const currentInvalid = this.firePartialOrder(
+                    net,
+                    partialOrders[index]
+                  );
 
-            return this.petriNetRegionsService
-              .computeSolutions(partialOrders, net, invalidPlaces)
-              .pipe(
-                tap(() => (this.computingSolutions = false)),
-                map((solutions) => ({
-                  solutions,
-                  renderChanges: false,
-                })),
-                startWith({
-                  solutions: [] as PlaceSolution[],
-                  renderChanges: false,
-                })
-              );
-          }),
-          map(({ solutions, renderChanges }) => {
-            for (const place of solutions) {
-              if (place.type === 'newTransition') {
-                continue;
-              }
-              const foundPlace = net.places.find((p) => p.id === place.place);
-              if (foundPlace) {
-                foundPlace.issueStatus = place.type;
-              }
-            }
-            return { net, renderChanges };
-          }),
+                  currentInvalid.forEach((place) => {
+                    if (invalidPlaces[place] === undefined) {
+                      invalidPlaces[place] = 0;
+                    }
+                    invalidPlaces[place]++;
+                  });
+                }
+
+                const placeIds = Object.keys(invalidPlaces);
+                this.invalidPlaceCount$.next({
+                  count: placeIds.length,
+                });
+
+                const places: Place[] = net.places.filter((place) =>
+                  placeIds.includes(place.id)
+                );
+                net.places.forEach((place) => {
+                  place.issueStatus = undefined;
+                });
+                places.forEach((invalidPlace) => {
+                  invalidPlace.issueStatus = 'error';
+                });
+
+                return this.petriNetRegionsService
+                  .computeSolutions(partialOrders, net, invalidPlaces)
+                  .pipe(
+                    tap(() => (this.computingSolutions = false)),
+                    map((solutions) => ({
+                      solutions,
+                      renderChanges: false,
+                    })),
+                    startWith({
+                      solutions: [] as PlaceSolution[],
+                      renderChanges: false,
+                    })
+                  );
+              }),
+              map(({ solutions, renderChanges }) => {
+                for (const place of solutions) {
+                  if (place.type === 'newTransition') {
+                    continue;
+                  }
+                  const foundPlace = net.places.find(
+                    (p) => p.id === place.place
+                  );
+                  if (foundPlace) {
+                    foundPlace.issueStatus = place.type;
+                  }
+                }
+                return { net, renderChanges };
+              })
+            )
+          ),
           switchMap(({ net, renderChanges }) =>
             (this.resetSvgPosition
               ? this.resetSvgPosition.pipe(

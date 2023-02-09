@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { first, map, Observable, Subject } from 'rxjs';
@@ -35,7 +36,7 @@ export class AppComponent implements OnInit {
   resetPositioningSubject: Subject<void> = new Subject<void>();
 
   constructor(
-    displayService: DisplayService,
+    private displayService: DisplayService,
     private uploadService: UploadService,
     public netCommandService: NetCommandService
   ) {
@@ -108,5 +109,9 @@ export class AppComponent implements OnInit {
     this.partialOrderCount$
       .pipe(first())
       .subscribe((count) => this.startEditing(count.count));
+  }
+
+  changeToggle(event: MatSlideToggleChange): void {
+    this.displayService.setShouldShowSuggestions(event.checked);
   }
 }

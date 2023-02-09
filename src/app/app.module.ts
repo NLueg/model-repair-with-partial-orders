@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BrowserModule } from '@angular/platform-browser';
@@ -60,6 +61,7 @@ import { TemplateButtonComponent } from './components/template-button/template-b
     MatDialogModule,
     OverlayModule,
     MatProgressSpinnerModule,
+    MatSlideToggleModule,
   ],
   bootstrap: [AppComponent],
 })

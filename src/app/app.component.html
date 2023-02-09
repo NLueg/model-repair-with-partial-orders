@@ -12,6 +12,16 @@
     recommendations to solve the issues.
   </p>
 
+  <section class="toggle-section">
+    <mat-slide-toggle
+      class="example-margin"
+      color="primary"
+      (change)="changeToggle($event)"
+    >
+      Activate me for repair suggestions!
+    </mat-slide-toggle>
+  </section>
+
   <ng-container *ngIf="partialOrderCount$ | async as partialOrderCount">
     <div [style.display]="hasPartialOrders ? 'block' : 'none'">
       <main>
