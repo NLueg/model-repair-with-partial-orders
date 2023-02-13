@@ -157,7 +157,7 @@ function generateTextForAutoRepair(
 
 const solutionTypeToText: { [key in SolutionType]: string } = {
   changeMarking: 'Add marking',
-  changeIncoming: 'Add ingoing arcs',
+  changeIncoming: 'Change ingoing arcs',
   multiplePlaces: 'Add minimal region',
 };
 
