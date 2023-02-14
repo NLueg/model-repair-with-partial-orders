@@ -159,7 +159,7 @@ export class IlpSolver {
             type: SolutionType;
           })[]
         ) => {
-          const ilpsToSolve = [
+          const ilpsToSolve: { type: SolutionType; ilp: LP }[] = [
             {
               type: 'changeMarking' as SolutionType,
               ilp: this.populateIlpBySameWeights(this.baseIlp, invalidPlace!),
@@ -196,15 +196,20 @@ export class IlpSolver {
         };
 
         placeSolutions.forEach((placeSolution) => {
-          placeSolution.forEach((solution) => {
-            typeToSolution[solution.type].push({
-              sum: Array.from(this.poVariableNames).reduce(
-                (acc, elem) => solution.solution.result.vars[elem] + acc,
-                0
-              ),
-              vars: solution.solution.result.vars,
+          placeSolution
+            .filter(
+              (solution) =>
+                solution.solution.result.status !== Solution.NO_SOLUTION
+            )
+            .forEach((solution) => {
+              typeToSolution[solution.type].push({
+                sum: Array.from(this.poVariableNames).reduce(
+                  (acc, elem) => solution.solution.result.vars[elem] + acc,
+                  0
+                ),
+                vars: solution.solution.result.vars,
+              });
             });
-          });
         });
 
         return Object.entries(typeToSolution)
