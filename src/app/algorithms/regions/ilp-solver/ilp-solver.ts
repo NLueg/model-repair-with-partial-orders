@@ -187,7 +187,9 @@ export class IlpSolver {
       ),
       toArray(),
       map((placeSolutions) => {
-        const typeToSolution: { [key in SolutionType]: Vars[] } = {
+        const typeToSolution: {
+          [key in SolutionType]: { sum: number; vars: Vars }[];
+        } = {
           changeMarking: [],
           changeIncoming: [],
           multiplePlaces: [],
@@ -195,17 +197,26 @@ export class IlpSolver {
 
         placeSolutions.forEach((placeSolution) => {
           placeSolution.forEach((solution) => {
-            if (solution.solution.result.status !== Solution.NO_SOLUTION) {
-              typeToSolution[solution.type].push(solution.solution.result.vars);
-            }
+            typeToSolution[solution.type].push({
+              sum: Array.from(this.poVariableNames).reduce(
+                (acc, elem) => solution.solution.result.vars[elem] + acc,
+                0
+              ),
+              vars: solution.solution.result.vars,
+            });
           });
         });
 
         return Object.entries(typeToSolution)
           .filter(([_, solutions]) => solutions.length > 0)
+          .sort(
+            ([_, first], [__, second]) =>
+              Math.max(...first.map((a) => a.sum)) -
+              Math.max(...second.map((a) => a.sum))
+          )
           .map(([type, solutions]) => ({
             type: type as SolutionType,
-            solutions,
+            solutions: solutions.map((solution) => solution.vars),
           }));
       }),
       map((foundSolutions) =>
@@ -217,23 +228,15 @@ export class IlpSolver {
   private filterSolutionsInSpecificOrder(
     foundSolutions: { type: SolutionType; solutions: Vars[] }[]
   ) {
-    const order: SolutionType[] = [
-      'changeMarking',
-      'changeIncoming',
-      'multiplePlaces',
-    ];
-
-    return foundSolutions
-      .sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type))
-      .filter((value, index) => {
-        const _value = JSON.stringify(value.solutions);
-        return (
-          index ===
-          foundSolutions.findIndex((obj) => {
-            return JSON.stringify(obj.solutions) === _value;
-          })
-        );
-      });
+    return foundSolutions.filter((value, index) => {
+      const _value = JSON.stringify(value.solutions);
+      return (
+        index ===
+        foundSolutions.findIndex((obj) => {
+          return JSON.stringify(obj.solutions) === _value;
+        })
+      );
+    });
   }
 
   /**

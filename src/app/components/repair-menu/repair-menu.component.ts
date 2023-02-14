@@ -106,22 +106,10 @@ export class RepairMenuComponent implements OnInit {
   private generateSolutionToDisplay(
     solutions: AutoRepairWithSolutionType[]
   ): { text: LabelWithTooltip; solution: AutoRepair }[] {
-    const orderToDisplay: SolutionType[] = [
-      'changeMarking',
-      'changeIncoming',
-      'multiplePlaces',
-    ];
-
-    return solutions
-      .sort(
-        (a, b) =>
-          orderToDisplay.indexOf(a.repairType) -
-          orderToDisplay.indexOf(b.repairType)
-      )
-      .map((solution) => ({
-        text: generateTextForAutoRepair(solution),
-        solution,
-      }));
+    return solutions.map((solution) => ({
+      text: generateTextForAutoRepair(solution),
+      solution,
+    }));
   }
 }
 
