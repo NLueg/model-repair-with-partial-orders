@@ -57,7 +57,6 @@ export function parseSolution(
       }
 
       const singlePlaceSolution = getSinglePlaceSolution(placeSolutions[0]);
-
       if (!singlePlaceSolution || singlePlaceSolution.type === 'marking') {
         return {
           ...singlePlaceSolution,
@@ -220,24 +219,28 @@ function checkPlaceAndReturnMarkingIfEquals(
     return solution;
   }
 
-  const incomingEquals = existingPlace.incomingArcs.every((arc) =>
-    solution.incoming.some(
-      (incoming) =>
-        incoming.transitionLabel === idTransitionToLabel[arc.source] &&
-        incoming.weight === arc.weight
-    )
-  );
+  const incomingEquals =
+    solution.incoming.length === existingPlace.incomingArcs.length &&
+    solution.incoming.every((incoming) =>
+      existingPlace.incomingArcs.some(
+        (arc) =>
+          incoming.transitionLabel === idTransitionToLabel[arc.source] &&
+          incoming.weight === arc.weight
+      )
+    );
   if (!incomingEquals) {
     return solution;
   }
 
-  const outgoingEquals = existingPlace.outgoingArcs.every((arc) =>
-    solution.outgoing.some(
-      (incoming) =>
-        incoming.transitionLabel === idTransitionToLabel[arc.target] &&
-        incoming.weight === arc.weight
-    )
-  );
+  const outgoingEquals =
+    solution.outgoing.length === existingPlace.outgoingArcs.length &&
+    solution.outgoing.every((incoming) =>
+      existingPlace.outgoingArcs.some(
+        (arc) =>
+          incoming.transitionLabel === idTransitionToLabel[arc.target] &&
+          incoming.weight === arc.weight
+      )
+    );
   if (!outgoingEquals) {
     return solution;
   }

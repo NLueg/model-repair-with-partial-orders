@@ -354,8 +354,9 @@ export class IlpSolver {
   }
 
   private setUpBaseIlp(): LP {
+    const subjectTo = this.buildBasicIlpForPartialOrders(this.partialOrders);
+
     const variablesToMinimize = Array.from(this.poVariableNames);
-    variablesToMinimize.push(VariableName.INITIAL_MARKING);
 
     return {
       name: 'ilp',
@@ -366,7 +367,7 @@ export class IlpSolver {
           return this.variable(v, 1);
         }),
       },
-      subjectTo: this.buildBasicIlpForPartialOrders(this.partialOrders),
+      subjectTo,
       generals: Array.from(this.allVariables),
     };
   }
@@ -448,37 +449,6 @@ export class IlpSolver {
       .map((e) => this.variable(this.getStartOfPoEventId(e.id, i), -1));
     variables.push(this.variable(VariableName.INITIAL_MARKING));
     return this.equal(variables, 0).constraints;
-  }
-
-  /**
-   * Generates ILP with the same incoming weights constraint.
-   * @private
-   */
-  private populateIlpBySameIncomingWeights(
-    baseIlp: LP,
-    existingPlace: Place
-  ): LP {
-    const result = clonedeep(baseIlp);
-    this.addConstraintsForSameIncomingWeights(existingPlace, result);
-
-    // Don't remove arcs to transitions that are connected with outgoing arcs
-    if (existingPlace.outgoingArcs.length > 0) {
-      existingPlace.outgoingArcs.forEach((arc) => {
-        result.subjectTo = result.subjectTo.concat(
-          this.equal(
-            this.variable(
-              this.transitionVariableName(
-                this.idToTransitionLabelMap[arc.target],
-                VariableName.OUTGOING_ARC_WEIGHT_PREFIX
-              )
-            ),
-            arc.weight
-          ).constraints
-        );
-      });
-    }
-
-    return result;
   }
 
   private populateIlpBySameOutgoingWeights(
@@ -667,12 +637,6 @@ export class IlpSolver {
       };
     }
     return null;
-  }
-
-  private getPoEventId(id: string, i: number): string {
-    const d = `${i}${this.PO_ARC_SEPARATOR}${id}`;
-    this.poVariableNames.add(d);
-    return d;
   }
 
   private getStartOfPoEventId(id: string, i: number) {
