@@ -8,7 +8,6 @@ import {
   of,
   ReplaySubject,
   switchMap,
-  tap,
   toArray,
 } from 'rxjs';
 
