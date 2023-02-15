@@ -146,13 +146,13 @@ function generateTextForAutoRepair(
 const solutionTypeToText: { [key in SolutionType]: string } = {
   changeMarking: 'Add marking',
   changeIncoming: 'Change ingoing arcs',
-  multiplePlaces: 'Add minimal region',
+  multiplePlaces: 'Generate similar place',
 };
 
 function generateBaseText(solution: AutoRepairWithSolutionType): string {
   let text = solutionTypeToText[solution.repairType];
   if (solution.type === 'replace-place' && solution.places.length > 1) {
-    text = `Add minimal regions`;
+    text = `Split place`;
   }
   return text;
 }
