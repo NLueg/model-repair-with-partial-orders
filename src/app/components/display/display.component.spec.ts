@@ -31,6 +31,7 @@ describe('DisplayComponent', () => {
           useValue: {
             getPetriNet$: () => of(parsedPetriNet),
             getPartialOrders$: () => of([]),
+            getShouldShowSuggestions: () => of(false),
           },
         },
         {

@@ -37,11 +37,6 @@ describe('PetriNetSolutionService', () => {
             place: 'p5',
             solutions: [
               {
-                newMarking: 2,
-                repairType: 'changeMarking',
-                type: 'marking',
-              },
-              {
                 incoming: [],
                 newMarking: 2,
                 outgoing: [
@@ -55,7 +50,7 @@ describe('PetriNetSolutionService', () => {
               },
               {
                 newMarking: 2,
-                repairType: 'multiplePlaces',
+                repairType: 'changeMarking',
                 type: 'marking',
               },
             ],
@@ -67,9 +62,69 @@ describe('PetriNetSolutionService', () => {
             place: 'p7',
             solutions: [
               {
-                newMarking: 2,
-                repairType: 'changeMarking',
-                type: 'marking',
+                places: [
+                  {
+                    incoming: [
+                      {
+                        transitionLabel: 'b',
+                        weight: 1,
+                      },
+                    ],
+                    newMarking: 1,
+                    outgoing: [
+                      {
+                        transitionLabel: 'd',
+                        weight: 1,
+                      },
+                    ],
+                  },
+                  {
+                    incoming: [
+                      {
+                        transitionLabel: 'd',
+                        weight: 1,
+                      },
+                    ],
+                    outgoing: [
+                      {
+                        transitionLabel: 'c',
+                        weight: 1,
+                      },
+                      {
+                        transitionLabel: 'f',
+                        weight: 1,
+                      },
+                    ],
+                  },
+                  {
+                    incoming: [
+                      {
+                        transitionLabel: 'd',
+                        weight: 1,
+                      },
+                      {
+                        transitionLabel: 'c',
+                        weight: 1,
+                      },
+                    ],
+                    outgoing: [
+                      {
+                        transitionLabel: 'c',
+                        weight: 1,
+                      },
+                      {
+                        transitionLabel: 'e',
+                        weight: 1,
+                      },
+                      {
+                        transitionLabel: 'f',
+                        weight: 1,
+                      },
+                    ],
+                  },
+                ],
+                repairType: 'multiplePlaces',
+                type: 'replace-place',
               },
               {
                 incoming: [
@@ -93,92 +148,9 @@ describe('PetriNetSolutionService', () => {
                 type: 'modify-place',
               },
               {
-                places: [
-                  {
-                    incoming: [
-                      {
-                        transitionLabel: 'd',
-                        weight: 1,
-                      },
-                      {
-                        transitionLabel: 'b',
-                        weight: 1,
-                      },
-                    ],
-                    newMarking: 1,
-                    outgoing: [
-                      {
-                        transitionLabel: 'd',
-                        weight: 1,
-                      },
-                      {
-                        transitionLabel: 'c',
-                        weight: 1,
-                      },
-                    ],
-                  },
-                  {
-                    incoming: [
-                      {
-                        transitionLabel: 'c',
-                        weight: 1,
-                      },
-                      {
-                        transitionLabel: 'b',
-                        weight: 1,
-                      },
-                    ],
-                    newMarking: 1,
-                    outgoing: [
-                      {
-                        transitionLabel: 'd',
-                        weight: 1,
-                      },
-                      {
-                        transitionLabel: 'e',
-                        weight: 1,
-                      },
-                    ],
-                  },
-                  {
-                    incoming: [
-                      {
-                        transitionLabel: 'd',
-                        weight: 1,
-                      },
-                    ],
-                    outgoing: [
-                      {
-                        transitionLabel: 'c',
-                        weight: 1,
-                      },
-                    ],
-                  },
-                  {
-                    incoming: [
-                      {
-                        transitionLabel: 'd',
-                        weight: 1,
-                      },
-                      {
-                        transitionLabel: 'c',
-                        weight: 1,
-                      },
-                    ],
-                    outgoing: [
-                      {
-                        transitionLabel: 'c',
-                        weight: 1,
-                      },
-                      {
-                        transitionLabel: 'e',
-                        weight: 1,
-                      },
-                    ],
-                  },
-                ],
-                repairType: 'multiplePlaces',
-                type: 'replace-place',
+                newMarking: 2,
+                repairType: 'changeMarking',
+                type: 'marking',
               },
             ],
             type: 'error',
