@@ -95,6 +95,13 @@ export class AppComponent implements OnInit {
     const repairExample = zip.folder('4 - repair-example');
     repairExample?.file('repair-example.log', repairExampleLog);
     repairExample?.file('repair-example.pn', repairExampleNet);
+    repairExample?.file(
+      'repair-log-description.jpg',
+      this.readFile('assets/log-description.png'),
+      {
+        binary: true,
+      }
+    );
 
     const coffeeMachine = zip.folder('5 - coffee-machine');
     coffeeMachine?.file('coffee-machine.log', coffeeMachineLog);
