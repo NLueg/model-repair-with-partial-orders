@@ -99,10 +99,28 @@ export class AppComponent implements OnInit {
     const coffeeMachine = zip.folder('5 - coffee-machine');
     coffeeMachine?.file('coffee-machine.log', coffeeMachineLog);
     coffeeMachine?.file('coffee-machine.pn', coffeeMachineNet);
+    coffeeMachine?.file(
+      '1-halbordnung.png',
+      this.readFile('assets/1-halbordnung.png'),
+      {
+        binary: true,
+      }
+    );
+    coffeeMachine?.file(
+      '2-halbordnung.png',
+      this.readFile('assets/2-halbordnung.png'),
+      {
+        binary: true,
+      }
+    );
 
     zip.generateAsync({ type: 'blob' }).then((content) => {
       saveAs(content, 'evaluation.zip');
     });
+  }
+
+  private readFile(filePath: string): Promise<Blob> {
+    return fetch(filePath).then((response) => response.blob());
   }
 
   ngOnInit(): void {
