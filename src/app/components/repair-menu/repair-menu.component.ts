@@ -156,15 +156,18 @@ function generateBaseText(
   solution: AutoRepairWithSolutionType,
   newTransition: boolean
 ): string {
-  let text = solutionTypeToText[solution.repairType];
+  if (solution.type === 'modify-place' && newTransition) {
+    return `Add minimal region`;
+  }
+
   if (solution.type === 'replace-place') {
     if (newTransition) {
-      text = `Add minimal region`;
+      return `Add minimal region`;
     } else if (solution.places.length > 1) {
-      text = `Split place`;
+      return `Split place`;
     }
   }
-  return text;
+  return solutionTypeToText[solution.repairType];
 }
 
 function tooltipForSinglePlaceParameter(
