@@ -61,7 +61,8 @@ export class RepairMenuComponent implements OnInit {
     if (this.placeSolution.type === 'newTransition') {
       this.infoHeader = `The transition ${this.placeSolution.missingTransition} is missing for ${this.placeSolution.invalidTraceCount} (${percentage}) traces.`;
       this.shownTextsForSolutions = this.generateSolutionToDisplay(
-        this.placeSolution.solutions
+        this.placeSolution.solutions,
+        true
       );
       return;
     }
@@ -104,19 +105,21 @@ export class RepairMenuComponent implements OnInit {
   }
 
   private generateSolutionToDisplay(
-    solutions: AutoRepairWithSolutionType[]
+    solutions: AutoRepairWithSolutionType[],
+    newTransition = false
   ): { text: LabelWithTooltip; solution: AutoRepair }[] {
     return solutions.map((solution) => ({
-      text: generateTextForAutoRepair(solution),
+      text: generateTextForAutoRepair(solution, newTransition),
       solution,
     }));
   }
 }
 
 function generateTextForAutoRepair(
-  solution: AutoRepairWithSolutionType
+  solution: AutoRepairWithSolutionType,
+  newTransition: boolean
 ): LabelWithTooltip {
-  const baseText = generateBaseText(solution);
+  const baseText = generateBaseText(solution, newTransition);
 
   if (solution.type === 'replace-place') {
     return {
@@ -149,10 +152,17 @@ const solutionTypeToText: { [key in SolutionType]: string } = {
   multiplePlaces: 'Generate similar place',
 };
 
-function generateBaseText(solution: AutoRepairWithSolutionType): string {
+function generateBaseText(
+  solution: AutoRepairWithSolutionType,
+  newTransition: boolean
+): string {
   let text = solutionTypeToText[solution.repairType];
-  if (solution.type === 'replace-place' && solution.places.length > 1) {
-    text = `Split place`;
+  if (solution.type === 'replace-place') {
+    if (newTransition) {
+      text = `Add minimal region`;
+    } else if (solution.places.length > 1) {
+      text = `Split place`;
+    }
   }
   return text;
 }
