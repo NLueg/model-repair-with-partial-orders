@@ -97,7 +97,7 @@ export class AppComponent implements OnInit {
     repairExample?.file('repair-example.pn', repairExampleNet);
     repairExample?.file(
       'repair-log-description.jpg',
-      this.readFile('assets/log-description.png'),
+      this.readFile('assets/log-description.jpg'),
       {
         binary: true,
       }
