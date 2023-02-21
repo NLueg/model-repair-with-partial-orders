@@ -307,24 +307,22 @@ export class IlpSolver {
 
     // We try to find a place without initial marking and with the pair
     // If we don't found a solution we try to find one with marking and different incoming arcs
-    if (firstTry) {
+    if (firstTry && causalPair[0]) {
       result.subjectTo = result.subjectTo.concat(
         this.equal(this.variable(VariableName.INITIAL_MARKING), 0).constraints
       );
 
-      if (causalPair[0]) {
-        result.subjectTo = result.subjectTo.concat(
-          this.greaterEqualThan(
-            this.variable(
-              this.transitionVariableName(
-                causalPair[0],
-                VariableName.INGOING_ARC_WEIGHT_PREFIX
-              )
-            ),
-            1
-          ).constraints
-        );
-      }
+      result.subjectTo = result.subjectTo.concat(
+        this.greaterEqualThan(
+          this.variable(
+            this.transitionVariableName(
+              causalPair[0],
+              VariableName.INGOING_ARC_WEIGHT_PREFIX
+            )
+          ),
+          1
+        ).constraints
+      );
     }
 
     result.subjectTo = result.subjectTo.concat(
