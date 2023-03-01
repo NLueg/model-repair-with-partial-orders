@@ -13,8 +13,6 @@ import {
   coffeeMachineNet,
   loopLog,
   loopPetriNet,
-  repairExampleLog,
-  repairExampleNet,
   skipLog,
   skipNet,
 } from './services/upload/simple-example/evaluation/evaluation';
@@ -92,18 +90,7 @@ export class AppComponent implements OnInit {
     eventSkipFolder?.file('event-skip.log', skipLog);
     eventSkipFolder?.file('event-skip.pn', skipNet);
 
-    const repairExample = zip.folder('4 - repair-example');
-    repairExample?.file('repair-example.log', repairExampleLog);
-    repairExample?.file('repair-example.pn', repairExampleNet);
-    repairExample?.file(
-      'repair-log-description.jpg',
-      this.readFile('assets/log-description.jpg'),
-      {
-        binary: true,
-      }
-    );
-
-    const coffeeMachine = zip.folder('5 - coffee-machine');
+    const coffeeMachine = zip.folder('4 - coffee-machine');
     coffeeMachine?.file('coffee-machine.log', coffeeMachineLog);
     coffeeMachine?.file('coffee-machine.pn', coffeeMachineNet);
     coffeeMachine?.file(
