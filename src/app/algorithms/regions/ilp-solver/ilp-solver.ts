@@ -231,6 +231,9 @@ export class IlpSolver {
               );
             });
         });
+
+        console.log('Generated solutions', typeToSolution);
+
         return Object.entries(typeToSolution)
           .filter(([_, solutions]) => solutions.vars.length > 0)
           .sort(([_, first], [__, second]) => first.sum - second.sum)
