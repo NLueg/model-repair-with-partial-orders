@@ -45,6 +45,7 @@ export type Vars = { [key: string]: number };
 export interface ProblemSolution {
   type: SolutionType;
   solutions: Vars[];
+  regionSize: number;
 }
 
 export enum VariableName {

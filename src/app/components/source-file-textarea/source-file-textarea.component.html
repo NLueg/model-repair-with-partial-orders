@@ -23,7 +23,12 @@
   ></textarea>
 </mat-form-field>
 
-<mat-form-field appearance="outline" class="textarea" [matTooltip]="netHint">
+<mat-form-field
+  appearance="outline"
+  class="textarea"
+  [matTooltip]="netHint"
+  *ngIf="shouldShowSuggestions$ | async"
+>
   <mat-label class="input-label">
     <span>Petri net</span>
     <ng-container [ngSwitch]="netValidationStatus">

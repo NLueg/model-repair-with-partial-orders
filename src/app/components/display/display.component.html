@@ -2,7 +2,7 @@
   class="margin-spaces outer-container"
   *ngIf="invalidPlaceCount$ | async as invalidPlaceCount"
 >
-  <div class="inner-container">
+  <div class="inner-container" *ngIf="shouldShowSuggestions$ | async">
     <div class="icon-with-text">
       <ng-container *ngIf="invalidPlaceCount.count === 0">
         <mat-icon class="color_success"> check_circle </mat-icon>

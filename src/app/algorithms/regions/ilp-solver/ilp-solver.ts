@@ -109,6 +109,11 @@ export class IlpSolver {
                 (solution) => solution.result.status !== Solution.NO_SOLUTION
               )
               .map((solution) => solution.result.vars),
+            regionSize: Math.max(
+              ...solutions.map((solution) =>
+                this.generateSumForVars(solution.result.vars)
+              )
+            ),
           },
         ])
       );
@@ -135,6 +140,7 @@ export class IlpSolver {
           const problemSolution: ProblemSolution = {
             type: 'changeMarking',
             solutions: [solution.solution.result.vars],
+            regionSize: this.generateSumForVars(solution.solution.result.vars),
           };
           return [problemSolution];
         })
@@ -202,11 +208,11 @@ export class IlpSolver {
       toArray(),
       map((placeSolutions) => {
         const typeToSolution: {
-          [key in SolutionType]: { sum: number; vars: Vars }[];
+          [key in SolutionType]: { sum: number; vars: Vars[] };
         } = {
-          changeMarking: [],
-          changeIncoming: [],
-          multiplePlaces: [],
+          multiplePlaces: { sum: 0, vars: [] },
+          changeIncoming: { sum: 0, vars: [] },
+          changeMarking: { sum: 0, vars: [] },
         };
 
         placeSolutions.forEach((placeSolution) => {
@@ -216,26 +222,22 @@ export class IlpSolver {
                 solution.solution.result.status !== Solution.NO_SOLUTION
             )
             .forEach((solution) => {
-              typeToSolution[solution.type].push({
-                sum: Array.from(this.poVariableNames).reduce(
-                  (acc, elem) => solution.solution.result.vars[elem] + acc,
-                  0
-                ),
-                vars: solution.solution.result.vars,
-              });
+              typeToSolution[solution.type].sum = Math.max(
+                typeToSolution[solution.type].sum,
+                this.generateSumForVars(solution.solution.result.vars)
+              );
+              typeToSolution[solution.type].vars.push(
+                solution.solution.result.vars
+              );
             });
         });
-
         return Object.entries(typeToSolution)
-          .filter(([_, solutions]) => solutions.length > 0)
-          .sort(
-            ([_, first], [__, second]) =>
-              Math.max(...first.map((a) => a.sum)) -
-              Math.max(...second.map((a) => a.sum))
-          )
+          .filter(([_, solutions]) => solutions.vars.length > 0)
+          .sort(([_, first], [__, second]) => first.sum - second.sum)
           .map(([type, solutions]) => ({
             type: type as SolutionType,
-            solutions: solutions.map((solution) => solution.vars),
+            solutions: solutions.vars,
+            regionSize: solutions.sum,
           }));
       }),
       map((foundSolutions) =>
@@ -244,9 +246,14 @@ export class IlpSolver {
     );
   }
 
-  private filterSolutionsInSpecificOrder(
-    foundSolutions: { type: SolutionType; solutions: Vars[] }[]
-  ) {
+  private generateSumForVars(vars: Vars): number {
+    return Array.from(this.poVariableNames).reduce(
+      (acc, elem) => vars[elem] + acc,
+      0
+    );
+  }
+
+  private filterSolutionsInSpecificOrder(foundSolutions: ProblemSolution[]) {
     return foundSolutions.filter((value, index) => {
       const _value = JSON.stringify(value.solutions);
       return (
@@ -386,6 +393,8 @@ export class IlpSolver {
     const subjectTo = this.buildBasicIlpForPartialOrders(this.partialOrders);
 
     const variablesToMinimize = Array.from(this.poVariableNames);
+    console.warn(variablesToMinimize);
+    console.warn(Array.from(this.allVariables));
 
     return {
       name: 'ilp',
@@ -486,11 +495,21 @@ export class IlpSolver {
   ): LP {
     const result = clonedeep(baseIlp);
 
-    // Don't add incoming arcs if there is no incoming arc
-    if (existingPlace.incomingArcs.length === 0) {
-      result.subjectTo = result.subjectTo.concat(
-        this.getRulesForNoArcs(VariableName.INGOING_ARC_WEIGHT_PREFIX)
-      );
+    if (existingPlace.incomingArcs.length > 0) {
+      existingPlace.incomingArcs.forEach((arc) => {
+        const transitionLabel = this.idToTransitionLabelMap[arc.source];
+        result.subjectTo = result.subjectTo.concat(
+          this.greaterEqualThan(
+            this.variable(
+              this.transitionVariableName(
+                transitionLabel,
+                VariableName.INGOING_ARC_WEIGHT_PREFIX
+              )
+            ),
+            arc.weight
+          ).constraints
+        );
+      });
     }
 
     this.addConstraintsForSameOutgoingWeights(existingPlace, result);

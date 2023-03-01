@@ -23,6 +23,7 @@ export type OutgoingArcSolution = {
 
 export type ParsableSolutionsPerType = {
   type: SolutionType;
+  regionSize: number;
   solutionParts: ParsableSolution[][];
 };
 
@@ -33,12 +34,14 @@ export type PlaceSolution =
       solutions: AutoRepairWithSolutionType[];
       invalidTraceCount: number;
       missingTokens: number | undefined;
+      regionSize: number;
     }
   | {
       type: 'warning';
       place: string;
       tooManyTokens: number;
       reduceTokensTo: number;
+      regionSize: number;
     }
   | NewTransitionSolution;
 
@@ -47,4 +50,5 @@ export type NewTransitionSolution = {
   missingTransition: string;
   solutions: AutoRepairWithSolutionType[];
   invalidTraceCount: number;
+  regionSize: number;
 };

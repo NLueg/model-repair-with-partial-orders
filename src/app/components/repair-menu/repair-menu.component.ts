@@ -5,14 +5,12 @@ import { SolutionType } from '../../algorithms/regions/ilp-solver/solver-classes
 import {
   AutoRepair,
   AutoRepairWithSolutionType,
-  SinglePlaceParameter,
 } from '../../algorithms/regions/parse-solutions.fn';
 import { NetCommandService } from '../../services/repair/net-command.service';
 import { PlaceSolution } from '../../services/repair/repair.model';
 
 type LabelWithTooltip = {
   label: string;
-  tooltip: string;
 };
 
 @Component({
@@ -39,8 +37,9 @@ export class RepairMenuComponent implements OnInit {
       this.shownTextsForSolutions = [
         {
           text: {
-            label: `<b>Change marking to ${this.placeSolution.reduceTokensTo}</b>`,
-            tooltip: `Change marking to ${this.placeSolution.reduceTokensTo}`,
+            label: `<b>Change marking to ${
+              this.placeSolution.reduceTokensTo
+            }</b>${getSubLabel(this.placeSolution)}`,
           },
           solution: {
             type: 'marking',
@@ -123,80 +122,43 @@ function generateTextForAutoRepair(
 
   if (solution.type === 'replace-place') {
     return {
-      label: baseText,
-      tooltip: solution.places
-        .map(
-          (place, index) => `
-        ${index + 1}. Place:
-        ${tooltipForSinglePlaceParameter(place)}`
-        )
-        .join(''),
+      label: `${baseText}${getSubLabel(solution)}`,
     };
   }
   if (solution.type === 'marking') {
     return {
-      label: baseText,
-      tooltip: `Change marking to ${solution.newMarking}`,
+      label: `${baseText}${getSubLabel(solution)}`,
     };
   }
 
   return {
-    label: baseText,
-    tooltip: tooltipForSinglePlaceParameter(solution),
+    label: `${baseText}${getSubLabel(solution)}`,
   };
 }
 
 const solutionTypeToText: { [key in SolutionType]: string } = {
-  changeMarking: 'Add marking',
+  changeMarking: 'Add tokens',
   changeIncoming: 'Change ingoing arcs',
-  multiplePlaces: 'Generate similar place',
+  multiplePlaces: 'Split place',
 };
+
+function getSubLabel(solution: { regionSize: number }): string {
+  return `<span>Region size: ${solution.regionSize}</span>`;
+}
 
 function generateBaseText(
   solution: AutoRepairWithSolutionType,
   newTransition: boolean
 ): string {
+  let text = solutionTypeToText[solution.repairType];
   if (solution.type === 'modify-place' && newTransition) {
-    return `Add minimal region`;
+    text = `Add minimal region`;
   }
 
   if (solution.type === 'replace-place') {
     if (newTransition) {
-      return `Add minimal region`;
-    } else if (solution.places.length > 1) {
-      return `Split place`;
+      text = `Add minimal region`;
     }
   }
-  return solutionTypeToText[solution.repairType];
-}
-
-function tooltipForSinglePlaceParameter(
-  solution: SinglePlaceParameter
-): string {
-  const incomingString =
-    solution.incoming.length > 0
-      ? `• incoming: ${solution.incoming
-          .map((arc) =>
-            arc.weight > 1
-              ? `${arc.transitionLabel} (${arc.weight})`
-              : arc.transitionLabel
-          )
-          .join(', ')} \n`
-      : '';
-  const outgoingString =
-    solution.outgoing.length > 0
-      ? `• outgoing: ${solution.outgoing
-          .map((arc) =>
-            arc.weight > 1
-              ? `${arc.transitionLabel} (${arc.weight})`
-              : arc.transitionLabel
-          )
-          .join(', ')} \n`
-      : '';
-
-  return `
-  ${incomingString}${outgoingString}• marking: ${
-    solution.newMarking ? solution.newMarking : '0'
-  }
-  `.trim();
+  return `<b>${text}</b></br>`;
 }

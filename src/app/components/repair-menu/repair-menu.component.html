@@ -12,8 +12,6 @@
       mat-button
       *ngFor="let model of shownTextsForSolutions"
       (click)="useSolution(model.solution)"
-      [matTooltip]="model.text.tooltip"
-      matTooltipClass="repair-menu-tooltip"
       [innerHTML]="model.text.label"
     ></button>
   </ng-container>

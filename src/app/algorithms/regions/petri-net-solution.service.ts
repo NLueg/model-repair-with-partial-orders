@@ -181,46 +181,49 @@ export function handleSolutions(
   solutions: ProblemSolution[],
   solver: IlpSolver
 ): ParsableSolutionsPerType[] {
-  const solutionsWithMaybeDuplicates = solutions.map((solution) => ({
-    type: solution.type,
-    solutionParts: solution.solutions
-      .map((singleSolution) =>
-        Object.entries(singleSolution)
-          .filter(
-            ([variable, value]) =>
-              value != 0 && solver.getInverseVariableMapping(variable) !== null
-          )
-          .map(([variable, value]) => {
-            const decoded = solver.getInverseVariableMapping(variable)!;
+  const solutionsWithMaybeDuplicates: ParsableSolutionsPerType[] =
+    solutions.map((solution) => ({
+      type: solution.type,
+      solutionParts: solution.solutions
+        .map((singleSolution) =>
+          Object.entries(singleSolution)
+            .filter(
+              ([variable, value]) =>
+                value != 0 &&
+                solver.getInverseVariableMapping(variable) !== null
+            )
+            .map(([variable, value]) => {
+              const decoded = solver.getInverseVariableMapping(variable)!;
 
-            let parsableSolution: ParsableSolution;
-            switch (decoded.type) {
-              case VariableType.INITIAL_MARKING:
-                parsableSolution = {
-                  type: 'increase-marking',
-                  newMarking: value,
-                };
-                break;
-              case VariableType.INCOMING_TRANSITION_WEIGHT:
-                parsableSolution = {
-                  type: 'incoming-arc',
-                  incoming: decoded.label,
-                  marking: value,
-                };
-                break;
-              case VariableType.OUTGOING_TRANSITION_WEIGHT:
-                parsableSolution = {
-                  type: 'outgoing-arc',
-                  outgoing: decoded.label,
-                  marking: value,
-                };
-            }
+              let parsableSolution: ParsableSolution;
+              switch (decoded.type) {
+                case VariableType.INITIAL_MARKING:
+                  parsableSolution = {
+                    type: 'increase-marking',
+                    newMarking: value,
+                  };
+                  break;
+                case VariableType.INCOMING_TRANSITION_WEIGHT:
+                  parsableSolution = {
+                    type: 'incoming-arc',
+                    incoming: decoded.label,
+                    marking: value,
+                  };
+                  break;
+                case VariableType.OUTGOING_TRANSITION_WEIGHT:
+                  parsableSolution = {
+                    type: 'outgoing-arc',
+                    outgoing: decoded.label,
+                    marking: value,
+                  };
+              }
 
-            return parsableSolution;
-          })
-      )
-      .filter((solution) => solution.length > 0),
-  }));
+              return parsableSolution;
+            })
+        )
+        .filter((solution) => solution.length > 0),
+      regionSize: solution.regionSize,
+    }));
 
   return removeDuplicatePlaces(solutionsWithMaybeDuplicates).filter(
     (value, index) => {

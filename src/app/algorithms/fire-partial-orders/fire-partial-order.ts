@@ -57,7 +57,7 @@ export class FirePartialOrder {
     ).fill(true);
     const notValidPlaces = new Array(this.petriNet.places.length).fill(false);
 
-    const forwardResult = this.fireForwards([...totalOrder], validPlaces);
+    const { branchPlaces } = this.fireForwards([...totalOrder], validPlaces);
 
     // not valid places
     const finalEvent = this.idToEventMap.get(
@@ -98,7 +98,7 @@ export class FirePartialOrder {
     for (let i = 0; i < this.petriNet.places.length; i++) {
       if (
         !validPlaces[i] &&
-        forwardResult.branchPlaces.includes(this.petriNet.places[i].id) &&
+        branchPlaces.includes(this.petriNet.places[i].id) &&
         !notValidPlaces[i] &&
         !backwardsValidPlaces[i]
       ) {

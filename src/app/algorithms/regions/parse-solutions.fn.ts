@@ -20,12 +20,14 @@ export type AutoRepair = AutoRepairForSinglePlace | ReplacePlaceAutoRepair;
 
 export type ReplacePlaceAutoRepair = {
   type: 'replace-place';
+  regionSize: number;
   repairType: SolutionType;
   places: SinglePlaceParameter[];
 };
 
 export type AutoRepairWithSolutionType = AutoRepair & {
   repairType: SolutionType;
+  regionSize: number;
 };
 
 export type SinglePlaceParameter = {
@@ -52,6 +54,7 @@ export function parseSolution(
         return {
           type: 'replace-place',
           repairType: parsableSolutionsPerType.type,
+          regionSize: parsableSolutionsPerType.regionSize,
           places: generateRepairForMultipleSolutions(placeSolutions),
         } as ReplacePlaceAutoRepair;
       }
@@ -60,6 +63,7 @@ export function parseSolution(
       if (!singlePlaceSolution || singlePlaceSolution.type === 'marking') {
         return {
           ...singlePlaceSolution,
+          regionSize: parsableSolutionsPerType.regionSize,
           repairType: parsableSolutionsPerType.type,
         } as AutoRepairWithSolutionType;
       }
@@ -71,6 +75,7 @@ export function parseSolution(
             existingPlace,
             idTransitionToLabel
           ),
+          regionSize: parsableSolutionsPerType.regionSize,
           repairType: parsableSolutionsPerType.type,
         };
       }
@@ -151,12 +156,14 @@ export function parseSolution(
             existingPlace,
             idTransitionToLabel
           ),
+          regionSize: parsableSolutionsPerType.regionSize,
           repairType: parsableSolutionsPerType.type,
         };
       }
 
       const repair: AutoRepairWithSolutionType = {
         type: 'replace-place',
+        regionSize: parsableSolutionsPerType.regionSize,
         repairType: parsableSolutionsPerType.type,
         places: newPlaces.map((newPlace) => mergeAllDuplicatePlaces(newPlace)),
       };
