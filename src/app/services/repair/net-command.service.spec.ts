@@ -162,6 +162,7 @@ p2 b 9`);
             ],
           },
         ],
+        regionSize: 1,
       })
       .subscribe((net) => {
         expect(net).toEqual(`.type pn

@@ -151,12 +151,15 @@ function generateBaseText(
   newTransition: boolean
 ): string {
   let text = solutionTypeToText[solution.repairType];
-  if (solution.type === 'modify-place' && newTransition) {
-    text = `Add minimal region`;
-  }
 
-  if (solution.type === 'replace-place') {
-    if (newTransition) {
+  if (solution.type === 'marking') {
+    text = 'Add tokens';
+  }
+  if (newTransition) {
+    if (solution.type === 'modify-place') {
+      text = `Add minimal region`;
+    }
+    if (solution.type === 'replace-place') {
       text = `Add minimal region`;
     }
   }

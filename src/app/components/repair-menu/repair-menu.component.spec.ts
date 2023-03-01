@@ -24,8 +24,10 @@ describe('RepairMenuComponent', () => {
           type: 'marking',
           repairType: 'multiplePlaces',
           newMarking: 1,
+          regionSize: 1,
         },
       ],
+      regionSize: 1,
       missingTokens: undefined,
       invalidTraceCount: 0,
     };

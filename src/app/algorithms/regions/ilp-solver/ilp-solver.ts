@@ -393,9 +393,6 @@ export class IlpSolver {
     const subjectTo = this.buildBasicIlpForPartialOrders(this.partialOrders);
 
     const variablesToMinimize = Array.from(this.poVariableNames);
-    console.warn(variablesToMinimize);
-    console.warn(Array.from(this.allVariables));
-
     return {
       name: 'ilp',
       objective: {

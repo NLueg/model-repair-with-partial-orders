@@ -18,6 +18,7 @@ describe('parseSolution', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
         type: 'multiplePlaces',
+        regionSize: 1,
         solutionParts: [
           [
             {
@@ -36,6 +37,7 @@ describe('parseSolution', () => {
         type: 'marking',
         repairType: 'multiplePlaces',
         newMarking: 10,
+        regionSize: 1,
       },
     ];
     expect(actual).toEqual(expected);
@@ -54,6 +56,7 @@ describe('parseSolution', () => {
             },
           ],
         ],
+        regionSize: 1,
       },
     ];
 
@@ -65,6 +68,7 @@ describe('parseSolution', () => {
         repairType: 'multiplePlaces',
         incoming: [{ transitionLabel: 't1', weight: 3 }],
         outgoing: [],
+        regionSize: 1,
       },
     ];
     expect(actual).toEqual(expected);
@@ -83,6 +87,7 @@ describe('parseSolution', () => {
             },
           ],
         ],
+        regionSize: 1,
       },
     ];
 
@@ -94,6 +99,7 @@ describe('parseSolution', () => {
         repairType: 'multiplePlaces',
         incoming: [],
         outgoing: [{ transitionLabel: 't1', weight: 3 }],
+        regionSize: 1,
       },
     ];
     expect(actual).toEqual(expected);
@@ -117,6 +123,7 @@ describe('parseSolution', () => {
             },
           ],
         ],
+        regionSize: 1,
       },
     ];
 
@@ -128,6 +135,7 @@ describe('parseSolution', () => {
         repairType: 'multiplePlaces',
         incoming: [{ transitionLabel: 't1', weight: 3 }],
         outgoing: [{ transitionLabel: 't1', weight: 3 }],
+        regionSize: 1,
       },
     ];
     expect(actual).toEqual(expected);
@@ -156,6 +164,7 @@ describe('parseSolution', () => {
             },
           ],
         ],
+        regionSize: 1,
       },
     ];
 
@@ -167,6 +176,7 @@ describe('parseSolution', () => {
         repairType: 'multiplePlaces',
         incoming: [{ transitionLabel: 't1', weight: 3 }],
         outgoing: [{ transitionLabel: 't1', weight: 6 }],
+        regionSize: 1,
       },
     ];
     expect(actual).toEqual(expected);
@@ -199,6 +209,7 @@ describe('parseSolution', () => {
             },
           ],
         ],
+        regionSize: 1,
       },
     ];
 
@@ -211,6 +222,7 @@ describe('parseSolution', () => {
         newMarking: 10,
         incoming: [{ transitionLabel: 't1', weight: 6 }],
         outgoing: [{ transitionLabel: 't1', weight: 3 }],
+        regionSize: 1,
       },
     ];
     expect(actual).toEqual(expected);
@@ -244,6 +256,7 @@ describe('parseSolution', () => {
             },
           ],
         ],
+        regionSize: 1,
       },
     ];
 
@@ -263,12 +276,12 @@ describe('parseSolution', () => {
             outgoing: [{ transitionLabel: 't2', weight: 3 }],
           },
         ],
+        regionSize: 1,
       },
     ];
     expect(actual).toEqual(expected);
   });
 
-  // TODO: Check this test case again
   it('should return replace state for outgoing arcs the same', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
@@ -297,6 +310,7 @@ describe('parseSolution', () => {
             },
           ],
         ],
+        regionSize: 1,
       },
     ];
 
@@ -316,12 +330,12 @@ describe('parseSolution', () => {
             outgoing: [{ transitionLabel: 't1', weight: 3 }],
           },
         ],
+        regionSize: 1,
       },
     ];
     expect(actual).toEqual(expected);
   });
 
-  // TODO: Check this test case again
   it('should merge everything together if too same incoming elements', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
@@ -355,6 +369,7 @@ describe('parseSolution', () => {
             },
           ],
         ],
+        regionSize: 1,
       },
     ];
 
@@ -369,12 +384,12 @@ describe('parseSolution', () => {
           { transitionLabel: 't1', weight: 3 },
           { transitionLabel: 't2', weight: 3 },
         ],
+        regionSize: 1,
       },
     ];
     expect(actual).toEqual(expected);
   });
 
-  // TODO: Check this test case again
   it('should merge everything together if same outgoing elements', () => {
     const parameter: ParsableSolutionsPerType[] = [
       {
@@ -408,6 +423,7 @@ describe('parseSolution', () => {
             },
           ],
         ],
+        regionSize: 1,
       },
     ];
 
@@ -422,6 +438,7 @@ describe('parseSolution', () => {
         ],
         outgoing: [{ transitionLabel: 't1', weight: 9 }],
         type: 'modify-place',
+        regionSize: 1,
       },
     ];
     expect(actual).toEqual(expected);
@@ -432,6 +449,7 @@ describe('parseSolution', () => {
       {
         type: 'changeMarking',
         solutionParts: [],
+        regionSize: 1,
       },
     ];
 
@@ -515,6 +533,7 @@ describe('parseSolution', () => {
             },
           ],
         ],
+        regionSize: 1,
       },
     ];
 
@@ -598,6 +617,7 @@ describe('parseSolution', () => {
         ],
         repairType: 'changeMarking',
         type: 'replace-place',
+        regionSize: 1,
       },
     ];
     expect(actual).toEqual(expected);

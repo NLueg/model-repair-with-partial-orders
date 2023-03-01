@@ -86,34 +86,34 @@ concept:name
 event-id
 follows[]
 .events
-1 Kaffeebohnen_mahlen km []
-1 Kaffeemaschine_entriegeln ke []
-1 Wasser_mit_Glaskanne_holen wgh []
-1 Filter_leeren fl [ke]
-1 Filter_füllen ff [km, fl]
-1 Wasser_einfüllen we [wgh, ke]
-1 Kaffeekanne_auswaschen ka [ke]
-1 Zusammensetzen_und_starten e [ka, we, ff]
-2 Kaffeebohnen_mahlen km []
-2 Kaffeemaschine_entriegeln ke []
-2 Filter_leeren fl [ke]
-2 Filter_füllen ff [km, fl]
-2 Kaffeekanne_auswaschen ka [ke]
-2 Wasser_mit_Kaffeekanne_holen wkh [ka]
-2 Wasser_einfüllen we [wkh]
-2 Zusammensetzen_und_starten e [we, ff]`;
+1 Grind_Beans km []
+1 Unlock_coffee_machine ke []
+1 Get_water_with_glass_pot wgh []
+1 Empty_strainer fl [ke]
+1 Fill_strainer ff [km, fl]
+1 Fill_kettle we [wgh, ke]
+1 Clean_coffee_pot ka [ke]
+1 Assemble_and_turn_on e [ka, we, ff]
+2 Grind_Beans km []
+2 Unlock_coffee_machine ke []
+2 Empty_strainer fl [ke]
+2 Fill_strainer ff [km, fl]
+2 Clean_coffee_pot ka [ke]
+2 Get_water_with_coffee_pot wkh [ka]
+2 Fill_kettle we [wkh]
+2 Assemble_and_turn_on e [we, ff]`;
 
 export const coffeeMachineNet = `.type pn
 .transitions
-km Kaffeebohnen_mahlen
-ff Filter_füllen
-fl Filter_leeren
-ke Kaffeemaschine_entriegeln
-ka Kaffeekanne_auswaschen
-wkh Wasser_mit_Kaffeekanne_holen
-wgh Wasser_mit_Glaskanne_holen
-we Wasser_einfüllen
-e Zusammensetzen_und_starten
+km Grind_Beans
+ff Fill_strainer
+fl Empty_strainer
+ke Unlock_coffee_machine
+ka Clean_coffee_pot
+wkh Get_water_with_coffee_pot
+wgh Get_water_with_glass_pot
+we Fill_kettle
+e Assemble_and_turn_on
 .places
 p0 1
 p1 1

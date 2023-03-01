@@ -525,22 +525,22 @@ describe('ParserService', () => {
         'event-id\n' +
         'follows[]\n' +
         '.events\n' +
-        '1 Kaffeebohnen_mahlen km []\n' +
-        '1 Kaffeemaschine_entriegeln ke []\n' +
-        '1 Wasser_mit_Glaskanne_holen wgh []\n' +
-        '1 Filter_leeren fl [ke]\n' +
-        '1 Filter_füllen ff [km, fl]\n' +
-        '1 Wasser_einfüllen we [wgh, ke]\n' +
-        '1 Kaffeekanne_auswaschen ka [ke]\n' +
-        '1 Zusammensetzen_und_starten e [ka, we, ff]\n' +
-        '2 Kaffeebohnen_mahlen km []\n' +
-        '2 Kaffeemaschine_entriegeln ke []\n' +
-        '2 Filter_leeren fl [ke]\n' +
-        '2 Filter_füllen ff [km, fl]\n' +
-        '2 Kaffeekanne_auswaschen ka [ke]\n' +
-        '2 Wasser_mit_Kaffeekanne_holen wkh [ka]\n' +
-        '2 Wasser_einfüllen we [wkh]\n' +
-        '2 Zusammensetzen_und_starten e [we, ff]',
+        '1 Grind_Beans km []\n' +
+        '1 Unlock_coffee_machine ke []\n' +
+        '1 Get_water_with_glass_pot wgh []\n' +
+        '1 Empty_strainer fl [ke]\n' +
+        '1 Fill_strainer ff [km, fl]\n' +
+        '1 Fill_kettle we [wgh, ke]\n' +
+        '1 Clean_coffee_pot ka [ke]\n' +
+        '1 Assemble_and_turn_on e [ka, we, ff]\n' +
+        '2 Grind_Beans km []\n' +
+        '2 Unlock_coffee_machine ke []\n' +
+        '2 Empty_strainer fl [ke]\n' +
+        '2 Fill_strainer ff [km, fl]\n' +
+        '2 Clean_coffee_pot ka [ke]\n' +
+        '2 Get_water_with_coffee_pot wkh [ka]\n' +
+        '2 Fill_kettle we [wkh]\n' +
+        '2 Assemble_and_turn_on e [we, ff]',
       errors
     );
     expect(result).toEqual([
@@ -605,7 +605,7 @@ describe('ParserService', () => {
           {
             id: 'km',
             incomingArcs: [],
-            label: 'Kaffeebohnen_mahlen',
+            label: 'Grind_Beans',
             nextEvents: ['ff'],
             outgoingArcs: [],
             previousEvents: [],
@@ -614,7 +614,7 @@ describe('ParserService', () => {
           {
             id: 'ke',
             incomingArcs: [],
-            label: 'Kaffeemaschine_entriegeln',
+            label: 'Unlock_coffee_machine',
             nextEvents: ['fl', 'we', 'ka'],
             outgoingArcs: [],
             previousEvents: [],
@@ -623,7 +623,7 @@ describe('ParserService', () => {
           {
             id: 'wgh',
             incomingArcs: [],
-            label: 'Wasser_mit_Glaskanne_holen',
+            label: 'Get_water_with_glass_pot',
             nextEvents: ['we'],
             outgoingArcs: [],
             previousEvents: [],
@@ -632,7 +632,7 @@ describe('ParserService', () => {
           {
             id: 'fl',
             incomingArcs: [],
-            label: 'Filter_leeren',
+            label: 'Empty_strainer',
             nextEvents: ['ff'],
             outgoingArcs: [],
             previousEvents: ['ke'],
@@ -641,7 +641,7 @@ describe('ParserService', () => {
           {
             id: 'ff',
             incomingArcs: [],
-            label: 'Filter_füllen',
+            label: 'Fill_strainer',
             nextEvents: ['e'],
             outgoingArcs: [],
             previousEvents: ['km', 'fl'],
@@ -650,7 +650,7 @@ describe('ParserService', () => {
           {
             id: 'we',
             incomingArcs: [],
-            label: 'Wasser_einfüllen',
+            label: 'Fill_kettle',
             nextEvents: ['e'],
             outgoingArcs: [],
             previousEvents: ['wgh', 'ke'],
@@ -659,7 +659,7 @@ describe('ParserService', () => {
           {
             id: 'ka',
             incomingArcs: [],
-            label: 'Kaffeekanne_auswaschen',
+            label: 'Clean_coffee_pot',
             nextEvents: ['e'],
             outgoingArcs: [],
             previousEvents: ['ke'],
@@ -668,7 +668,7 @@ describe('ParserService', () => {
           {
             id: 'e',
             incomingArcs: [],
-            label: 'Zusammensetzen_und_starten',
+            label: 'Assemble_and_turn_on',
             nextEvents: [],
             outgoingArcs: [],
             previousEvents: ['ka', 'we', 'ff'],
@@ -733,7 +733,7 @@ describe('ParserService', () => {
           {
             id: 'km',
             incomingArcs: [],
-            label: 'Kaffeebohnen_mahlen',
+            label: 'Grind_Beans',
             nextEvents: ['ff'],
             outgoingArcs: [],
             previousEvents: [],
@@ -742,7 +742,7 @@ describe('ParserService', () => {
           {
             id: 'ke',
             incomingArcs: [],
-            label: 'Kaffeemaschine_entriegeln',
+            label: 'Unlock_coffee_machine',
             nextEvents: ['fl', 'ka'],
             outgoingArcs: [],
             previousEvents: [],
@@ -751,7 +751,7 @@ describe('ParserService', () => {
           {
             id: 'fl',
             incomingArcs: [],
-            label: 'Filter_leeren',
+            label: 'Empty_strainer',
             nextEvents: ['ff'],
             outgoingArcs: [],
             previousEvents: ['ke'],
@@ -760,7 +760,7 @@ describe('ParserService', () => {
           {
             id: 'ff',
             incomingArcs: [],
-            label: 'Filter_füllen',
+            label: 'Fill_strainer',
             nextEvents: ['e'],
             outgoingArcs: [],
             previousEvents: ['km', 'fl'],
@@ -769,7 +769,7 @@ describe('ParserService', () => {
           {
             id: 'ka',
             incomingArcs: [],
-            label: 'Kaffeekanne_auswaschen',
+            label: 'Clean_coffee_pot',
             nextEvents: ['wkh'],
             outgoingArcs: [],
             previousEvents: ['ke'],
@@ -778,7 +778,7 @@ describe('ParserService', () => {
           {
             id: 'wkh',
             incomingArcs: [],
-            label: 'Wasser_mit_Kaffeekanne_holen',
+            label: 'Get_water_with_coffee_pot',
             nextEvents: ['we'],
             outgoingArcs: [],
             previousEvents: ['ka'],
@@ -787,7 +787,7 @@ describe('ParserService', () => {
           {
             id: 'we',
             incomingArcs: [],
-            label: 'Wasser_einfüllen',
+            label: 'Fill_kettle',
             nextEvents: ['e'],
             outgoingArcs: [],
             previousEvents: ['wkh'],
@@ -796,7 +796,7 @@ describe('ParserService', () => {
           {
             id: 'e',
             incomingArcs: [],
-            label: 'Zusammensetzen_und_starten',
+            label: 'Assemble_and_turn_on',
             nextEvents: [],
             outgoingArcs: [],
             previousEvents: ['we', 'ff'],

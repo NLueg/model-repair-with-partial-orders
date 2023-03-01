@@ -27,6 +27,7 @@ describe('remove-duplicate-place', () => {
             { type: 'incoming-arc', incoming: 'x', marking: 1 },
           ],
         ],
+        regionSize: 1,
       },
     ]);
 
@@ -68,6 +69,7 @@ describe('remove-duplicate-place', () => {
             },
           ],
         ],
+        regionSize: 1,
         type: 'multiplePlaces',
       },
     ]);

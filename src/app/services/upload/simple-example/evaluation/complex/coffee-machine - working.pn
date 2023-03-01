@@ -1,18 +1,18 @@
 .type pn
-.transitions  
-km Kaffeebohnen_mahlen  
-ff Filter_füllen  
-fl Filter_leeren  
-ke Kaffeemaschine_entriegeln  
-ka Kaffeekanne_auswaschen 
-wkh Wasser_mit_Kaffeekanne_holen
-wgh Wasser_mit_Glaskanne_holen 
-we Wasser_einfüllen 
-e Zusammensetzen_und_starten 
-.places 
-p0 1 
-p1 1 
-p2 1 
+.transitions
+km Grind_Beans
+ff Fill_strainer
+fl Empty_strainer
+ke Unlock_coffee_machine
+ka Clean_coffee_pot
+wkh Get_water_with_coffee_pot
+wgh Get_water_with_glass_pot
+we Fill_kettle
+e Assemble_and_turn_on
+.places
+p0 1
+p1 1
+p2 1
 p3 0
 p4 0
 p5 0

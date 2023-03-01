@@ -34,6 +34,7 @@ describe('SourceFileTextareaComponent', () => {
     registerRun: jest.fn(),
     getPetriNet$: () => of(petriNet),
     getCurrentErrors$: () => new Set(),
+    getShouldShowSuggestions: () => of(true),
   };
 
   beforeEach(async () => {
