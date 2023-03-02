@@ -39,7 +39,7 @@ export class RepairMenuComponent implements OnInit {
           text: {
             label: `<b>Change marking to ${
               this.placeSolution.reduceTokensTo
-            }</b>${getSubLabel(this.placeSolution)}`,
+            }</b><br/>${getSubLabel(this.placeSolution)}`,
           },
           solution: {
             type: 'marking',

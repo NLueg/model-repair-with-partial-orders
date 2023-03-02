@@ -111,19 +111,34 @@ export class PetriNetSolutionService {
                     : undefined;
 
                 if (place.type === 'warning') {
-                  const requiredMarking = solutions.flatMap((solution) =>
-                    solution.solutions.map(
-                      (solution) => solution[VariableName.INITIAL_MARKING]
-                    )
+                  const highestMarkingSolution: {
+                    regionSize: number;
+                    marking: number;
+                  } = solutions.reduce(
+                    (acc: { regionSize: number; marking: number }, item) => {
+                      const itemMax = Math.max(
+                        ...item.solutions.map(
+                          (solution) => solution[VariableName.INITIAL_MARKING]
+                        )
+                      );
+                      if (acc == null || itemMax > acc.regionSize) {
+                        return {
+                          regionSize: item.regionSize,
+                          marking: itemMax,
+                        };
+                      }
+                      return acc;
+                    },
+                    null as any
                   );
-                  const maximumRequiredMarking = Math.max(...requiredMarking);
-                  if (maximumRequiredMarking < existingPlace!.marking) {
+                  if (highestMarkingSolution.marking < existingPlace!.marking) {
                     return {
                       type: 'warning',
                       place: place.placeId,
-                      reduceTokensTo: maximumRequiredMarking,
+                      reduceTokensTo: highestMarkingSolution.marking,
                       tooManyTokens:
-                        existingPlace!.marking - maximumRequiredMarking,
+                        existingPlace!.marking - highestMarkingSolution.marking,
+                      regionSize: highestMarkingSolution.regionSize,
                     };
                   }
                   return undefined;
