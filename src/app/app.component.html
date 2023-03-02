@@ -99,23 +99,13 @@
 
         <div class="empty-button-list">
           <app-template-button
-            buttonText="Upload logs*"
+            buttonText="Upload logs and/or a net"
             buttonIcon="upload"
             [styleClass]="
               partialOrderCount.count === 0 ? 'color_error' : 'color_success'
             "
-            (buttonAction)="openFileSelector('log')"
-            (dropAction)="dropFiles($event, 'log')"
-          ></app-template-button>
-
-          <app-template-button
-            buttonText="Upload petri net"
-            buttonIcon="upload"
-            [styleClass]="
-              (isCurrentNetEmpty$ | async) ? undefined : 'color_success'
-            "
-            (buttonAction)="openFileSelector('petri-net')"
-            (dropAction)="dropFiles($event, 'petri-net')"
+            (buttonAction)="openFileSelector(undefined)"
+            (dropAction)="dropFiles($event, undefined)"
           ></app-template-button>
         </div>
 
