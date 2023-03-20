@@ -138,7 +138,7 @@ function generateTextForAutoRepair(
 
 const solutionTypeToText: { [key in SolutionType]: string } = {
   changeMarking: 'Add tokens',
-  changeIncoming: 'Change ingoing arcs',
+  changeIncoming: 'Add ingoing tokens',
   multiplePlaces: 'Split place',
 };
 
