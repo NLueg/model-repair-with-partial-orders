@@ -43,6 +43,8 @@ export class AppComponent implements OnInit {
       .pipe(map((pos) => ({ count: pos?.length ?? 0 })));
 
     this.isCurrentNetEmpty$ = displayService.isCurrentNetEmpty$();
+
+    window.onresize = () => this.resetSvgPositioning();
   }
 
   resetSvgPositioning(): void {
