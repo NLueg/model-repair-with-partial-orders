@@ -210,8 +210,8 @@ export class IlpSolver {
         const typeToSolution: {
           [key in SolutionType]: { sum: number; vars: Vars[] };
         } = {
-          multiplePlaces: { sum: 0, vars: [] },
           changeIncoming: { sum: 0, vars: [] },
+          multiplePlaces: { sum: 0, vars: [] },
           changeMarking: { sum: 0, vars: [] },
         };
 
