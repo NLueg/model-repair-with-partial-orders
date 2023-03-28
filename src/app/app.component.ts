@@ -32,6 +32,7 @@ export class AppComponent implements OnInit {
   isCurrentNetEmpty$: Observable<boolean>;
   partialOrderCount$: Observable<{ count: number }>;
   resetPositioningSubject: Subject<void> = new Subject<void>();
+  shouldShowSuggestions$: Observable<boolean>;
 
   constructor(
     private displayService: DisplayService,
@@ -43,6 +44,8 @@ export class AppComponent implements OnInit {
       .pipe(map((pos) => ({ count: pos?.length ?? 0 })));
 
     this.isCurrentNetEmpty$ = displayService.isCurrentNetEmpty$();
+
+    this.shouldShowSuggestions$ = displayService.getShouldShowSuggestions();
 
     window.onresize = () => this.resetSvgPositioning();
   }
