@@ -19,6 +19,7 @@ describe('AppComponent', () => {
           useValue: {
             getPartialOrders$: jest.fn().mockReturnValue(of([])),
             isCurrentNetEmpty$: jest.fn().mockReturnValue(of(false)),
+            getShouldShowSuggestions: jest.fn().mockReturnValue(of(false)),
           },
         },
         { provide: UploadService, useValue: {} },
